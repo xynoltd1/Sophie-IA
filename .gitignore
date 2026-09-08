@@ -1,0 +1,54 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# production artefacts
+*.tsbuildinfo
+next-env.d.ts.timestamp
+
+# environnement — NE JAMAIS COMMITER
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+*.pem
+*.key
+service-account*.json
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# tests / couverture
+coverage/
+playwright-report/
+test-results/
+
+# systeme
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# editeurs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# vercel
+.vercel
+
+# archives de livraison
+releases/
+*.zip

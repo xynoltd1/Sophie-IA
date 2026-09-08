@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* Polices auto-hebergees : le build ne depend d'aucun CDN externe. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/bricolage-grotesque";
+
+/* ==========================================================================
+   Design system Sophie IA
+   --------------------------------------------------------------------------
+   L'utilisateur type est un artisan, debout sur un chantier, au soleil, avec
+   une main occupee. Les choix suivants decoulent de cette contrainte :
+     - contraste eleve plutot que nuances de gris ;
+     - couleur reservee au statut (urgent / a valider / fait), jamais decorative ;
+     - cibles tactiles de 48 px minimum ;
+     - une seule information dominante par ecran.
+   ========================================================================== */
+
+@theme {
+  /* Couleurs ------------------------------------------------------------- */
+  --color-ink: #16211d; /* texte principal, vert-noir */
+  --color-ink-soft: #55635e; /* texte secondaire */
+  --color-ink-faint: #8a9793; /* texte tertiaire, placeholders */
+
+  --color-paper: #f7f8f7; /* fond d'application */
+  --color-surface: #ffffff; /* cartes, feuilles */
+  --color-line: #dde3df; /* separateurs, bordures */
+
+  --color-signal: #0b6e58; /* action principale, Sophie active */
+  --color-signal-soft: #e4f0ec;
+  --color-signal-deep: #085243;
+
+  --color-urgent: #c22b12; /* urgence : la seule couleur qui crie */
+  --color-urgent-soft: #fbe9e5;
+
+  --color-attention: #9a5400; /* a valider, en attente */
+  --color-attention-soft: #fbf0e2;
+
+  /* Typographie ---------------------------------------------------------- */
+  --font-display: "Bricolage Grotesque Variable", "Inter Variable", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --text-hero: 2rem;
+  --text-hero--line-height: 1.1;
+  --text-hero--letter-spacing: -0.02em;
+
+  /* Formes --------------------------------------------------------------- */
+  --radius-sheet: 1rem;
+  --radius-control: 0.625rem;
+
+  /* Hauteur de la barre de navigation basse, utilisee pour le padding. */
+  --spacing-navbar: 4.5rem;
+}
+
+/* Reglages de base ------------------------------------------------------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  /* Zone sure iOS : la barre de navigation basse ne passe pas sous l'encoche. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Focus clavier visible partout, y compris sur fond colore. */
+:focus-visible {
+  outline: 3px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Les chiffres d'un tableau de bord doivent s'aligner. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
