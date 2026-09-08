@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.1.5 · **Phase 0 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.2.1 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -52,14 +52,14 @@ npm run build       ✓  14 routes générées
 
 | Élément | État |
 |---|---|
-| Onboarding | seule l'étape 1 sur 7 existe ; les six autres sont des écrans vides |
+| Onboarding | sept étapes fonctionnelles ; l'étape agenda annonce Google Calendar pour la Phase 3 au lieu de connecter |
 | Écrans Prospects, Agenda, Appels, Sophie | états vides honnêtes, aucune donnée derrière |
 | `src/types/database.ts` | écrit à la main (ADR-012), à régénérer dès que le projet Supabase existe |
 | Tests d'isolation | écrits et complets, mais **jamais exécutés** faute de base de test |
 
 ## Ce qui n'est pas commencé
 
-Métiers et `ProfessionTemplate`, services, horaires, `BusinessKnowledge`, contacts, leads,
+Contacts, leads,
 tâches, recherche, Google Calendar, `AvailabilityEngine`, holds, rendez-vous, téléphonie,
 `SophieEngine`, Voice, enregistrement audio, lecteur, transcription, résumé, extraction,
 jobs asynchrones, SMS, notifications, console plateforme, abonnements, observabilité.
@@ -154,21 +154,25 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
 
 **Avant la Phase 1, dans cet ordre :**
 
-1. Créer le projet Supabase de développement, appliquer les cinq migrations, corriger ce
-   qui accroche.
+1. Appliquer les onze migrations, puis exécuter `supabase/checks/01_verify_schema.sql` et
+   `02_verify_content.sql` pour confirmer qu'aucun objet ne manque.
 2. Renseigner `SUPABASE_TEST_*` et exécuter `npm run test`. Les dix tests d'isolation
    doivent passer. **Ne pas commencer la Phase 1 avant.**
 3. Régénérer `src/types/database.ts` avec `supabase gen types`.
 4. Créer le dépôt GitHub et pousser (voir `DEPLOYMENT.md`).
 
-**Phase 1 — Entreprise et Sophie (cible 0.2.0)**
+**Phase 2 — CRM (cible 0.3.0)**
 
-Migrations : `profession_templates`, `business_profiles`, `services`,
-`business_hours`, `absences`, `sophie_configurations`, `business_knowledge` — chacune avec
-RLS. Puis les six étapes d'onboarding manquantes, la résolution
-`ProfessionTemplate → OrganizationConfiguration`, et l'écran *Sophie → Connaissances*.
+Migrations : `contacts` (déduplication par téléphone normalisé — `normalize_phone()` existe
+déjà), `leads` avec le pipeline `NEW → QUALIFIED → APPOINTMENT → CUSTOMER → WON | LOST`,
+`tasks`. Puis les écrans Prospects et fiche contact, la recherche globale (prévoir `pg_trgm`
+et des index GIN), et le remplissage réel du bloc « À traiter » de l'accueil.
 
-Aucun compte externe supplémentaire n'est nécessaire pour la Phase 1.
+Restent aussi de la Phase 1, volontairement laissés de côté : l'écran
+*Sophie → Connaissances* (la table `business_knowledge` existe), l'édition des services et
+horaires depuis les paramètres après l'onboarding, et la gestion des absences.
+
+Aucun compte externe supplémentaire n'est nécessaire pour la Phase 2.
 
 ---
 

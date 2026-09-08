@@ -3,6 +3,7 @@ import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/states";
 import { onboardingProgress } from "@/lib/org/onboarding";
 import Link from "next/link";
+import { STEP_ROUTES } from "@/app/onboarding/steps";
 
 export const metadata = { title: "Accueil — Sophie IA" };
 
@@ -16,6 +17,7 @@ export const metadata = { title: "Accueil — Sophie IA" };
 export default async function HomePage() {
   const { activeOrganization, user } = await requireOrganization();
   const progress = onboardingProgress(activeOrganization.onboarding_step);
+  const configured = activeOrganization.onboarding_step === "DONE";
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0];
 
   return (
@@ -29,6 +31,7 @@ export default async function HomePage() {
         </p>
       </section>
 
+      {!configured ? (
       <Sheet className="border-attention bg-attention-soft">
         <p className="font-semibold">Configuration de Sophie</p>
         <p className="mt-1 text-sm text-ink-soft">
@@ -45,13 +48,17 @@ export default async function HomePage() {
         >
           <div className="h-full rounded-full bg-attention" style={{ width: `${progress}%` }} />
         </div>
-        <p className="mt-3 text-sm text-ink-soft">
-          La suite de la configuration est en cours de construction (Phase 1).
-        </p>
+        <Link
+          href={STEP_ROUTES[activeOrganization.onboarding_step]}
+          className="mt-3 inline-flex min-h-12 items-center rounded-control bg-attention px-4 font-medium text-white"
+        >
+          Reprendre la configuration
+        </Link>
       </Sheet>
+      ) : null}
 
       <section>
-        <SectionTitle>A traiter</SectionTitle>
+        <SectionTitle>À traiter</SectionTitle>
         <EmptyState
           title="Rien ne vous attend"
           description="Les urgences, les rendez-vous a valider et les taches en retard apparaitront ici des que Sophie prendra ses premiers appels."

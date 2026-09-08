@@ -109,3 +109,114 @@ export interface MyOrganizationRow {
   test_mode_enabled_by: string | null;
   test_mode_enabled_at: string | null;
 }
+
+export type ServiceSource = "TEMPLATE" | "CUSTOM";
+export type SophieStyle = "CHALEUREUX" | "NEUTRE" | "DIRECT";
+export type SophieAnswerMode = "OFF" | "ALWAYS" | "WHEN_UNAVAILABLE" | "SCHEDULE";
+export type KnowledgeKind = "FAQ" | "INSTRUCTION" | "FACT";
+export type AbsenceKind = "VACATION" | "ABSENCE" | "HOLIDAY";
+
+export interface SuggestedService {
+  name: string;
+  duration_minutes?: number;
+  is_urgent?: boolean;
+  collect?: string[];
+}
+
+export interface ProfessionTemplateRow {
+  id: string;
+  slug: string;
+  label: string;
+  locale: string;
+  is_published: boolean;
+  sort_order: number;
+  /** Vrai pour « Autre métier » : une précision libre est alors exigée. */
+  allows_custom_label: boolean;
+  suggested_services: SuggestedService[];
+  qualification_questions: string[];
+  urgency_categories: string[];
+  vocabulary: Record<string, string>;
+  default_appointment_minutes: number;
+  default_buffer_minutes: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BusinessProfileRow {
+  organization_id: string;
+  profession_template_id: string | null;
+  custom_profession_label: string | null;
+  legal_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  contact_phone_e164: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  postal_code: string | null;
+  city: string | null;
+  service_area_description: string | null;
+  service_area_radius_km: number | null;
+  website: string | null;
+  default_appointment_minutes: number;
+  buffer_minutes: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ServiceRow {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  duration_minutes: number;
+  is_urgent: boolean;
+  is_active: boolean;
+  /** Texte libre : Sophie l'énonce tel quel et ne calcule jamais un prix. */
+  price_indication: string | null;
+  collect_fields: string[];
+  source: ServiceSource;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BusinessHourRow {
+  id: string;
+  organization_id: string;
+  member_id: string | null;
+  /** 1 = lundi … 7 = dimanche (ISO 8601). */
+  weekday: number;
+  is_open: boolean;
+  opens_at: string | null;
+  closes_at: string | null;
+}
+
+export interface SophieConfigurationRow {
+  organization_id: string;
+  assistant_name: string;
+  language: string;
+  voice_id: string | null;
+  style: SophieStyle;
+  greeting: string | null;
+  behavior_notes: string | null;
+  disclose_ai: boolean;
+  answer_mode: SophieAnswerMode;
+  transfer_number: string | null;
+  transfer_number_e164: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BusinessKnowledgeRow {
+  id: string;
+  organization_id: string;
+  kind: KnowledgeKind;
+  question: string | null;
+  answer: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}

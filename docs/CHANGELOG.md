@@ -3,6 +3,48 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.1] — 2026-09-07 — Scripts de vérification
+
+### Ajouté
+- `supabase/checks/01_verify_schema.sql` : contrôle en lecture seule des tables, fonctions
+  et colonnes attendues, avec le numéro de migration pour chaque objet manquant. Détecte
+  aussi les tables sans RLS et les tables avec RLS mais sans policy.
+- `supabase/checks/02_verify_content.sql` : catalogue de métiers, modèles d'annonce,
+  garde-fous de conformité.
+- `supabase/checks/README.md` : lecture des résultats et ordre d'application.
+
+## [0.2.0] — 2026-09-07 — Phase 1 : entreprise et Sophie
+
+**État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
+
+### Ajouté
+- Migration `0009_profession_templates` : modèles de métier avec services suggérés,
+  questions de qualification, catégories d'urgence, vocabulaire et durées. Catalogue de
+  douze métiers, dont « Autre » avec saisie libre. Modifiable depuis la console plateforme.
+- Migration `0010_business_configuration` : `business_profiles`, `services`,
+  `business_hours`, `absences`, avec RLS et normalisation du téléphone.
+- Migration `0011_sophie_configuration` : `sophie_configurations`, `business_knowledge`,
+  fonctions `apply_profession_template()` et `set_onboarding_step()`.
+- Onboarding complet en sept étapes, sauvegardé au fur et à mesure et reprenable :
+  entreprise, métier, services, horaires, agenda, Sophie, appels.
+- Garde d'étape : on revient en arrière librement, on ne saute pas en avant. L'organisation
+  fait foi, jamais l'URL.
+- Éditeur de services : activation, durée, ajout personnalisé, indication de prix en texte.
+- Éditeur d'horaires : sept jours, durée standard, marge entre interventions.
+- Configuration de Sophie : nom, ton, phrase d'accueil, consignes, transparence sur sa
+  nature d'assistante virtuelle.
+- Règles de prise d'appel avec numéro de transfert.
+- Accueil : reprise de la configuration, message adapté une fois terminée.
+- Tests : validation des horaires, cohérence du parcours d'onboarding.
+
+### Notes
+- L'étape agenda annonce honnêtement que Google Calendar arrive en Phase 3 plutôt que
+  d'afficher un bouton qui ne connecte rien.
+- `sophie_configurations.is_active` reste faux : la prise d'appel réelle demande la
+  Phase 4.
+- Les services issus d'un modèle de métier sont remplacés si l'on change de métier ; ceux
+  ajoutés par l'entreprise sont conservés.
+
 ## [0.1.5] — 2026-09-07 — Région d'exécution européenne
 
 ### Ajouté

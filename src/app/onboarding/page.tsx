@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { OrganizationForm } from "./organization-form";
+import { STEP_ROUTES } from "./steps";
 
 /**
  * Rendu dynamique obligatoire : cette page dépend de la session de

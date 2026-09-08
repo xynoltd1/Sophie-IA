@@ -79,5 +79,11 @@ export async function createOrganization(
     maxAge: 60 * 60 * 24 * 365,
   });
 
-  redirect("/app");
+  // L'organisation existe : on enchaîne sur le métier.
+  await supabase.rpc("set_onboarding_step", {
+    org_id: String(data),
+    step: "PROFESSION",
+  });
+
+  redirect("/onboarding/metier");
 }

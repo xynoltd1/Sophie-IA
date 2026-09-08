@@ -16,6 +16,15 @@ doit pouvoir être reconstruite à partir de zéro.
 | `0006_audio_retention_policy` | enregistrement désactivé par défaut, rétention audio plafonnée à 30 jours, `audio_retention_events` |
 | `0007_recording_notice_templates` | textes d'annonce par pays et langue, `resolve_recording_notice()`, `recording_allowed()` |
 | `0008_test_organizations` | `is_test_organization`, trigger de garde, `call_is_test()` |
+| `0009_profession_templates` | modèles de métier et catalogue de douze métiers |
+| `0010_business_configuration` | `business_profiles`, `services`, `business_hours`, `absences` |
+| `0011_sophie_configuration` | `sophie_configurations`, `business_knowledge`, `apply_profession_template()`, `set_onboarding_step()` |
+
+## Vérifier ce qui est appliqué
+
+`supabase/checks/01_verify_schema.sql` liste les objets attendus et signale ceux qui
+manquent, avec le numéro de la migration concernée. `02_verify_content.sql` vérifie le
+catalogue de métiers et les garde-fous de conformité. Les deux sont en lecture seule.
 
 ## Tables
 
