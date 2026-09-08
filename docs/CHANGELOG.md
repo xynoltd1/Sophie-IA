@@ -3,6 +3,21 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.8] — 2026-09-08 — Correctif : variables facultatives en production
+
+### Corrigé
+- L'application échouait en production avec « Configuration incomplete :
+  NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_APP_ENV » alors que ces deux variables ont une valeur
+  par défaut et que tout fonctionnait en développement.
+
+  Cause : Next.js remplace les variables `NEXT_PUBLIC_` au moment du build. Une variable
+  absente devient une **chaîne vide**, pas `undefined` — or `.default()` de zod ne
+  s'applique qu'à `undefined`. La chaîne vide était donc validée, et rejetée. En
+  développement, `process.env` étant lu à l'exécution, le problème n'apparaissait pas.
+
+  Les valeurs vides sont désormais converties en `undefined` avant validation.
+- Test de régression ajouté.
+
 ## [0.2.7] — 2026-09-08 — Sonde de connectivite Supabase
 
 ### Ajouté

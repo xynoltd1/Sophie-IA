@@ -24,11 +24,17 @@ export function publicEnv(): PublicEnv {
 
   // Les variables NEXT_PUBLIC_ sont remplacees a la compilation : on doit les
   // referencer litteralement, pas via process.env[nom].
+  //
+  // Piege : une variable NEXT_PUBLIC_ absente au moment du build est remplacee
+  // par une CHAINE VIDE, pas par undefined. Or .default() de zod ne s'applique
+  // qu'a undefined. Sans la conversion ci-dessous, une variable facultative
+  // absente fait echouer la validation en production alors que tout fonctionne
+  // en developpement, ou process.env est lu a l'execution.
   const parsed = publicSchema.safeParse({
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+    NEXT_PUBLIC_SUPABASE_URL: vide(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: vide(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    NEXT_PUBLIC_APP_URL: vide(process.env.NEXT_PUBLIC_APP_URL),
+    NEXT_PUBLIC_APP_ENV: vide(process.env.NEXT_PUBLIC_APP_ENV),
   });
 
   if (!parsed.success) {
@@ -45,6 +51,12 @@ export function publicEnv(): PublicEnv {
 
   cachedPublicEnv = parsed.data;
   return cachedPublicEnv;
+}
+
+/** Une chaine vide equivaut a une variable absente. */
+function vide(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === "" ? undefined : trimmed;
 }
 
 /** Cle service_role — serveur uniquement. */
