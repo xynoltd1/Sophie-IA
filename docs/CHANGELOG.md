@@ -3,6 +3,17 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.7] — 2026-09-08 — Sonde de connectivite Supabase
+
+### Ajouté
+- `/api/health/supabase` : exerce réellement le chemin utilisé par les pages — création du
+  client, lecture de session, requête sur une table protégée par RLS — et renvoie le
+  message d'erreur exact de chaque étape. Transforme un « Application error » opaque en
+  diagnostic lisible, sans exposer aucune valeur secrète.
+
+### Corrigé
+- `/api/health` affichait `environment: ""` : `??` ne rattrape pas la chaîne vide, `||` si.
+
 ## [0.2.6] — 2026-09-08 — Diagnostic de configuration
 
 ### Corrigé

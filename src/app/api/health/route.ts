@@ -25,7 +25,7 @@ export function GET() {
     {
       status: missing.length === 0 ? "ok" : "configuration_incomplete",
       version: pkg.version,
-      environment: process.env.NEXT_PUBLIC_APP_ENV ?? "non defini",
+      environment: process.env.NEXT_PUBLIC_APP_ENV || "non defini",
       config,
       missing,
       time: new Date().toISOString(),
