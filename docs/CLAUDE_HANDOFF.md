@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.1.3 · **Phase 0 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.1.4 · **Phase 0 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -143,6 +143,10 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
 4. Le contrôle « toute table publique a RLS » dans la suite de tests s'appuie sur une
    fonction utilitaire absente par défaut ; il s'ignore silencieusement. À remplacer par une
    vraie vérification en Phase 8.
+5. **Toute page dépendant de la session doit porter `export const dynamic =
+   "force-dynamic"`.** Sans cela, Next tente de la prérendre au build, où il n'existe ni
+   session ni variable d'environnement, et le déploiement échoue. Vérifier ce point à
+   chaque nouvelle page sous `(app)`.
 
 ---
 

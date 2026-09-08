@@ -86,3 +86,41 @@ npm run check      # typecheck + lint + tests + build
 
 Puis : migrations appliquées d'abord en staging, RLS vérifié sur les nouvelles tables,
 `CHANGELOG.md` et `CLAUDE_HANDOFF.md` à jour.
+
+---
+
+## Dépannage du déploiement
+
+### Le build échoue sur « Error occurred prerendering page »
+
+Message : `Configuration incomplete : NEXT_PUBLIC_SUPABASE_URL, …`
+
+Les variables d'environnement ne sont pas définies sur Vercel. Allez dans *Project
+Settings → Environment Variables* et ajoutez-les **pour chaque environnement** — Production,
+Preview et Development ont chacun leur propre jeu de valeurs.
+
+Point qui surprend souvent : les variables `NEXT_PUBLIC_` sont lues **au moment du build**,
+pas à l'exécution. Les ajouter ne suffit pas — il faut relancer un déploiement pour qu'elles
+soient prises en compte. Sur Vercel : *Deployments → … → Redeploy*.
+
+### Avertissement sur la version de Node
+
+`Detected "engines": { "node": ">=20.9.0" } … will automatically upgrade`
+
+Une plage ouverte laisse Vercel passer à la version majeure suivante dès sa sortie, ce qui
+peut casser un build sans que rien n'ait changé côté code. `package.json` fixe désormais
+`"node": "22.x"` : les correctifs sont appliqués, les changements de version majeure sont
+un choix explicite.
+
+### Avertissements npm sur les scripts d'installation
+
+`2 packages have install scripts not yet covered by allowScripts` (esbuild,
+unrs-resolver). Ce sont des dépendances de développement légitimes, tirées par Vitest et
+ESLint. L'avertissement est informatif et n'empêche pas le build.
+
+### Vérifier qu'un déploiement fonctionne
+
+1. `https://VOTRE-URL/api/health` doit répondre `{"status":"ok", …}`.
+2. `https://VOTRE-URL/login` doit afficher le formulaire.
+3. Créer un compte, puis une entreprise. Si la création échoue, les migrations ne sont pas
+   appliquées sur le projet Supabase pointé par vos variables.

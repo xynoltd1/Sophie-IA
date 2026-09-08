@@ -2,6 +2,13 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { OrganizationForm } from "./organization-form";
 
+/**
+ * Rendu dynamique obligatoire : cette page dépend de la session de
+ * l'utilisateur. Sans cette directive, Next tente de la prérendre au moment du
+ * build, où aucune session ni aucune variable d'environnement n'existe.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Votre entreprise — Sophie IA" };
 
 export default async function OnboardingPage() {

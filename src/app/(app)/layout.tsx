@@ -2,6 +2,13 @@ import { requireOrganization } from "@/lib/auth/session";
 import { AppHeader } from "@/components/nav/app-header";
 import { BottomNav } from "@/components/nav/bottom-nav";
 
+/**
+ * Rendu dynamique obligatoire : cette page dépend de la session de
+ * l'utilisateur. Sans cette directive, Next tente de la prérendre au moment du
+ * build, où aucune session ni aucune variable d'environnement n'existe.
+ */
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { activeOrganization } = await requireOrganization();
 

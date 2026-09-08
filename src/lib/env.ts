@@ -34,7 +34,12 @@ export function publicEnv(): PublicEnv {
   if (!parsed.success) {
     const missing = parsed.error.issues.map((i) => i.path.join(".")).join(", ");
     throw new Error(
-      `Configuration incomplete : ${missing}. Copiez .env.example vers .env.local et remplissez les valeurs.`,
+      `Configuration incomplete : ${missing}.\n` +
+        "En local : copiez .env.example vers .env.local et remplissez les valeurs.\n" +
+        "Sur Vercel : Project Settings > Environment Variables, pour chaque " +
+        "environnement (Production, Preview, Development), puis redeployez. " +
+        "Les variables NEXT_PUBLIC_ sont lues au moment du build : un simple " +
+        "redemarrage ne suffit pas, il faut un nouveau deploiement.",
     );
   }
 

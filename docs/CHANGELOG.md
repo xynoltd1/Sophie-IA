@@ -3,6 +3,22 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.1.4] — 2026-09-07 — Correctif de déploiement
+
+### Corrigé
+- Le build échouait au prérendu des pages sous `(app)` lorsque les variables
+  d'environnement Supabase étaient absentes. Ces pages dépendent de la session et ne
+  doivent jamais être prérendues : `export const dynamic = "force-dynamic"` est ajouté sur
+  le layout `(app)`, la page racine et l'onboarding. Le build passe désormais sans aucune
+  variable d'environnement.
+- Message d'erreur de configuration : il indique maintenant quoi faire sur Vercel, et
+  rappelle qu'une variable `NEXT_PUBLIC_` exige un nouveau déploiement.
+
+### Modifié
+- `engines.node` passe de `>=20.9.0` à `22.x` : une plage ouverte laissait Vercel changer
+  de version majeure sans préavis.
+- `DEPLOYMENT.md` : section de dépannage.
+
 ## [0.1.3] — 2026-09-07 — Organisations d'essai
 
 **État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
