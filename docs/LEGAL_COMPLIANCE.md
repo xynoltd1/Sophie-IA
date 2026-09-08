@@ -129,8 +129,13 @@ affirmations.
 - **Fonction** : exécution des pages et des Route Handlers, journaux de requêtes.
 - **Données concernées** : données en transit, adresses IP, journaux techniques. Pas de
   stockage durable de données métier.
-- **Région** : à configurer sur les fonctions ; par défaut, l'exécution peut être répartie.
-  **À fixer explicitement sur une région européenne.**
+- **Région** : `vercel.json` fixe `fra1` (Francfort) depuis la version 0.1.5.
+  **Constat du 2026-09-07** : le projet s'exécutait à `iad1` (Washington), donc hors UE.
+  Corrigé au niveau du dépôt ; à confirmer dans *Project Settings → Functions*.
+- **Point ouvert** : le middleware Next.js s'exécute sur le réseau de périphérie, réparti
+  mondialement, indépendamment de la région des fonctions. Il ne traite que les cookies de
+  session et le jeton d'authentification, sans donnée métier. À faire confirmer et
+  consigner avant production.
 - **Documents nécessaires** : DPA du prestataire ; liste de ses sous-traitants.
 - **À vérifier avant production** : région d'exécution des fonctions ; durée de rétention
   des journaux ; absence de données personnelles dans les journaux applicatifs (à

@@ -3,6 +3,18 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.1.5] — 2026-09-07 — Région d'exécution européenne
+
+### Ajouté
+- `vercel.json` : `"regions": ["fra1"]`. Le projet s'exécutait à `iad1` (Washington), donc
+  hors UE, ce qui contredisait l'engagement du registre des sous-traitants (L2).
+- `DEPLOYMENT.md` : tableau des réglages Vercel à vérifier, diagnostic du taux d'erreur
+  à 100 %.
+
+### Modifié
+- `LEGAL_COMPLIANCE.md` : entrée Vercel du registre mise à jour avec le constat et la
+  correction ; le cas du middleware en périphérie est consigné comme point ouvert.
+
 ## [0.1.4] — 2026-09-07 — Correctif de déploiement
 
 ### Corrigé

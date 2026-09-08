@@ -89,6 +89,33 @@ Puis : migrations appliquées d'abord en staging, RLS vérifié sur les nouvelle
 
 ---
 
+## Réglages Vercel à vérifier
+
+### Région d'exécution — important
+
+`vercel.json` fixe `"regions": ["fra1"]` (Francfort). Ce n'est pas une préférence de
+latence : le registre des sous-traitants (`LEGAL_COMPLIANCE.md`, point L2) engage
+Sophie IA sur un traitement en Union européenne. Une exécution par défaut à `iad1`
+(Washington) placerait les données de vos clients hors UE.
+
+Le fichier ne suffit pas toujours : vérifiez aussi *Project Settings → Functions →
+Function Region*, et que le projet Supabase associé est bien lui aussi en région
+européenne.
+
+**Point ouvert, à ne pas confondre** : le middleware Next.js s'exécute sur le réseau de
+périphérie, réparti mondialement, indépendamment de cette région. Il ne manipule que les
+cookies de session et le jeton, sans donnée métier — mais ce point doit être vérifié et
+consigné au registre avant la production (L2).
+
+### Autres réglages
+
+| Réglage | Recommandé | Pourquoi |
+|---|---|---|
+| Function Region | `fra1` | conformité, voir ci-dessus |
+| Skew Protection | activé | évite qu'un navigateur sur l'ancienne version appelle la nouvelle API pendant un déploiement |
+| Deployment Protection | activé | protège les previews — **mais bloquera les webhooks en Phase 4** : il faudra exempter les routes `/api/webhooks/*` |
+| Node.js Version | piloté par `package.json` (`22.x`) | l'avertissement affiché signale simplement que le réglage projet (24.x) est surchargé par le dépôt. C'est le comportement voulu |
+
 ## Dépannage du déploiement
 
 ### Le build échoue sur « Error occurred prerendering page »
@@ -117,6 +144,15 @@ un choix explicite.
 `2 packages have install scripts not yet covered by allowScripts` (esbuild,
 unrs-resolver). Ce sont des dépendances de développement légitimes, tirées par Vitest et
 ESLint. L'avertissement est informatif et n'empêche pas le build.
+
+### Taux d'erreur à 100 % après un déploiement réussi
+
+Le build passe mais chaque requête échoue. Cause quasi certaine : les variables
+d'environnement Supabase manquent. Le middleware s'exécute sur **toutes** les requêtes et
+appelle Supabase ; sans configuration, il lève une erreur avant même d'atteindre une page.
+
+C'est cohérent avec un build vert depuis la version 0.1.4 : le build ne dépend plus des
+variables, l'exécution si.
 
 ### Vérifier qu'un déploiement fonctionne
 

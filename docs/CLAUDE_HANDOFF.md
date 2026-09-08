@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.1.4 · **Phase 0 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.1.5 · **Phase 0 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -187,7 +187,9 @@ fournisseur de téléphonie et de voix — à trancher pendant la Phase 3, avant
 - durées de conservation de la transcription, du résumé, des contacts, des journaux
   d'audit et des comptes résiliés (ADR-018) ;
 - région d'hébergement des fournisseurs de téléphonie, de voix et d'IA — inconnue tant
-  qu'ils ne sont pas choisis (ADR-017).
+  qu'ils ne sont pas choisis (ADR-017) ;
+- région d'exécution du middleware Next.js sur le réseau de périphérie de Vercel : à
+  vérifier et consigner avant production.
 
 Si une session future a besoin d'une de ces valeurs, la réponse correcte est de la
 demander, pas de la choisir.
