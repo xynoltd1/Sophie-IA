@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.2.9 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.2.10 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -158,7 +158,10 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
 6. **Ne jamais rediriger une page vers elle-même.** Une redirection calculée depuis un
    état stocké doit être comparée à la route courante avant d'être suivie ; sinon la
    boucle apparaît en production sous forme d'exception opaque. Vu en vrai le 2026-09-08.
-7. **Toute page dépendant de la session doit porter `export const dynamic =
+7. **Un fichier `"use server"` n'exporte que des fonctions asynchrones.** Un objet ou une
+   constante exportés y passent le build et le typecheck, puis échouent au moment où
+   l'utilisateur soumet le formulaire. Couvert par `tests/server-actions.test.ts`.
+8. **Toute page dépendant de la session doit porter `export const dynamic =
    "force-dynamic"`.** Sans cela, Next tente de la prérendre au build, où il n'existe ni
    session ni variable d'environnement, et le déploiement échoue. Vérifier ce point à
    chaque nouvelle page sous `(app)`.

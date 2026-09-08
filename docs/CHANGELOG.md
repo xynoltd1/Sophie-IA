@@ -3,6 +3,21 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.10] — 2026-09-08 — Correctif : export interdit dans une action serveur
+
+### Corrigé
+- `src/app/onboarding/actions.ts` exportait `SUPPORTED_COUNTRIES`, un objet. Un fichier
+  `"use server"` ne peut exporter que des fonctions asynchrones : Next levait
+  « A "use server" file can only export async functions » **au moment de soumettre le
+  formulaire**, pas au build. C'était la cause réelle de l'erreur après la saisie du nom
+  de l'entreprise, et ce qui empêchait `set_onboarding_step()` de s'exécuter.
+- L'objet n'était utilisé nulle part ; il est supprimé.
+
+### Ajouté
+- `tests/server-actions.test.ts` : vérifie que tout fichier `"use server"` n'exporte que
+  des fonctions asynchrones ou des types. Ce défaut passait le build et le typecheck sans
+  broncher, il n'apparaissait qu'au clic de l'utilisateur.
+
 ## [0.2.9] — 2026-09-08 — Correctif : boucle de redirection dans l'onboarding
 
 ### Corrigé

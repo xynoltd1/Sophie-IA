@@ -22,8 +22,6 @@ const COUNTRIES: Record<string, { callingCode: string; timezone: string; label: 
 // (voir docs/SECURITY.md). Ajouter un pays est une decision juridique avant
 // d'etre une ligne de code.
 
-export const SUPPORTED_COUNTRIES = COUNTRIES;
-
 export interface OnboardingState {
   error?: string;
   fieldErrors?: Partial<Record<"name" | "countryCode", string>>;
