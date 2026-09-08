@@ -16,8 +16,14 @@ export default async function OnboardingPage() {
   const { activeOrganization } = await requireSession();
 
   // L'entreprise existe déjà : on reprend l'onboarding là où il s'est arrêté.
-  if (activeOrganization) {
-    redirect(STEP_ROUTES[activeOrganization.onboarding_step]);
+  //
+  // Le test sur la destination n'est pas une precaution theorique : si l'etape
+  // enregistree est encore ORGANIZATION, sa route est cette page meme, et la
+  // rediriger vers elle-meme provoque une boucle infinie que Next transforme en
+  // « Application error ». Une page ne se redirige jamais vers elle-meme.
+  const destination = activeOrganization ? STEP_ROUTES[activeOrganization.onboarding_step] : null;
+  if (destination && destination !== "/onboarding") {
+    redirect(destination);
   }
 
   return (

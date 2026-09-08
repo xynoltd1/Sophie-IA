@@ -3,6 +3,17 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.9] — 2026-09-08 — Correctif : boucle de redirection dans l'onboarding
+
+### Corrigé
+- `/onboarding` redirigeait vers la route de l'étape courante. Quand cette étape était
+  encore `ORGANIZATION`, cette route **était cette page elle-même** : boucle infinie,
+  transformée par Next en « Application error » après la création de l'entreprise. Une
+  page ne se redirige plus jamais vers elle-même, ni dans la page ni dans la garde d'étape.
+- L'échec de `set_onboarding_step()` était ignoré silencieusement, ce qui laissait
+  l'onboarding bloqué à la première étape sans message. Il est désormais signalé.
+- Test de régression : aucune étape ne partage sa route avec une autre.
+
 ## [0.2.8] — 2026-09-08 — Correctif : variables facultatives en production
 
 ### Corrigé

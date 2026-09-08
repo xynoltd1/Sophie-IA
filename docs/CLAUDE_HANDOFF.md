@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.2.8 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.2.9 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -155,7 +155,10 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
    `undefined`.** Toute validation de configuration doit convertir les chaînes vides en
    `undefined`, sinon une variable facultative fait échouer l'application en production
    alors que le développement fonctionne. Vu en vrai le 2026-09-08.
-6. **Toute page dépendant de la session doit porter `export const dynamic =
+6. **Ne jamais rediriger une page vers elle-même.** Une redirection calculée depuis un
+   état stocké doit être comparée à la route courante avant d'être suivie ; sinon la
+   boucle apparaît en production sous forme d'exception opaque. Vu en vrai le 2026-09-08.
+7. **Toute page dépendant de la session doit porter `export const dynamic =
    "force-dynamic"`.** Sans cela, Next tente de la prérendre au build, où il n'existe ni
    session ni variable d'environnement, et le déploiement échoue. Vérifier ce point à
    chaque nouvelle page sous `(app)`.

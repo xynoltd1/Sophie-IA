@@ -24,8 +24,12 @@ export async function requireStep(step: OnboardingStep): Promise<{
   const reached = ONBOARDING_STEPS.indexOf(activeOrganization.onboarding_step);
   const requested = ONBOARDING_STEPS.indexOf(step);
 
-  if (requested > reached) {
-    redirect(STEP_ROUTES[activeOrganization.onboarding_step]);
+  const destination = STEP_ROUTES[activeOrganization.onboarding_step];
+  const current = STEP_ROUTES[step];
+
+  // Jamais de redirection vers la page courante : ce serait une boucle.
+  if (requested > reached && destination !== current) {
+    redirect(destination);
   }
 
   return { organization: activeOrganization, supabase };

@@ -80,10 +80,19 @@ export async function createOrganization(
   });
 
   // L'organisation existe : on enchaîne sur le métier.
-  await supabase.rpc("set_onboarding_step", {
+  // L'echec de cette etape etait ignore, ce qui laissait l'onboarding bloque a
+  // l'etape ORGANIZATION sans que personne ne le sache.
+  const advanced = await supabase.rpc("set_onboarding_step", {
     org_id: String(data),
     step: "PROFESSION",
   });
+
+  if (advanced.error) {
+    return {
+      error:
+        "Votre entreprise est bien enregistrée, mais l'étape suivante n'a pas pu être ouverte. Rechargez la page pour continuer.",
+    };
+  }
 
   redirect("/onboarding/metier");
 }
