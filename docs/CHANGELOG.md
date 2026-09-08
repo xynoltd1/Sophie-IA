@@ -3,6 +3,68 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.5] — 2026-09-08 — Isolation multi-tenant vérifiée
+
+Pas de changement de code. Cette entrée consigne un jalon.
+
+### Vérifié
+- La suite d'isolation multi-tenant s'est exécutée pour la première fois contre une vraie
+  base Supabase : 50 tests passés, aucun ignoré. L'isolation entre organisations est
+  désormais prouvée, et non plus seulement conçue.
+- Les douze migrations sont appliquées et confirmées par les scripts de vérification.
+
+### Notes
+- Reste ouvert : `src/types/database.ts` est encore écrit à la main et doit être régénéré
+  depuis le schéma réel (ADR-012).
+
+## [0.2.4] — 2026-09-08 — Correctif : privilèges de table manquants
+
+**Bug révélé par la première exécution réelle des tests d'isolation.**
+
+### Corrigé
+- Migration `0012_table_grants` : les policies RLS existaient, mais les `GRANT` au niveau
+  des tables manquaient. Postgres vérifie le privilège **avant** la policy — résultat,
+  `permission denied for table organizations` pour tout utilisateur connecté, y compris
+  sur ses propres données. Nous nous reposions sur les privilèges par défaut de Supabase,
+  qui ne se sont pas appliqués. Chaque privilège est désormais déclaré explicitement, et
+  les privilèges par défaut sont fixés pour les tables futures.
+- Le test « s'ajouter comme membre d'un autre tenant est refusé » passait pour la mauvaise
+  raison : il attendait le code `42501`, que renvoient aussi bien un refus RLS qu'un
+  privilège manquant. Il vérifie maintenant que le refus vient bien de RLS.
+
+### Ajouté
+- Quatre contrôles **positifs** dans la suite d'isolation : un membre lit bien sa propre
+  organisation, sa propre équipe, ses activités et le catalogue des métiers. Sans eux, une
+  base totalement verrouillée ressemblait à un succès — tous les contrôles négatifs
+  passaient, pour la mauvaise raison.
+- `01_verify_schema.sql` détecte les tables ayant des policies mais aucun privilège.
+
+## [0.2.3] — 2026-09-08 — Chargement fiable de la configuration de test
+
+### Corrigé
+- Les variables de `.env.local` étaient injectées dans `process.env` depuis le fichier de
+  configuration Vitest. Or les tests s'exécutent dans des processus séparés : la mutation
+  ne leur parvenait pas de façon fiable, et la suite d'isolation se marquait « ignorée »
+  malgré une configuration correcte. Elles passent désormais par `test.env`.
+
+### Ajouté
+- `npm run check:env` : diagnostic de `.env.local` — encodage UTF-16, BOM, espaces autour
+  du signe égal, guillemets, clés absentes ou trop courtes. N'affiche jamais la valeur
+  d'une clé, seulement son nom et sa longueur.
+
+## [0.2.2] — 2026-09-08 — Correctif : configuration des tests
+
+### Corrigé
+- Vitest ne lit pas `.env.local` (contrairement à Next.js). Les variables
+  `SUPABASE_TEST_*` étaient donc invisibles pour la suite d'isolation, qui se marquait
+  « ignorée » alors que la configuration était présente — un faux négatif silencieux sur
+  un contrôle de sécurité. `vitest.config.ts` charge désormais explicitement le fichier.
+- Message plus explicite quand la suite est réellement non configurée.
+
+### Ajouté
+- `tests/env-loading.test.ts` : vérifie que les variables déclarées dans `.env.local`
+  arrivent bien dans `process.env`.
+
 ## [0.2.1] — 2026-09-07 — Scripts de vérification
 
 ### Ajouté

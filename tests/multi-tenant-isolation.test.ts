@@ -84,6 +84,54 @@ suite("isolation multi-tenant", () => {
     }
   });
 
+  // --- Contrôles positifs -------------------------------------------------
+  // Sans eux, un verrouillage total de la base ressemblerait à un succès :
+  // tous les contrôles négatifs passeraient, pour la mauvaise raison.
+  // C'est exactement le bug qu'a révélé la première exécution réelle.
+
+  it("un membre lit bien sa propre organisation", async () => {
+    const { data, error } = await alice.client
+      .from("organizations")
+      .select("id, name")
+      .eq("id", alice.organizationId);
+
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+  });
+
+  it("un membre lit bien sa propre équipe", async () => {
+    const { data, error } = await alice.client
+      .from("organization_members")
+      .select("user_id, role")
+      .eq("organization_id", alice.organizationId);
+
+    expect(error).toBeNull();
+    expect(data?.[0]?.role).toBe("OWNER");
+  });
+
+  it("un membre lit bien les activités de son organisation", async () => {
+    const { data, error } = await alice.client
+      .from("activities")
+      .select("id, type")
+      .eq("organization_id", alice.organizationId);
+
+    expect(error).toBeNull();
+    // create_organization() écrit une activité ORGANIZATION_CREATED.
+    expect((data ?? []).length).toBeGreaterThan(0);
+  });
+
+  it("un membre lit bien le catalogue des métiers", async () => {
+    const { data, error } = await alice.client
+      .from("profession_templates")
+      .select("slug")
+      .eq("is_published", true);
+
+    expect(error).toBeNull();
+    expect((data ?? []).length).toBeGreaterThanOrEqual(12);
+  });
+
+  // --- Contrôles négatifs ---------------------------------------------------
+
   it("chaque utilisateur ne voit que sa propre organisation", async () => {
     const { data, error } = await alice.client.rpc("my_organizations");
     expect(error).toBeNull();
@@ -130,7 +178,11 @@ suite("isolation multi-tenant", () => {
     });
 
     expect(error).not.toBeNull();
-    expect(error?.code).toBe("42501"); // violation de policy RLS
+    expect(error?.code).toBe("42501");
+    // Les deux causes donnent 42501. On exige que le refus vienne bien de RLS
+    // et non d'un privilège de table manquant, sinon ce test passerait alors
+    // que la base est simplement inaccessible.
+    expect(error?.message).not.toContain("permission denied for table");
   });
 
   it("les membres d'un autre tenant ne sont pas listables", async () => {
@@ -221,7 +273,10 @@ suite("isolation multi-tenant", () => {
 
 if (!configured) {
   describe("isolation multi-tenant", () => {
-    it("suite ignoree : variables SUPABASE_TEST_* absentes", () => {
+    it("suite ignoree : variables SUPABASE_TEST_* absentes de .env.local", () => {
+      // Ce test passe volontairement : il signale une configuration absente,
+      // pas un echec. Renseignez SUPABASE_TEST_URL, SUPABASE_TEST_ANON_KEY et
+      // SUPABASE_TEST_SERVICE_ROLE_KEY dans .env.local pour executer la suite.
       expect(configured).toBe(false);
     });
   });

@@ -126,4 +126,25 @@ where n.nspname = 'public'
   -- audit_logs n a volontairement aucune policy : acces service_role uniquement.
   and c.relname <> 'audit_logs'
 
+union all
+
+-- 6. Controle de securite : une table avec des policies mais sans privilege
+--    est totalement inaccessible. Postgres verifie le GRANT AVANT la policy.
+--    Symptome : « permission denied for table X » meme sur ses propres donnees.
+select
+  '0012',
+  'privilege',
+  'authenticated ne peut pas lire ' || c.relname,
+  'MANQUANT'
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public'
+  and c.relkind = 'r'
+  and c.relname <> 'audit_logs'   -- volontairement inaccessible aux tenants
+  and exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'public' and p.tablename = c.relname and p.cmd in ('SELECT', 'ALL')
+  )
+  and not has_table_privilege('authenticated', c.oid, 'SELECT')
+
 order by 1, 2, 3;

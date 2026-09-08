@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.2.1 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.2.5 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -93,8 +93,14 @@ projet.
 ```
 
 **Règle absolue** : toute nouvelle table portant un `organization_id` reçoit RLS, ses
-policies et son index `(organization_id, …)` **dans la même migration**. Une table sans
-policy est une fuite de données.
+policies, **son `GRANT` à `authenticated`** et son index `(organization_id, …)` dans la
+même migration. Une table sans policy est une fuite de données ; une table sans `GRANT`
+est inaccessible même à son propriétaire — les deux erreurs se sont produites, la seconde
+a été trouvée par les tests.
+
+**Écrire des contrôles positifs autant que négatifs.** La suite d'isolation ne contenait
+que des assertions « X ne doit pas voir Y ». Une base entièrement verrouillée les faisait
+toutes passer. Quatre contrôles positifs ont été ajoutés ; garder ce réflexe.
 
 ## Variables d'environnement
 
@@ -133,13 +139,15 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
 
 ## Problèmes connus
 
-1. **Les tests d'isolation n'ont jamais tourné.** Ils sont marqués « ignorés », jamais
-   verts, tant que `SUPABASE_TEST_*` est absent — mais tant qu'ils n'ont pas tourné contre
-   une vraie base, l'isolation est *conçue*, pas *prouvée*. C'est la première chose à faire
-   dès qu'un projet Supabase existe.
-2. **Aucune migration n'a été appliquée à une vraie base.** Le SQL est relu, pas exécuté.
-   Attendez-vous à un ou deux ajustements au premier `db push`.
-3. **`src/types/database.ts` est manuel** et peut dériver du schéma réel.
+1. ~~Les tests d'isolation n'ont jamais tourné.~~ **Résolu le 2026-09-08** : les douze
+   contrôles d'isolation et les quatre contrôles positifs s'exécutent contre une vraie base
+   Supabase. Ils ont révélé la migration `0012` manquante (privilèges de table).
+2. ~~Aucune migration n'a été appliquée.~~ **Résolu** : les douze migrations sont
+   appliquées et vérifiées par `supabase/checks/01_verify_schema.sql`.
+3. **`src/types/database.ts` est manuel** et peut dériver du schéma réel. À régénérer avec
+   `npx supabase gen types typescript --project-id <ref> > src/types/database.ts`, puis
+   corriger les écarts que `npm run typecheck` remontera. C'est désormais le principal
+   point ouvert côté technique.
 4. Le contrôle « toute table publique a RLS » dans la suite de tests s'appuie sur une
    fonction utilitaire absente par défaut ; il s'ignore silencieusement. À remplacer par une
    vraie vérification en Phase 8.
@@ -152,14 +160,15 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
 
 ## Prochaines tâches recommandées
 
-**Avant la Phase 1, dans cet ordre :**
+**Fait le 2026-09-08** : douze migrations appliquées, scripts de vérification verts,
+suite d'isolation exécutée avec succès contre une vraie base.
 
-1. Appliquer les onze migrations, puis exécuter `supabase/checks/01_verify_schema.sql` et
-   `02_verify_content.sql` pour confirmer qu'aucun objet ne manque.
-2. Renseigner `SUPABASE_TEST_*` et exécuter `npm run test`. Les dix tests d'isolation
-   doivent passer. **Ne pas commencer la Phase 1 avant.**
-3. Régénérer `src/types/database.ts` avec `supabase gen types`.
-4. Créer le dépôt GitHub et pousser (voir `DEPLOYMENT.md`).
+**Avant la Phase 2 :**
+
+1. Régénérer `src/types/database.ts` avec `supabase gen types` et corriger les écarts.
+2. Renseigner les variables d'environnement sur Vercel et vérifier que le taux d'erreur
+   retombe à zéro.
+3. Pousser sur GitHub depuis un dépôt cloné, pas depuis un dossier extrait d'archive.
 
 **Phase 2 — CRM (cible 0.3.0)**
 

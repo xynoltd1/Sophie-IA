@@ -1,6 +1,6 @@
 {
   "name": "sophie-ia",
-  "version": "0.2.1",
+  "version": "0.2.5",
   "private": true,
   "description": "Sophie IA — secretaire virtuelle pour artisans et professionnels de terrain",
   "engines": {
@@ -13,6 +13,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "check:env": "node scripts/check-env.mjs",
     "test:watch": "vitest",
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
