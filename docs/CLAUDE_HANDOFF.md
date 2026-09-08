@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.2.5 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.2.6 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de

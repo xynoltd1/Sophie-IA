@@ -11,6 +11,24 @@ import { updateSession } from "@/lib/supabase/middleware";
 const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/api/health"];
 
 export async function middleware(request: NextRequest) {
+  // Sans configuration Supabase, chaque page leve une exception et l'utilisateur
+  // ne voit qu'un « Application error » opaque. On preferele dire clairement,
+  // avec le nom des variables manquantes.
+  const missing = [
+    !process.env.NEXT_PUBLIC_SUPABASE_URL && "NEXT_PUBLIC_SUPABASE_URL",
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  ].filter(Boolean);
+
+  if (missing.length > 0) {
+    return new NextResponse(
+      `Configuration incomplete.\n\nVariables manquantes : ${missing.join(", ")}\n\n` +
+        "Sur Vercel : Project Settings > Environment Variables, puis relancez un " +
+        "deploiement en decochant « Use existing Build Cache ».\n" +
+        "Diagnostic detaille : /api/health",
+      { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } },
+    );
+  }
+
   const { response, user } = await updateSession(request);
   const { pathname } = request.nextUrl;
 

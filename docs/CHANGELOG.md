@@ -3,6 +3,22 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.6] — 2026-09-08 — Diagnostic de configuration
+
+### Corrigé
+- `/onboarding` renvoyait vers `/app` au lieu de reprendre l'onboarding à l'étape en
+  cours : une modification de la Phase 1 n'avait pas été appliquée. Le build le signalait
+  par un avertissement `'STEP_ROUTES' is defined but never used`, passé inaperçu.
+- `/api/health` affichait toujours `version: 0.1.0` et `environment: ""` : la version est
+  désormais lue depuis `package.json`, et l'environnement indique `non defini` plutôt
+  qu'une chaîne vide trompeuse. Ces deux valeurs m'avaient conduit à un faux diagnostic.
+
+### Ajouté
+- `/api/health` indique quelles variables d'environnement sont présentes — jamais leur
+  valeur — et renvoie 503 si l'une manque.
+- Le middleware affiche un message lisible nommant les variables manquantes, au lieu de
+  laisser une exception opaque « Application error ».
+
 ## [0.2.5] — 2026-09-08 — Isolation multi-tenant vérifiée
 
 Pas de changement de code. Cette entrée consigne un jalon.

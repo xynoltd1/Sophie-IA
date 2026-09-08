@@ -15,9 +15,10 @@ export const metadata = { title: "Votre entreprise — Sophie IA" };
 export default async function OnboardingPage() {
   const { activeOrganization } = await requireSession();
 
-  // L’onboarding complet (metier, services, horaires, agenda, Sophie, appels)
-  // est construit en Phase 1. La Phase 0 s’arrete a la creation du tenant.
-  if (activeOrganization) redirect("/app");
+  // L'entreprise existe déjà : on reprend l'onboarding là où il s'est arrêté.
+  if (activeOrganization) {
+    redirect(STEP_ROUTES[activeOrganization.onboarding_step]);
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-12">
