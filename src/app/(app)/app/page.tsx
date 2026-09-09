@@ -2,7 +2,8 @@ import { requireOrganization } from "@/lib/auth/session";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { onboardingProgress } from "@/lib/org/onboarding";
-import { getDashboardCounts } from "@/lib/crm/queries";
+import { getDashboardCounts, getTodayAppointments } from "@/lib/crm/queries";
+import { APPOINTMENT_STATUS_LABELS, formatTime, needsApproval } from "@/lib/crm/agenda";
 import Link from "next/link";
 import { STEP_ROUTES } from "@/app/onboarding/steps";
 
@@ -24,6 +25,7 @@ export default async function HomePage() {
     activeOrganization.organization_id,
   );
   const aTraiter = counts.urgent_leads + counts.new_leads + counts.overdue_tasks;
+  const rendezVous = await getTodayAppointments(activeOrganization.organization_id);
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0];
 
   return (
@@ -133,15 +135,43 @@ export default async function HomePage() {
 
       <section>
         <SectionTitle>Aujourd’hui</SectionTitle>
-        <EmptyState
-          title="Aucun rendez-vous"
-          description="Connectez votre agenda Google pour voir vos interventions du jour."
-          action={
-            <Link href="/app/plus" className="font-medium text-signal underline underline-offset-4">
-              Voir les paramètres
-            </Link>
-          }
-        />
+        {rendezVous.length === 0 ? (
+          <EmptyState
+            title="Aucun rendez-vous"
+            description="Vos interventions du jour apparaîtront ici."
+            action={
+              <Link href="/app/agenda" className="font-medium text-signal underline underline-offset-4">
+                Ouvrir l’agenda
+              </Link>
+            }
+          />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {rendezVous.map((rdv) => (
+              <li key={rdv.id}>
+                <Link href="/app/agenda" className="block">
+                  <Sheet
+                    tone={needsApproval(rdv.status) ? "attention" : "neutral"}
+                    className="flex items-start justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{rdv.title}</p>
+                      <p className="text-sm text-ink-soft">
+                        {formatTime(rdv.starts_at)} – {formatTime(rdv.ends_at)}
+                        {rdv.contact_name ? ` · ${rdv.contact_name}` : ""}
+                      </p>
+                    </div>
+                    {needsApproval(rdv.status) ? (
+                      <span className="shrink-0 text-sm text-attention">
+                        {APPOINTMENT_STATUS_LABELS[rdv.status]}
+                      </span>
+                    ) : null}
+                  </Sheet>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

@@ -1,7 +1,12 @@
 import "server-only";
 
 import { createServerSupabase } from "@/lib/supabase/server";
-import type { DashboardCounts, LeadRow, SearchResultRow } from "@/types/database";
+import type {
+  DashboardCounts,
+  DayAppointmentRow,
+  LeadRow,
+  SearchResultRow,
+} from "@/types/database";
 
 /**
  * Compteurs de l'accueil.
@@ -77,4 +82,31 @@ export async function searchCrm(
   });
 
   return (data ?? []) as SearchResultRow[];
+}
+
+/**
+ * Rendez-vous du jour, pour l'accueil.
+ *
+ * La date est calculée en base, dans le fuseau de l'entreprise : « aujourd'hui »
+ * à Bruxelles n'est pas « aujourd'hui » en UTC pendant une partie de la journée.
+ */
+export async function getTodayAppointments(
+  organizationId: string,
+): Promise<DayAppointmentRow[]> {
+  const supabase = await createServerSupabase();
+
+  const jour = new Intl.DateTimeFormat("fr-CA", {
+    timeZone: "Europe/Brussels",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const { data, error } = await supabase.rpc("appointments_for_day", {
+    org_id: organizationId,
+    jour,
+  });
+
+  if (error) return [];
+  return (data ?? []) as DayAppointmentRow[];
 }

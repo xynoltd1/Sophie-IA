@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.3.2 · **Phase 2 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.4.0 · **Phase 3 terminée sauf Google Calendar** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de

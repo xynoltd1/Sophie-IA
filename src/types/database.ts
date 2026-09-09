@@ -310,3 +310,47 @@ export interface SearchResultRow {
   status: string;
   updated_at: string;
 }
+
+export type AppointmentStatus =
+  | "HELD"
+  | "PENDING_APPROVAL"
+  | "CONFIRMED"
+  | "CHANGE_PROPOSED"
+  | "REJECTED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "NO_SHOW";
+
+export interface AppointmentRow {
+  id: string;
+  organization_id: string;
+  contact_id: string | null;
+  lead_id: string | null;
+  service_id: string | null;
+  assigned_member_id: string | null;
+  title: string;
+  notes: string | null;
+  starts_at: string;
+  ends_at: string;
+  status: AppointmentStatus;
+  hold_expires_at: string | null;
+  address_line1: string | null;
+  postal_code: string | null;
+  city: string | null;
+  external_event_id: string | null;
+  external_provider: string | null;
+  source: EntitySource;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Ligne renvoyée par public.appointments_for_day(). */
+export interface DayAppointmentRow {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  status: AppointmentStatus;
+  contact_name: string | null;
+  city: string | null;
+}

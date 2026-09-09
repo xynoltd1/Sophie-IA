@@ -3,6 +3,34 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.4.0] — 2026-09-09 — Phase 3 : agenda et disponibilités
+
+**État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
+
+### Ajouté
+- Migration `0015_appointments` : table `appointments` avec les huit états du cycle de vie,
+  et surtout **une contrainte d'exclusion PostgreSQL** qui rend la double réservation
+  impossible. Deux réservations simultanées : la seconde échoue en base, quelles que
+  soient les conditions de course côté application. L'IA n'est jamais le verrou.
+- Holds avec expiration, libérés automatiquement avant chaque réservation : un appel
+  interrompu ne bloque plus un créneau indéfiniment.
+- `book_appointment()` et `set_appointment_status()` : chemin unique de création et de
+  changement d'état, traduisant le refus de la contrainte en message compréhensible.
+- Migration `0016_availability` : `available_slots()` calcule les créneaux réellement
+  libres à partir des horaires, des rendez-vous, des holds, des absences et de la marge
+  entre interventions. Rien n'est estimé côté application.
+- `calendar_connections` et la vue `calendar_status` : la structure de l'intégration
+  Google Calendar, avec les jetons hors de portée du navigateur.
+- Écran Agenda : réservation avec choix du créneau parmi les disponibilités réelles,
+  rendez-vous groupés par jour, actions selon l'état.
+- Le bloc « Aujourd'hui » de l'accueil affiche les vrais rendez-vous du jour.
+
+### Notes
+- Google Calendar n'est pas encore branché : il demande un compte Google Cloud et des
+  identifiants OAuth. L'écran le dit explicitement plutôt que de laisser croire que les
+  créneaux tiennent compte d'un agenda externe.
+- Un rendez-vous annulé n'est jamais supprimé (section 21).
+
 ## [0.3.2] — 2026-09-09 — Fiche contact, tâches et recherche
 
 Fin de la Phase 2. **État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
