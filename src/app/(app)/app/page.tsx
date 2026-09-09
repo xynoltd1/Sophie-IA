@@ -6,6 +6,7 @@ import { getDashboardCounts } from "@/lib/crm/queries";
 import Link from "next/link";
 import { STEP_ROUTES } from "@/app/onboarding/steps";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Accueil — Sophie IA" };
 
 /**
@@ -65,13 +66,27 @@ export default async function HomePage() {
       ) : null}
 
       <section>
-        <SectionTitle>À traiter</SectionTitle>
+        <SectionTitle>Ce qui presse</SectionTitle>
         {countsError ? (
           <ErrorState description="Les compteurs n’ont pas pu être chargés. Rechargez la page." />
         ) : aTraiter === 0 ? (
           <EmptyState
             title="Rien ne vous attend"
-            description="Les urgences, les prospects à qualifier et les tâches en retard apparaîtront ici."
+            description={
+              counts.open_leads > 0
+                ? `Vos ${counts.open_leads} prospect${counts.open_leads > 1 ? "s" : ""} en cours n’attendent rien de vous dans l’immédiat.`
+                : "Les urgences, les nouveaux prospects et les tâches en retard apparaîtront ici."
+            }
+            action={
+              counts.open_leads > 0 ? (
+                <Link
+                  href="/app/prospects"
+                  className="font-medium text-signal underline underline-offset-4"
+                >
+                  Voir les prospects
+                </Link>
+              ) : undefined
+            }
           />
         ) : (
           <ul className="flex flex-col gap-2">

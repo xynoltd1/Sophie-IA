@@ -65,7 +65,12 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
         <section>
           <SectionTitle>Client</SectionTitle>
           <Sheet className="flex flex-col gap-1">
-            <p className="font-medium">{contactLabel(lead.contacts)}</p>
+            <Link
+              href={`/app/contacts/${lead.contacts.id}`}
+              className="font-medium underline underline-offset-4"
+            >
+              {contactLabel(lead.contacts)}
+            </Link>
             {lead.contacts.phone ? (
               <a
                 href={`tel:${lead.contacts.phone.replace(/\s/g, "")}`}

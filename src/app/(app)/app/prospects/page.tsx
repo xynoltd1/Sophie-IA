@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireOrganization } from "@/lib/auth/session";
-import { listLeads } from "@/lib/crm/queries";
+import { listLeads, searchCrm } from "@/lib/crm/queries";
+import { SearchBox } from "./search-box";
+import { Suspense } from "react";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { LEAD_STATUS_LABELS, contactLabel, isOpen } from "@/lib/crm/pipeline";
@@ -20,10 +22,14 @@ const FILTRES = [
 export default async function ProspectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filtre?: string }>;
+  searchParams: Promise<{ filtre?: string; q?: string }>;
 }) {
   const { activeOrganization } = await requireOrganization();
-  const { filtre = "ouverts" } = await searchParams;
+  const { filtre = "ouverts", q } = await searchParams;
+  const recherche = q?.trim() ?? "";
+  const resultats = recherche
+    ? await searchCrm(activeOrganization.organization_id, recherche)
+    : [];
 
   const { leads, error } = await listLeads(activeOrganization.organization_id, {
     onlyOpen: filtre !== "tous",
@@ -47,6 +53,40 @@ export default async function ProspectsPage({
         </Link>
       </div>
 
+      <Suspense fallback={<div className="min-h-12" />}>
+        <SearchBox />
+      </Suspense>
+
+      {recherche ? (
+        <section>
+          {resultats.length === 0 ? (
+            <EmptyState
+              title="Aucun résultat"
+              description={`Rien ne correspond à « ${recherche} ». Essayez un nom, une ville ou quelques chiffres du numéro.`}
+            />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {resultats.map((item) => (
+                <li key={`${item.kind}-${item.id}`}>
+                  <Link
+                    href={item.kind === "contact" ? `/app/contacts/${item.id}` : `/app/prospects/${item.id}`}
+                    className="block"
+                  >
+                    <Sheet className="flex flex-col gap-0.5">
+                      <span className="font-medium">{item.title}</span>
+                      <span className="text-sm text-ink-soft">
+                        {item.kind === "contact" ? "Client" : "Demande"}
+                        {item.subtitle ? ` · ${item.subtitle}` : ""}
+                      </span>
+                    </Sheet>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : (
+      <>
       <nav aria-label="Filtrer les prospects" className="-mx-4 overflow-x-auto px-4">
         <ul className="flex gap-2">
           {FILTRES.map((item) => {
@@ -108,6 +148,8 @@ export default async function ProspectsPage({
             </li>
           ))}
         </ul>
+      )}
+      </>
       )}
     </div>
   );

@@ -3,6 +3,43 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.3.2] — 2026-09-09 — Fiche contact, tâches et recherche
+
+Fin de la Phase 2. **État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
+
+### Ajouté
+- Fiche contact : identité, appel direct, prospects du client, tâches, coordonnées
+  modifiables. La structure de l'historique est celle qui accueillera les appels, les SMS
+  et les rendez-vous aux phases suivantes.
+- Tâches rattachées à un contact : création avec échéance facultative, case à cocher, mise
+  en évidence des retards. Elles alimentent les compteurs de l'accueil.
+- Recherche globale sur l'écran Prospects : nom, entreprise, ville, et téléphone normalisé
+  — taper quelques chiffres d'un numéro suffit. La recherche passe par la barre d'adresse,
+  donc le retour arrière et le rechargement la conservent.
+- Lien du prospect vers la fiche de son client.
+
+### Modifié
+- Le bloc d'accueil « À traiter » devient « Ce qui presse ». Il portait le même nom qu'une
+  étape du pipeline sans recouvrir la même chose, ce qui a réellement induit en erreur :
+  un prospect à l'étape « À traiter » n'apparaît pas dans ce bloc, qui ne compte que les
+  urgences, les nouveaux prospects et les tâches en retard.
+- Un contact complété à la main cesse d'être marqué provisoire.
+
+## [0.3.1] — 2026-09-09 — Lisibilité du bloc « À traiter »
+
+### Corrigé
+- Un résultat vide de `dashboard_counts()` était traité comme un succès à zéro : un échec
+  silencieux s'affichait donc en « Rien ne vous attend » rassurant. Il est désormais
+  signalé comme une erreur.
+- L'accueil porte explicitement `force-dynamic` au lieu de dépendre de l'héritage du
+  layout.
+
+### Modifié
+- Quand rien ne demande d'action mais que des prospects sont en cours, l'accueil le dit et
+  propose d'y aller. Auparavant, un artisan venant de créer un prospect ne voyait aucune
+  trace de son action : le bloc ne compte que les urgences, les nouveaux prospects et les
+  tâches en retard.
+
 ## [0.3.0] — 2026-09-08 — Phase 2 : CRM
 
 **État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**

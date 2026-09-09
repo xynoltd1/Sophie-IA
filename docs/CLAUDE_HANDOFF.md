@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.3.0 · **Phase 2 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.3.2 · **Phase 2 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -58,8 +58,6 @@ npm run build       ✓  14 routes générées
 | Tests d'isolation | écrits et complets, mais **jamais exécutés** faute de base de test |
 
 ## Ce qui n'est pas commencé
-
-Fiche contact détaillée, interface des tâches, recherche globale câblée à l'écran,
 tâches, recherche, Google Calendar, `AvailabilityEngine`, holds, rendez-vous, téléphonie,
 `SophieEngine`, Voice, enregistrement audio, lecteur, transcription, résumé, extraction,
 jobs asynchrones, SMS, notifications, console plateforme, abonnements, observabilité.
@@ -180,7 +178,13 @@ suite d'isolation exécutée avec succès contre une vraie base.
    retombe à zéro.
 3. Pousser sur GitHub depuis un dépôt cloné, pas depuis un dossier extrait d'archive.
 
-**Phase 2 — CRM (cible 0.3.0)**
+**Phase 3 — Agenda (cible 0.4.0)**
+
+Google Calendar (compte Google Cloud et identifiants OAuth à préparer), `AvailabilityEngine`,
+holds avec expiration, rendez-vous et leurs états, prévention de la double réservation par
+contrainte d'exclusion — l'extension `btree_gist` est installée depuis la Phase 0 pour ça.
+
+**Ancienne Phase 2 — CRM (livrée en 0.3.0 à 0.3.2)**
 
 Migrations : `contacts` (déduplication par téléphone normalisé — `normalize_phone()` existe
 déjà), `leads` avec le pipeline `NEW → QUALIFIED → APPOINTMENT → CUSTOMER → WON | LOST`,

@@ -25,10 +25,15 @@ export async function getDashboardCounts(
     contacts_total: 0,
   };
 
-  if (error || !data) return { counts: vide, error: true };
+  if (error) return { counts: vide, error: true };
 
+  // Un tableau vide n'est pas un succes a zero : la fonction renvoie toujours
+  // une ligne. Le traiter comme un resultat valide masquait un echec silencieux
+  // derriere un « Rien ne vous attend » rassurant.
   const row = (Array.isArray(data) ? data[0] : data) as DashboardCounts | undefined;
-  return { counts: row ?? vide, error: false };
+  if (!row) return { counts: vide, error: true };
+
+  return { counts: row, error: false };
 }
 
 export interface LeadWithContact extends LeadRow {
