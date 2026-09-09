@@ -16,39 +16,43 @@
    ========================================================================== */
 
 @theme {
-  /* Couleurs ------------------------------------------------------------- */
-  --color-ink: #16211d; /* texte principal, vert-noir */
-  --color-ink-soft: #55635e; /* texte secondaire */
-  --color-ink-faint: #8a9793; /* texte tertiaire, placeholders */
+  /* Couleurs --------------------------------------------------------------
+     Palette du carnet de chantier. Le fond n'est pas blanc : le blanc pur
+     eblouit en plein soleil, et c'est la que l'artisan regarde son telephone.
+     Un gris-vert tres pale reduit l'eblouissement sans assombrir l'ecran. */
+  --color-ink: #0e1c18; /* texte principal, vert-noir profond */
+  --color-ink-soft: #4d5c56; /* texte secondaire */
+  --color-ink-faint: #7f8d87; /* placeholders */
 
-  --color-paper: #f7f8f7; /* fond d'application */
-  --color-surface: #ffffff; /* cartes, feuilles */
-  --color-line: #dde3df; /* separateurs, bordures */
+  --color-paper: #eef1ed; /* fond d'application */
+  --color-surface: #ffffff; /* blocs poses sur le fond */
+  --color-line: #d6ded8; /* separateurs */
 
-  --color-signal: #0b6e58; /* action principale, Sophie active */
-  --color-signal-soft: #e4f0ec;
-  --color-signal-deep: #085243;
+  --color-signal: #0a6b4f; /* vert de camionnette : action, Sophie active */
+  --color-signal-soft: #dcece5;
+  --color-signal-deep: #064e39;
 
-  --color-urgent: #c22b12; /* urgence : la seule couleur qui crie */
-  --color-urgent-soft: #fbe9e5;
+  --color-urgent: #b3210b; /* la seule couleur qui crie */
+  --color-urgent-soft: #fae5e1;
 
-  --color-attention: #9a5400; /* a valider, en attente */
-  --color-attention-soft: #fbf0e2;
+  --color-attention: #8a4b00; /* a valider, en attente */
+  --color-attention-soft: #f8ecdc;
 
-  /* Typographie ---------------------------------------------------------- */
+  /* Typographie ------------------------------------------------------------ */
   --font-display: "Bricolage Grotesque Variable", "Inter Variable", system-ui, sans-serif;
   --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --text-hero: 2rem;
-  --text-hero--line-height: 1.1;
-  --text-hero--letter-spacing: -0.02em;
+  --text-hero: 1.875rem;
+  --text-hero--line-height: 1.15;
+  --text-hero--letter-spacing: -0.022em;
 
-  /* Formes --------------------------------------------------------------- */
-  --radius-sheet: 1rem;
-  --radius-control: 0.625rem;
+  /* Formes -----------------------------------------------------------------
+     Trois rayons, pas un seul : le rayon encode le role. Les surfaces
+     d'action sont plus serrees que les blocs de contenu. */
+  --radius-sheet: 0.875rem;
+  --radius-control: 0.5rem;
 
-  /* Hauteur de la barre de navigation basse, utilisee pour le padding. */
-  --spacing-navbar: 4.5rem;
+  --spacing-navbar: 5rem;
 }
 
 /* Reglages de base ------------------------------------------------------- */
@@ -84,6 +88,15 @@ h3 {
 /* Les chiffres d'un tableau de bord doivent s'aligner. */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Arete de statut.
+   Dans les metiers de terrain, le statut se lit a une bande de couleur sur la
+   tranche : bons de commande, etiquettes d'atelier, marquages de securite.
+   L'arete porte l'information — un bloc sans arete ne demande rien. */
+.spine {
+  border-left-width: 5px;
+  border-left-style: solid;
 }
 
 @media (prefers-reduced-motion: reduce) {

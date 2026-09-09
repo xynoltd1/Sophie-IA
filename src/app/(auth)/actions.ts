@@ -65,7 +65,7 @@ export async function signUp(
   });
 
   if (error) {
-    return { error: "Ce compte n'a pas pu etre cree. Verifiez l'adresse e-mail et reessayez." };
+    return { error: "Ce compte n'a pas pu être créé. Vérifiez l'adresse e-mail et réessayez." };
   }
 
   redirect("/");

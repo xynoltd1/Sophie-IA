@@ -4,7 +4,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div>
         <p className="font-display text-hero font-semibold">Sophie IA</p>
         <p className="mt-2 text-ink-soft">
-          Elle repond a vos clients pendant que vous travaillez.
+          Elle répond à vos clients pendant que vous travaillez.
         </p>
       </div>
       {children}

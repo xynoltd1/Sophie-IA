@@ -27,16 +27,18 @@ export default async function HomePage() {
           {firstName ? `Bonjour ${firstName}` : "Bonjour"}
         </h1>
         <p className="mt-1 text-ink-soft">
-          Sophie n’est pas encore prete a repondre a vos appels.
+          {configured
+            ? "Votre configuration est terminée. Sophie décrochera dès que la téléphonie sera active."
+            : "Sophie n’est pas encore prête à répondre à vos appels."}
         </p>
       </section>
 
       {!configured ? (
-      <Sheet className="border-attention bg-attention-soft">
-        <p className="font-semibold">Configuration de Sophie</p>
+      <Sheet tone="attention">
+        <p className="font-display text-lg font-semibold">Configuration de Sophie</p>
         <p className="mt-1 text-sm text-ink-soft">
-          {progress} % termine. Il reste votre metier, vos services, vos horaires, votre agenda
-          et vos regles d’appel.
+          {progress} % de la configuration est fait. Il reste votre métier, vos services,
+          vos horaires, votre agenda et vos règles d’appel.
         </p>
         <div
           className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface"
@@ -50,7 +52,7 @@ export default async function HomePage() {
         </div>
         <Link
           href={STEP_ROUTES[activeOrganization.onboarding_step]}
-          className="mt-3 inline-flex min-h-12 items-center rounded-control bg-attention px-4 font-medium text-white"
+          className="mt-4 flex min-h-12 items-center justify-center rounded-control bg-attention px-4 font-medium text-white"
         >
           Reprendre la configuration
         </Link>
@@ -61,7 +63,7 @@ export default async function HomePage() {
         <SectionTitle>À traiter</SectionTitle>
         <EmptyState
           title="Rien ne vous attend"
-          description="Les urgences, les rendez-vous a valider et les taches en retard apparaitront ici des que Sophie prendra ses premiers appels."
+          description="Les urgences, les rendez-vous à valider et les tâches en retard apparaîtront ici dès que Sophie prendra ses premiers appels."
         />
       </section>
 
@@ -72,7 +74,7 @@ export default async function HomePage() {
           description="Connectez votre agenda Google pour voir vos interventions du jour."
           action={
             <Link href="/app/plus" className="font-medium text-signal underline underline-offset-4">
-              Voir les parametres
+              Voir les paramètres
             </Link>
           }
         />

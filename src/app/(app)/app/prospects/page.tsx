@@ -9,7 +9,7 @@ export default function ProspectsPage() {
       <SectionTitle>Prospects</SectionTitle>
       <EmptyState
         title="Aucun prospect pour l’instant"
-        description="Chaque appel qualifie par Sophie creera automatiquement une fiche ici : Nouveau, A traiter, RDV, Client, Termine, Perdu."
+        description="Chaque appel qualifié par Sophie créera automatiquement une fiche ici : Nouveau, À traiter, RDV, Client, Terminé, Perdu."
       />
     </div>
   );

@@ -3,6 +3,39 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.2.12] — 2026-09-08 — Installation PWA et passe de design
+
+### Ajouté
+- Bouton d'installation dans l'en-tête. Sur Android il déclenche l'invite native ; sur
+  iPhone, où aucune API n'existe, il explique le geste (Partager → Sur l'écran d'accueil).
+  Il disparaît une fois l'application installée. Ce n'est pas un confort : sur iOS, les
+  notifications d'une application web ne fonctionnent que si elle a été installée, et
+  « rendez-vous à valider » est le cœur du produit.
+- Icônes dans la navigation basse : un texte se lit, une icône se reconnaît.
+
+### Modifié
+- Palette revue. Le fond passe du blanc à un gris-vert très pâle : le blanc pur éblouit en
+  plein soleil, là où l'artisan regarde son téléphone. Vert plus profond et plus saturé.
+- Hiérarchie visuelle par **arête de statut** : une bande de couleur à gauche des blocs qui
+  demandent une action, rien pour les autres. Remplace des cartes toutes identiques, où
+  « Configuration de Sophie » et « Rien ne vous attend » avaient le même poids.
+- États vides en pointillés et en gris : ils informent, ils ne réclament pas.
+- Deux rayons de bordure au lieu d'un seul, selon le rôle de la surface.
+
+## [0.2.11] — 2026-09-08 — Orthographe de l'interface
+
+### Corrigé
+- Les accents manquaient dans tous les textes visibles : « prete », « repond », « regles »,
+  « taches », « Creer mon compte », « Se deconnecter », « Proprietaire », « Etape »,
+  « equipe », « parametres », et les messages d'erreur des actions serveur. Héritage de
+  mon écriture du SQL sans accents, qui avait débordé dans l'interface.
+- Reformulation de « {n} % termine » en « {n} % de la configuration est fait », plus clair.
+
+### Notes
+- Les occurrences restantes sont des commentaires de code, des chemins de route
+  (`/onboarding/metier`) et un nom d'option HTML : elles ne sont pas visibles par
+  l'utilisateur et ne doivent pas être touchées.
+
 ## [0.2.10] — 2026-09-08 — Correctif : export interdit dans une action serveur
 
 ### Corrigé

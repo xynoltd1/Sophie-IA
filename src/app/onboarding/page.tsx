@@ -29,10 +29,10 @@ export default async function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-12">
       <div>
-        <p className="text-sm font-medium text-signal">Etape 1 sur 7</p>
+        <p className="text-sm font-medium text-signal">Étape 1 sur 7</p>
         <h1 className="mt-1 text-hero font-semibold">Votre entreprise</h1>
         <p className="mt-2 text-ink-soft">
-          Sophie a besoin de savoir pour qui elle repond. Vous pourrez tout modifier ensuite.
+          Sophie a besoin de savoir pour qui elle répond. Vous pourrez tout modifier ensuite.
         </p>
       </div>
       <OrganizationForm />

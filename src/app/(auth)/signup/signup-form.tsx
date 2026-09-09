@@ -55,7 +55,7 @@ export function SignupForm() {
       </Field>
 
       <Button type="submit" size="lg" loading={pending}>
-        Creer mon compte
+        Créer mon compte
       </Button>
     </form>
   );

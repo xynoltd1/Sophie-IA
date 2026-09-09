@@ -28,16 +28,16 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Sheet className="flex flex-col gap-2">
-      <p className="font-semibold text-ink">{title}</p>
-      <p className="text-sm text-ink-soft">{description}</p>
+    <Sheet className="flex flex-col gap-1.5 border-dashed bg-transparent">
+      <p className="font-medium text-ink-soft">{title}</p>
+      <p className="text-sm text-ink-faint">{description}</p>
       {action ? <div className="mt-2">{action}</div> : null}
     </Sheet>
   );
 }
 
 export function ErrorState({
-  title = "Cette information n’a pas pu etre chargee",
+  title = "Cette information n’a pas pu être chargée",
   description,
   action,
 }: {
@@ -46,7 +46,7 @@ export function ErrorState({
   action?: React.ReactNode;
 }) {
   return (
-    <Sheet className="flex flex-col gap-2 border-urgent bg-urgent-soft" role="alert">
+    <Sheet tone="urgent" className="flex flex-col gap-2" role="alert">
       <p className="font-semibold text-ink">{title}</p>
       <p className="text-sm text-ink-soft">{description}</p>
       {action ? <div className="mt-2">{action}</div> : null}

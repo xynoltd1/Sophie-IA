@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Sophie IA",
   description:
-    "Sophie repond a vos clients pendant que vous travaillez : appels qualifies, rendez-vous proposes, messages centralises.",
+    "Sophie répond à vos clients pendant que vous travaillez : appels qualifiés, rendez-vous proposés, messages centralisés.",
   applicationName: "Sophie IA",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Sophie", statusBarStyle: "default" },

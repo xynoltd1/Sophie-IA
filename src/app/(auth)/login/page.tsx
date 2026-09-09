@@ -10,7 +10,7 @@ export default function LoginPage() {
       <p className="text-sm text-ink-soft">
         Pas encore de compte ?{" "}
         <Link href="/signup" className="font-medium text-signal underline underline-offset-4">
-          Creer mon compte
+          Créer mon compte
         </Link>
       </p>
     </>

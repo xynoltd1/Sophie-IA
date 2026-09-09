@@ -10,7 +10,7 @@ import type { MemberRole, MemberStatus } from "@/types/database";
 export const metadata = { title: "Plus — Sophie IA" };
 
 const ROLE_LABELS: Record<MemberRole, string> = {
-  OWNER: "Proprietaire",
+  OWNER: "Propriétaire",
   ADMIN: "Administrateur",
   MEMBER: "Membre",
 };
@@ -52,7 +52,7 @@ export default async function PlusPage() {
       <section>
         <SectionTitle>Equipe</SectionTitle>
         {error ? (
-          <ErrorState description="La liste de l’equipe n’a pas pu etre chargee. Rechargez la page." />
+          <ErrorState description="La liste de l’équipe n’a pas pu être chargée. Rechargez la page." />
         ) : (
           <Sheet className="divide-y divide-line p-0">
             {team.map((member) => (
@@ -79,7 +79,7 @@ export default async function PlusPage() {
 
       <form action={signOut}>
         <Button type="submit" variant="secondary" size="lg">
-          Se deconnecter
+          Se déconnecter
         </Button>
       </form>
     </div>

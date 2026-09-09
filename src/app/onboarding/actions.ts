@@ -64,7 +64,7 @@ export async function createOrganization(
   if (error || !data) {
     return {
       error:
-        "L'entreprise n'a pas pu etre creee. Reessayez dans un instant ; si le probleme persiste, contactez le support.",
+        "L'entreprise n'a pas pu être créée. Réessayez dans un instant ; si le problème persiste, contactez le support.",
     };
   }
 
