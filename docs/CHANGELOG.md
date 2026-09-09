@@ -3,6 +3,33 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.3.0] — 2026-09-08 — Phase 2 : CRM
+
+**État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
+
+### Ajouté
+- Migration `0013_crm` : `contacts`, `leads`, `tasks`, avec RLS, privilèges et index.
+  Déduplication des contacts par téléphone normalisé — index unique en base, pas seulement
+  une vérification applicative.
+- Migration `0014_crm_search` : `search_crm()` (nom, entreprise, ville, et téléphone
+  normalisé), `dashboard_counts()` (compteurs de l'accueil, calculés dans le fuseau de
+  l'entreprise), `find_contact_by_phone()` — la fonction que Sophie utilisera en Phase 4,
+  exposée dès maintenant pour être éprouvée avant que de vrais appels en dépendent.
+- Pipeline `NEW → QUALIFIED → APPOINTMENT → CUSTOMER → WON | LOST`, avec transitions
+  contrôlées **côté serveur** : un bouton masqué n'est pas une protection. Rouvrir un
+  prospect perdu est permis, c'est fréquent et légitime.
+- Écran Prospects avec filtres (en cours, urgents, nouveaux, tous), création d'un prospect
+  qui crée ou retrouve le contact, fiche prospect avec appel direct et changement d'étape.
+- Le bloc « À traiter » de l'accueil affiche enfin de vrais compteurs : urgences, nouveaux
+  prospects, tâches en retard — chacun cliquable vers la liste filtrée.
+- Tests du pipeline, des transitions, des tâches en retard et du nom affichable.
+
+### Notes
+- Les tâches ont leur table et leurs compteurs ; leur interface arrive avec la fiche
+  contact.
+- L'accueil renvoie des compteurs à zéro plutôt que de planter si la requête échoue :
+  c'est le premier écran ouvert, il doit toujours s'afficher.
+
 ## [0.2.12] — 2026-09-08 — Installation PWA et passe de design
 
 ### Ajouté

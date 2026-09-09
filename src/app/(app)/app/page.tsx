@@ -1,7 +1,8 @@
 import { requireOrganization } from "@/lib/auth/session";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
-import { EmptyState } from "@/components/ui/states";
+import { EmptyState, ErrorState } from "@/components/ui/states";
 import { onboardingProgress } from "@/lib/org/onboarding";
+import { getDashboardCounts } from "@/lib/crm/queries";
 import Link from "next/link";
 import { STEP_ROUTES } from "@/app/onboarding/steps";
 
@@ -18,6 +19,10 @@ export default async function HomePage() {
   const { activeOrganization, user } = await requireOrganization();
   const progress = onboardingProgress(activeOrganization.onboarding_step);
   const configured = activeOrganization.onboarding_step === "DONE";
+  const { counts, error: countsError } = await getDashboardCounts(
+    activeOrganization.organization_id,
+  );
+  const aTraiter = counts.urgent_leads + counts.new_leads + counts.overdue_tasks;
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0];
 
   return (
@@ -61,10 +66,54 @@ export default async function HomePage() {
 
       <section>
         <SectionTitle>À traiter</SectionTitle>
-        <EmptyState
-          title="Rien ne vous attend"
-          description="Les urgences, les rendez-vous à valider et les tâches en retard apparaîtront ici dès que Sophie prendra ses premiers appels."
-        />
+        {countsError ? (
+          <ErrorState description="Les compteurs n’ont pas pu être chargés. Rechargez la page." />
+        ) : aTraiter === 0 ? (
+          <EmptyState
+            title="Rien ne vous attend"
+            description="Les urgences, les prospects à qualifier et les tâches en retard apparaîtront ici."
+          />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {counts.urgent_leads > 0 ? (
+              <li>
+                <Link href="/app/prospects?filtre=urgent" className="block">
+                  <Sheet tone="urgent" className="flex items-center justify-between gap-3">
+                    <span className="font-medium">
+                      {counts.urgent_leads} urgence{counts.urgent_leads > 1 ? "s" : ""}
+                    </span>
+                    <span aria-hidden className="text-ink-soft">→</span>
+                  </Sheet>
+                </Link>
+              </li>
+            ) : null}
+            {counts.new_leads > 0 ? (
+              <li>
+                <Link href="/app/prospects?filtre=nouveau" className="block">
+                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                    <span className="font-medium">
+                      {counts.new_leads} nouveau{counts.new_leads > 1 ? "x" : ""} prospect
+                      {counts.new_leads > 1 ? "s" : ""} à qualifier
+                    </span>
+                    <span aria-hidden className="text-ink-soft">→</span>
+                  </Sheet>
+                </Link>
+              </li>
+            ) : null}
+            {counts.overdue_tasks > 0 ? (
+              <li>
+                <Link href="/app/prospects?filtre=retard" className="block">
+                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                    <span className="font-medium">
+                      {counts.overdue_tasks} tâche{counts.overdue_tasks > 1 ? "s" : ""} en retard
+                    </span>
+                    <span aria-hidden className="text-ink-soft">→</span>
+                  </Sheet>
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        )}
       </section>
 
       <section>

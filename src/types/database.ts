@@ -220,3 +220,93 @@ export interface BusinessKnowledgeRow {
   created_at: string;
   updated_at: string;
 }
+
+export type LeadStatus =
+  | "NEW"
+  | "QUALIFIED"
+  | "APPOINTMENT"
+  | "CUSTOMER"
+  | "WON"
+  | "LOST";
+
+export type LeadPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
+export type TaskStatus = "OPEN" | "DONE" | "CANCELLED";
+export type EntitySource = "MANUAL" | "SOPHIE" | "SYSTEM";
+
+export interface ContactRow {
+  id: string;
+  organization_id: string;
+  full_name: string | null;
+  company_name: string | null;
+  email: string | null;
+  phone: string | null;
+  /** Clé de déduplication, calculée en base. */
+  phone_e164: string | null;
+  address_line1: string | null;
+  postal_code: string | null;
+  city: string | null;
+  notes: string | null;
+  source: EntitySource;
+  /** Créé pendant un appel, avant d'avoir un nom. */
+  is_provisional: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeadRow {
+  id: string;
+  organization_id: string;
+  contact_id: string | null;
+  service_id: string | null;
+  title: string;
+  description: string | null;
+  status: LeadStatus;
+  priority: LeadPriority;
+  address_line1: string | null;
+  postal_code: string | null;
+  city: string | null;
+  requested_at: string | null;
+  source: EntitySource;
+  closed_at: string | null;
+  close_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskRow {
+  id: string;
+  organization_id: string;
+  title: string;
+  description: string | null;
+  assigned_to: string | null;
+  contact_id: string | null;
+  lead_id: string | null;
+  due_at: string | null;
+  priority: LeadPriority;
+  status: TaskStatus;
+  source: EntitySource;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Ligne renvoyée par public.dashboard_counts(). */
+export interface DashboardCounts {
+  urgent_leads: number;
+  new_leads: number;
+  overdue_tasks: number;
+  tasks_today: number;
+  open_leads: number;
+  contacts_total: number;
+}
+
+/** Ligne renvoyée par public.search_crm(). */
+export interface SearchResultRow {
+  kind: "contact" | "lead";
+  id: string;
+  title: string;
+  subtitle: string | null;
+  status: string;
+  updated_at: string;
+}

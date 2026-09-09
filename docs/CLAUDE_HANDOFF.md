@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.2.12 · **Phase 1 terminée** · **Dernière mise à jour** 2026-09-07
+**Version** 0.3.0 · **Phase 2 terminée** · **Dernière mise à jour** 2026-09-07
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -59,7 +59,7 @@ npm run build       ✓  14 routes générées
 
 ## Ce qui n'est pas commencé
 
-Contacts, leads,
+Fiche contact détaillée, interface des tâches, recherche globale câblée à l'écran,
 tâches, recherche, Google Calendar, `AvailabilityEngine`, holds, rendez-vous, téléphonie,
 `SophieEngine`, Voice, enregistrement audio, lecteur, transcription, résumé, extraction,
 jobs asynchrones, SMS, notifications, console plateforme, abonnements, observabilité.

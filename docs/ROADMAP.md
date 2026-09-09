@@ -20,7 +20,7 @@ pas validée par un juriste, avec un nom et une date.
 | **0** | structure, Supabase, Auth, multi-tenant, migrations, RLS, design system, documentation | 0.1.0 | **terminée** |
 | **0+** | rétention audio 30 jours, cadre de conformité, annonce configurable | 0.1.2 | **terminée** |
 | **1** | onboarding complet, métiers, services, horaires, BusinessProfile, ProfessionTemplates, SophieConfiguration, BusinessKnowledge | 0.2.0 | **terminée** |
-| 2 | contacts, leads, tâches, Activity, tableau de bord, recherche | 0.3.0 | à venir |
+| **2** | contacts, leads, tâches, Activity, tableau de bord, recherche | 0.3.0 | **terminée** |
 | 3 | Google Calendar, AvailabilityEngine, holds, rendez-vous, conflits, états | 0.4.0 | à venir |
 | 4 | téléphonie, appels entrants, SophieEngine, VoiceAIProvider, outils, transfert, repli | 0.5.0 | à venir |
 | 5 | enregistrement, stockage audio, lecteur, transcription, résumé, extraction, jobs, retry | 0.6.0 | à venir |
