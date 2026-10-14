@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatTime } from "@/lib/crm/agenda";
 import { bookAppointment, type AgendaState } from "./actions";
 import { fetchSlots } from "./slots";
+import type { CalendarConfidence } from "@/lib/crm/calendar-state";
 
 export function BookingPanel({
   defaultDay,
@@ -22,6 +23,7 @@ export function BookingPanel({
   const [slots, setSlots] = useState<string[]>([]);
   const [slotChoisi, setSlotChoisi] = useState<string | null>(null);
   const [erreurSlots, setErreurSlots] = useState<string | null>(null);
+  const [confiance, setConfiance] = useState<CalendarConfidence>("NOT_CONNECTED");
   const [chargement, startTransition] = useTransition();
   const [state, action, pending] = useActionState<AgendaState, FormData>(bookAppointment, {});
   const router = useRouter();
@@ -34,6 +36,7 @@ export function BookingPanel({
       const resultat = await fetchSlots(jour, duree);
       if (resultat.error) setErreurSlots(resultat.error);
       setSlots(resultat.slots);
+      setConfiance(resultat.confidence);
     });
   }, [ouvert, jour, duree]);
 
@@ -97,6 +100,13 @@ export function BookingPanel({
 
         <div>
           <p className="mb-2 text-sm font-medium text-ink">Créneaux libres</p>
+          {confiance !== "FRESH" && !chargement ? (
+            <p className="mb-2 text-sm text-attention">
+              {confiance === "NOT_CONNECTED"
+                ? "Votre agenda Google n\u2019est pas connecté : ces créneaux ne tiennent pas compte de vos rendez-vous personnels."
+                : "La dernière synchronisation de votre agenda est ancienne : vérifiez avant de confirmer."}
+            </p>
+          ) : null}
           {chargement ? (
             <p className="text-sm text-ink-soft">Calcul en cours…</p>
           ) : erreurSlots ? (

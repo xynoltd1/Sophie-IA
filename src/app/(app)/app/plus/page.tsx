@@ -5,6 +5,8 @@ import { ErrorState } from "@/components/ui/states";
 import { Button } from "@/components/ui/button";
 import { can } from "@/lib/auth/permissions";
 import { signOut } from "@/app/(auth)/actions";
+import { getCalendarState } from "@/lib/crm/calendar-state";
+import { CalendarPanel } from "./calendar-panel";
 import type { MemberRole, MemberStatus } from "@/types/database";
 
 export const metadata = { title: "Plus — Sophie IA" };
@@ -23,8 +25,14 @@ interface TeamRow {
   profiles: { full_name: string | null } | null;
 }
 
-export default async function PlusPage() {
+export default async function PlusPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ agenda?: string }>;
+}) {
   const { activeOrganization } = await requireOrganization();
+  const { agenda } = await searchParams;
+  const calendarState = await getCalendarState(activeOrganization.organization_id);
   const supabase = await createServerSupabase();
 
   // Cette requete est filtree par RLS : elle ne peut renvoyer que les membres
@@ -50,7 +58,16 @@ export default async function PlusPage() {
       </section>
 
       <section>
-        <SectionTitle>Equipe</SectionTitle>
+        <SectionTitle>Agenda</SectionTitle>
+        <CalendarPanel
+          state={calendarState}
+          canManage={can(activeOrganization.role, "organization:update")}
+          notice={agenda}
+        />
+      </section>
+
+      <section>
+        <SectionTitle>Équipe</SectionTitle>
         {error ? (
           <ErrorState description="La liste de l’équipe n’a pas pu être chargée. Rechargez la page." />
         ) : (

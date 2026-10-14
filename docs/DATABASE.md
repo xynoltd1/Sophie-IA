@@ -101,3 +101,5 @@ Une table sans policy est une fuite de données, pas un oubli mineur.
   normalisé, entreprise et adresse.
 - **Rétention audio (Phase 5)** : la politique de rétention est une colonne de
   configuration par organisation, jamais une constante dans le code.
+
+| `0017_calendar_security_and_sync` | privilèges au niveau colonne sur les jetons d'agenda, `calendar_busy_blocks`, `calendar_sync_state()`, `available_slots()` tenant compte de l'agenda externe |

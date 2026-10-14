@@ -269,3 +269,171 @@ erreur de configuration ne peut plus produire l'enregistrement d'un tiers réel 
 *Ce que cela ne fait pas* : rien n'empêche techniquement quelqu'un d'appeler le numéro
 d'une organisation d'essai. La règle reste humaine — une organisation de test ne reçoit
 que des appels de personnes prévenues — mais elle n'est plus la seule barrière.
+
+---
+
+## ADR-020 — Fournisseur de voix : Vapi en région européenne, avec trunk SIP apporté
+**Date** 2026-09-24 · **Statut** acceptée, sous réserve de validation par le spike
+
+### Le choix
+
+Architecture retenue : **opérateur téléphonique (Twilio) → trunk SIP → Vapi région UE →
+outils HTTP vers notre backend**, le tout derrière l'abstraction `VoiceAIProvider`.
+
+Deux architectures ont été comparées, conformément à la demande :
+
+- **A** — opérateur/SIP + Vapi + outils HTTP vers notre backend
+- **B** — opérateur/SIP + OpenAI Realtime directement + function calling
+
+### Ce qui tranche, et ce n'est pas la quantité de code
+
+**L'option B est incompatible avec notre contrainte d'hébergement.** L'API Realtime
+d'OpenAI en mode SIP exige qu'un de nos processus maintienne une connexion WebSocket
+ouverte **pendant toute la durée de l'appel**. Les fonctions Vercel s'arrêtent à 300
+secondes par défaut, 800 au maximum en offre Pro. Un appel d'artisan de plus de cinq
+minutes est banal.
+
+L'option B imposerait donc un second hébergeur avec un processus permanent — exactement
+ce que le cahier des charges écarte (« Ne suppose pas qu'un processus Node permanent
+tourne en arrière-plan ») et ce que l'ADR-002 a acté dès le premier jour.
+
+Avec Vapi, notre backend ne reçoit que des requêtes HTTP courtes, avec un délai
+d'attente de 20 secondes par défaut. C'est le modèle serverless sans compromis.
+
+### Comparaison détaillée
+
+| Critère | A — Vapi | B — OpenAI Realtime |
+|---|---|---|
+| Compatible Vercel serverless | oui, HTTP court | **non, WebSocket persistante** |
+| Simplicité d'intégration | assistant en JSON + endpoints | orchestration complète à écrire |
+| Latence mesurée (tiers) | 720 ms médiane, 1 050 ms P95 | aucune mesure SIP publiée |
+| Voix française | multi-fournisseur, substituable | voix OpenAI imposée, qualité fr non vérifiée |
+| Tool calling | délai 20 s, politique de reprise, contrat d'erreur documenté | délai et concurrence non documentés |
+| Appels entrants multi-tenant | un numéro = un assistant | un seul projet, routage à écrire |
+| Transfert vers un humain | sept modes, dont transfert avec résumé | transfert aveugle seulement |
+| Enregistrement | activable, **bucket Supabase supporté nativement** | à capturer soi-même |
+| Sécurité des appels d'outils | HMAC + horodatage + liste d'IP autorisées | à construire |
+| Observabilité | tableau de bord + traçage | à construire |
+| Dépendance fournisseur | moyenne, atténuée (SIP, clés et stockage apportés) | élevée (modèle **et** voix) |
+| Coût estimé par minute | 0,12 à 0,25 $ | 0,06 à 0,20 $ **plus** un runtime externe |
+| Résidence des données | région UE complète ; sous-traitants à auditer | traitement UE confirmé sur l'endpoint Realtime |
+
+### Ce que le choix coûte, dit franchement
+
+L'option B serait moins chère sur le papier : environ 0,08 $ de moins par minute, soit
+près de 16 $ par mois pour un artisan à 200 minutes. Cet écart est réel.
+
+Il est absorbé par le coût du second hébergeur, par les semaines de développement de
+l'orchestration (interruptions, détection de fin de phrase, messages d'attente,
+reprises), et par la maintenance permanente de cette couche. À l'échelle d'un produit qui
+n'a pas encore de client, ce n'est pas un arbitrage économique, c'est un arbitrage de
+risque.
+
+### Ce que Vapi livre et que nous n'aurons pas à écrire
+
+Quatre exigences du cahier des charges sont satisfaites par configuration plutôt que par
+développement : l'enregistrement vers notre propre bucket Supabase privé (sections 13 et
+40), le transfert avec résumé pour les urgences (section 27), l'authentification des
+appels d'outils par HMAC avec protection contre le rejeu (section 41), et le traçage
+(section 54).
+
+### Garde-fous
+
+1. `VoiceAIProvider` est écrit avant toute ligne de code Vapi. Nos outils métier sont des
+   endpoints HTTP neutres : c'est l'actif qui survivra à un changement de fournisseur.
+2. Trunk SIP apporté par nous : le numéro et l'opérateur nous appartiennent, une
+   migration n'oblige pas à porter les numéros.
+3. Clés des fournisseurs de transcription et de voix apportées par nous quand c'est
+   possible.
+4. Enregistrements et transcriptions écrits dans **notre** bucket Supabase, jamais
+   laissés chez le fournisseur — dont la rétention par défaut est de 14 à 180 jours selon
+   l'offre, ce qui ne correspond pas à notre politique de 30 jours (ADR-013).
+
+### Plan de repli
+
+Si Vapi déçoit, l'ordre de préférence est : **LiveKit Agents** auto-hébergé en UE
+(contrôle total, mais infrastructure à exploiter), puis **Telnyx AI Voice Agents** (un
+seul fournisseur pour les numéros et l'agent, meilleure latence réseau mesurée, mais
+résidence UE et qualité française non documentées).
+
+### Ce qui reste à vérifier avant engagement
+
+- **Quels fournisseurs de transcription, de modèle et de voix traitent réellement en
+  UE chez Vapi.** La documentation de la région européenne ne le précise pas. Router par
+  Vapi UE ne garantit pas que la chaîne complète reste en Europe. À auditer fournisseur
+  par fournisseur et à inscrire au registre des sous-traitants (L2).
+- **La qualité de la prosodie française.** Aucune source ne permet d'en juger. Cinq à dix
+  appels d'écoute réels avant de figer la voix.
+- **Le spike technique** décrit ci-dessous.
+
+---
+
+## ADR-021 — Les jetons d'agenda sont chiffrés par l'application
+**Date** 2026-09-24 · **Statut** acceptée
+
+Un jeton de rafraîchissement Google donne un accès durable à l'agenda d'un client. Trois
+mesures, dans cet ordre d'importance :
+
+1. **Privilèges au niveau colonne.** La migration 0016 accordait `select` sur toute la
+   table `calendar_connections` à `authenticated`, avec une policy ouverte à tous les
+   membres — un membre connecté pouvait donc lire les jetons de son organisation. Le
+   commentaire du fichier affirmait l'inverse. La migration 0017 révoque ce privilège et
+   ne réaccorde que les colonnes non sensibles.
+2. **Chiffrement applicatif** en AES-256-GCM, clé dans `SECRETS_ENCRYPTION_KEY`, hors de
+   la base. Une copie de la base, une sauvegarde égarée ou une clé `service_role`
+   compromise ne suffisent plus à obtenir les jetons.
+3. **Journalisation** de chaque connexion, déconnexion et révocation dans `audit_logs`.
+
+*Leçon générale* : un commentaire qui affirme une propriété de sécurité ne la garantit
+pas. Cette faille est passée à travers une relecture parce que l'intention était écrite
+juste à côté du code qui la contredisait.
+
+---
+
+## ADR-022 — Acquisition des numéros de téléphone : décision ouverte
+**Date** 2026-09-24 · **Statut** **ouverte — décision produit et juridique requise**
+
+La recherche a mis au jour une contrainte réglementaire qui touche le modèle commercial,
+indépendamment du fournisseur de voix retenu.
+
+**France** : un numéro géographique ou mobile exige une adresse en France, un extrait
+K-bis, un SIREN/SIRET et l'identité d'un représentant.
+
+**Belgique** : plus strict encore — l'adresse doit se situer **dans la zone couverte par
+l'indicatif du numéro**, avec extrait BCE et numéro de TVA belge.
+
+Deux modèles possibles, et ils ne se valent pas :
+
+- **Numéros détenus par Sophie IA**, l'artisan renvoyant sa ligne existante vers le
+  numéro fourni. Onboarding simple, mais exige une entité par pays et transfère la charge
+  réglementaire sur nous.
+- **Un dossier réglementaire par client.** Juridiquement plus propre, mais demande à un
+  plombier de fournir un K-bis avant d'essayer le produit — ce qui tue l'inscription.
+
+**Aucune de ces options ne sera choisie sans vous.** Elle engage une structure
+juridique, un coût, et le discours commercial. Voir aussi le point L8 de
+`LEGAL_COMPLIANCE.md`.
+
+---
+
+## ADR-023 — Domaine de production : zelicall.com
+**Date** 2026-10-13 · **Statut** acceptée
+
+Le domaine **zelicall.com** a été acheté et devient l'adresse de production.
+
+*Aucun changement de code.* Toutes les adresses étaient déjà lues depuis des variables
+d'environnement ; l'ancienne adresse n'apparaissait que dans la documentation. C'est ce
+qui rend ce changement gratuit, et c'est la raison pour laquelle aucune URL ne doit jamais
+être écrite en dur dans le code.
+
+L'adresse d'origine de Vercel reste active et sert de secours. Les deux sont déclarées
+chez Google, ce qui permet de continuer à tester si le domaine n'est pas encore propagé.
+
+*Trois endroits à mettre à jour hors du code*, et les oublier casse la connexion :
+`NEXT_PUBLIC_APP_URL` sur Vercel, les URL de redirection dans Supabase Auth, et les URI
+autorisés dans Google Cloud.
+
+**Question ouverte** : zelicall.com est-il le nom commercial du produit, Sophie restant le
+prénom de l'assistante ? Le code, les documents et l'interface disent aujourd'hui
+« Sophie IA » partout. Un changement de nom est une décision produit, pas une correction
+technique : il n'a pas été fait.

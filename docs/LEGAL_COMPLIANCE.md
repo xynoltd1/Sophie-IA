@@ -281,3 +281,41 @@ comme `PRODUCTION READY`.
 
 Les essais dans une organisation d'essai ne sont pas concernés — voir la section
 précédente.
+
+---
+
+## L8 bis — Acquisition des numéros : contrainte découverte le 2026-09-24
+
+La recherche menée pour le choix du fournisseur de voix a mis au jour une contrainte
+réglementaire qui touche le modèle commercial, et qui ne dépend d'aucun fournisseur.
+
+**France** : un numéro géographique ou mobile exige une adresse en France (pas de boîte
+postale), un extrait K-bis, un SIREN/SIRET, et l'identité d'un représentant.
+
+**Belgique** : plus strict — l'adresse doit se situer **dans la zone couverte par
+l'indicatif** du numéro, avec extrait BCE et numéro de TVA belge.
+
+**Ce que cela implique.** Soit Sophie IA détient les numéros sous sa propre entité et
+l'artisan renvoie sa ligne existante, soit chaque client monte son propre dossier
+réglementaire — ce qui revient à demander un K-bis à un plombier avant qu'il ait essayé le
+produit.
+
+La première option demande vraisemblablement une entité dans chaque pays, et transfère la
+charge réglementaire sur Sophie IA. C'est une décision produit, juridique et financière.
+Elle est ouverte : voir ADR-022.
+
+**Bloque** : la commercialisation, pas le développement.
+
+---
+
+## L2 bis — Chaîne de sous-traitants du fournisseur de voix
+
+Router les appels par la région européenne de Vapi ne garantit pas que la chaîne complète
+reste en Europe. Vapi orchestre des fournisseurs tiers de transcription, de modèle de
+langage et de synthèse vocale, et sa documentation de région européenne ne précise pas
+lesquels traitent en UE.
+
+**À vérifier fournisseur par fournisseur avant de figer la configuration**, et à inscrire
+au registre des sous-traitants (L2). C'est le principal risque RGPD de l'architecture
+retenue, et il est gérable — à condition de le traiter avant les premiers appels réels et
+non après.

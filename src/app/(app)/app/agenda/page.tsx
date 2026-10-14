@@ -11,6 +11,8 @@ import {
   needsApproval,
   todayISO,
 } from "@/lib/crm/agenda";
+import { getCalendarState, calendarMessage } from "@/lib/crm/calendar-state";
+import Link from "next/link";
 import type { AppointmentRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -23,25 +25,21 @@ export default async function AgendaPage() {
   const [rdvRes, agendaRes] = await Promise.all([
     supabase
       .from("appointments")
-      .select("id, title, starts_at, ends_at, status, city, contact_id")
+      .select("id, title, starts_at, ends_at, status, city, contact_id, external_sync_error")
       .eq("organization_id", activeOrganization.organization_id)
       .in("status", ["PENDING_APPROVAL", "CONFIRMED", "CHANGE_PROPOSED"])
       .gte("starts_at", new Date().toISOString())
       .order("starts_at")
       .limit(50),
-    supabase
-      .from("calendar_status")
-      .select("provider, is_active")
-      .eq("organization_id", activeOrganization.organization_id)
-      .maybeSingle(),
+    getCalendarState(activeOrganization.organization_id),
   ]);
 
-  const rendezVous = (rdvRes.data ?? []) as Pick<
+  const rendezVous = (rdvRes.data ?? []) as (Pick<
     AppointmentRow,
     "id" | "title" | "starts_at" | "ends_at" | "status" | "city" | "contact_id"
-  >[];
+  > & { external_sync_error: string | null })[];
 
-  const agendaConnecte = Boolean(agendaRes.data?.is_active);
+  const calendrier = agendaRes;
 
   // Regroupement par jour : un artisan raisonne en journées, pas en liste.
   const parJour = new Map<string, typeof rendezVous>();
@@ -54,13 +52,20 @@ export default async function AgendaPage() {
     <div className="flex flex-col gap-5">
       <SectionTitle>Agenda</SectionTitle>
 
-      {!agendaConnecte ? (
-        <Sheet tone="attention" className="flex flex-col gap-1">
-          <p className="font-medium">Agenda Google non connecté</p>
-          <p className="text-sm text-ink-soft">
-            Les créneaux proposés tiennent compte de vos horaires et de vos rendez-vous
-            enregistrés ici, mais pas de votre agenda Google.
+      {calendrier.confidence !== "FRESH" ? (
+        <Sheet tone="attention" className="flex flex-col gap-2">
+          <p className="font-medium">
+            {calendrier.connected
+              ? "Synchronisation de l\u2019agenda en retard"
+              : "Agenda Google non connecté"}
           </p>
+          <p className="text-sm text-ink-soft">{calendarMessage(calendrier)}</p>
+          <Link
+            href="/app/plus"
+            className="text-sm font-medium text-signal underline underline-offset-4"
+          >
+            {calendrier.connected ? "Vérifier dans les paramètres" : "Connecter mon agenda"}
+          </Link>
         </Sheet>
       ) : null}
 
@@ -102,7 +107,16 @@ export default async function AgendaPage() {
                             {APPOINTMENT_STATUS_LABELS[rdv.status]}
                           </span>
                         </div>
-                        <AppointmentActions appointmentId={rdv.id} status={rdv.status} />
+                        {rdv.external_sync_error ? (
+                          <p className="text-sm text-attention">
+                            Pas encore écrit dans votre agenda Google.
+                          </p>
+                        ) : null}
+                        <AppointmentActions
+                          appointmentId={rdv.id}
+                          status={rdv.status}
+                          syncError={Boolean(rdv.external_sync_error)}
+                        />
                       </Sheet>
                     </li>
                   ))}

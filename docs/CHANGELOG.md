@@ -3,6 +3,86 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.5.1] — 2026-10-13 — Domaine zelicall.com
+
+### Modifié
+- Le domaine de production devient **zelicall.com**. Aucun changement de code : toutes les
+  adresses étaient déjà lues depuis des variables d'environnement, l'ancienne n'apparaissait
+  que dans la documentation.
+- `DEPLOYMENT.md` : procédure pour relier le domaine à Vercel, et les trois endroits à
+  mettre à jour hors du code — `NEXT_PUBLIC_APP_URL`, les redirections Supabase Auth, les
+  URI autorisés Google.
+- Les URI de redirection Google listent maintenant les deux domaines, pour pouvoir
+  continuer à tester si zelicall.com n'est pas encore propagé.
+- ADR-023.
+
+### Supprimé
+- Un tableau d'URL périmé dans `DEPLOYMENT.md`, hérité de la version 0.1. Il annonçait
+  `/api/jobs/run` et `/api/webhooks/voice`, deux adresses qui n'existent pas.
+
+## [0.5.0] — 2026-09-24 — Google Calendar réel et socle de la Phase 4
+
+**État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
+Google Calendar et Sophie Voice sont `BLOCKED_EXTERNAL_CONFIG` : le code est écrit, aucun
+compte n'existe encore. Voir `src/lib/providers/status.ts`.
+
+### Sécurité — corrigé
+- **Les jetons d'agenda étaient lisibles par tout membre connecté.** La migration 0016
+  accordait `select` sur toute la table `calendar_connections` à `authenticated`, avec une
+  policy ouverte aux membres — alors qu'un commentaire du même fichier affirmait l'inverse.
+  La migration 0017 révoque ce privilège et ne réaccorde que les colonnes non sensibles,
+  au niveau colonne. Voir ADR-021.
+- Les jetons sont désormais chiffrés par l'application en AES-256-GCM, clé hors base
+  (`SECRETS_ENCRYPTION_KEY`). Une copie de la base ne suffit plus à les obtenir.
+- Chaque connexion, déconnexion et révocation est journalisée dans `audit_logs`.
+
+### Ajouté — Google Calendar
+- Migration `0017` : privilèges au niveau colonne, `calendar_busy_blocks`,
+  `calendar_sync_state()`, et `available_slots()` qui exclut désormais les occupations
+  importées.
+- `CalendarProvider` et son implémentation Google, écrite avec `fetch` plutôt qu'avec le
+  SDK officiel — celui-ci pèse des dizaines de mégaoctets par fonction serverless.
+- Flux OAuth complet : état signé avec HMAC et horodaté, revérification de la session au
+  retour, refus d'une connexion sans jeton de rafraîchissement durable.
+- Synchronisation incrémentale avec reprise complète automatique quand Google refuse le
+  jeton (410), webhook de notification authentifié par jeton de canal, et tâche planifiée
+  de rattrapage toutes les quinze minutes.
+- Écriture des rendez-vous confirmés dans l'agenda, suppression à l'annulation.
+- **Trois états de confiance distincts** : non connecté, connecté et à jour, connecté mais
+  périmé. Le troisième est le plus dangereux parce qu'il ressemble au deuxième ; l'interface
+  et l'outil `check_availability` le traitent explicitement (sections 19 et 43).
+- Si l'écriture vers Google échoue après une confirmation, le rendez-vous reste confirmé
+  chez nous, l'écart est visible, et un bouton permet de réessayer. On n'annule pas un
+  rendez-vous réel à cause d'une panne d'agenda (section 22).
+
+### Ajouté — socle de la Phase 4
+- Les quatre abstractions demandées : `TelephonyProvider`, `VoiceAIProvider`,
+  `MessagingProvider`, `TranscriptionProvider`.
+- `VapiVoiceProvider` pour la partie testable sans compte : vérification HMAC avec
+  protection contre le rejeu, décodage des appels d'outils, mise en forme des réponses.
+- Endpoint `/api/voice/tools` et deux outils métier réels : `check_availability` et
+  `get_business_information`. Ils valident l'organisation, les données et les règles
+  métier côté serveur — Sophie ne produit aucune vérité métier.
+- `src/lib/providers/status.ts` : registre des états d'intégration, avec un test qui
+  interdit d'annoncer une intégration externe comme `PRODUCTION_READY`.
+
+### Documenté
+- **ADR-020** : comparaison argumentée de Vapi et d'OpenAI Realtime sur quatorze critères,
+  et choix de Vapi en région européenne. Ce qui tranche n'est pas la quantité de code :
+  l'API Realtime en mode SIP exige une WebSocket maintenue pendant tout l'appel, ce que
+  les fonctions Vercel ne permettent pas.
+- **ADR-021** : chiffrement des jetons d'agenda.
+- **ADR-022** : acquisition des numéros de téléphone — **décision ouverte**. Un numéro
+  français exige un K-bis, un numéro belge une adresse dans la zone de l'indicatif et un
+  numéro de TVA belge. Cela touche le modèle commercial.
+- `DEPLOYMENT.md` : étapes exactes de création des comptes Google Cloud et Vapi.
+- `LEGAL_COMPLIANCE.md` : contrainte réglementaire sur les numéros, et audit à mener sur
+  la chaîne de sous-traitants du fournisseur de voix.
+
+### Corrigé
+- Le titre « Equipe » de la page Plus n'avait pas d'accent — reste de la correction
+  incomplète de la version 0.2.11, repéré par un avertissement du build.
+
 ## [0.4.0] — 2026-09-09 — Phase 3 : agenda et disponibilités
 
 **État : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**

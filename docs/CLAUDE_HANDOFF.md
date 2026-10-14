@@ -1,7 +1,7 @@
 # Reprise du projet
 
 > Ce document est le point d'entrée d'une nouvelle session. Lisez-le en premier, puis
-> `PROJECT.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `CHANGELOG.md`.
+> `PROJECT.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `LEGAL_COMPLIANCE.md`, `CHANGELOG.md`.
 > **Le code et les tests font foi.** Si ce document et le code divergent, vérifiez le code,
 > corrigez ce document, et signalez l'écart.
 
@@ -9,58 +9,95 @@
 
 ## Où en est le projet
 
-**Version** 0.4.0 · **Phase 3 terminée sauf Google Calendar** · **Dernière mise à jour** 2026-09-07
+**Version** 0.5.1 · **Phase 3 écrite en entier ; Phase 4 au stade du spike** · **Vérifié le 2026-09-24**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
 `docs/LEGAL_COMPLIANCE.md` n'est pas validée. Aucun client réel, aucun appel réel, aucun
-enregistrement réel tant qu'elle ne l'est pas. Le développement technique, lui, continue
+enregistrement réel tant qu'elle ne l'est pas. Le développement technique continue
 normalement.
 
-Sophie ne répond pas encore au téléphone. La Phase 0 pose les fondations : un tenant
-existe, un utilisateur peut créer son entreprise, l'isolation multi-tenant est réelle et
-testable, le design system est posé.
+**Sophie ne répond pas encore au téléphone.** C'est la Phase 4, et elle dépend d'un
+fournisseur non choisi.
 
-### Vérifications passées à la clôture de la phase
+### Vérifications passées, exécutées le 2026-09-24
 
 ```
 npm run typecheck   ✓
 npm run lint        ✓  (via next build)
-npm run test        ✓  22 tests passés, 10 ignorés (base de test non configurée)
-npm run build       ✓  14 routes générées
+npm run test        ✓  90 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run build       ✓
 ```
+
+Les 17 tests ignorés sont la suite d'isolation multi-tenant et un contrôle de
+configuration. Ils **ont tourné avec succès contre la vraie base le 2026-09-08** ; ils
+s'ignorent seulement quand les variables `SUPABASE_TEST_*` sont absentes de `.env.local`.
 
 ---
 
 ## Ce qui fonctionne réellement
 
-- **Authentification** e-mail et mot de passe : inscription, connexion, déconnexion,
-  route de callback protégée contre l'open redirect.
-- **Multi-tenant** : création d'organisation via `create_organization()`, appartenance
-  `OWNER` automatique, RLS active sur toutes les tables publiques.
-- **Session** : `getSessionContext()`, `requireSession()`, `requireOrganization()`.
-  L'organisation active est en cookie mais confrontée à `my_organizations()` à chaque fois.
-- **Onboarding étape 1** : formulaire entreprise + pays, réellement enregistré.
-- **Écran Plus** : lit l'équipe sous RLS, affiche le rôle, permet la déconnexion.
-- **Coquille mobile** : en-tête avec l'état de Sophie, navigation basse à cinq entrées.
-- **Design system** : jetons couleur et typographie, `Button`, `Field`, `Input`, `Sheet`,
-  et les quatre états (chargement, vide, erreur, succès).
-- **PWA** : manifeste, icônes générées, thème, zones sûres iOS.
-- **Sonde** `/api/health`.
+**Fondations (Phase 0)**
+- Authentification e-mail et mot de passe : inscription, connexion, déconnexion, callback
+  protégé contre l'open redirect.
+- Multi-tenant : `create_organization()`, appartenance `OWNER` automatique, RLS active
+  partout, **prouvée par les tests contre la vraie base**.
+- Session : `getSessionContext()`, `requireSession()`, `requireOrganization()`.
+  L'organisation active est en cookie, toujours confrontée à `my_organizations()`.
+- Design system, PWA (manifeste, icônes, bouton d'installation Android et iPhone),
+  sondes `/api/health` et `/api/health/supabase`.
+
+**Entreprise et Sophie (Phase 1)**
+- Onboarding complet en sept étapes, sauvegardé à chaque étape, reprenable, avec garde
+  d'étape côté serveur.
+- Catalogue de douze métiers ; `apply_profession_template()` crée profil, services,
+  horaires et configuration Sophie en une transaction.
+- Configuration de Sophie : nom, ton, accueil, consignes, transparence sur sa nature.
+- Règles de prise d'appel avec numéro de transfert.
+
+**CRM (Phase 2)**
+- Contacts avec déduplication par téléphone normalisé (index unique en base).
+- Prospects, pipeline `NEW → QUALIFIED → APPOINTMENT → CUSTOMER → WON | LOST`,
+  transitions vérifiées côté serveur.
+- Tâches rattachées à un contact, échéances, retards.
+- Fiche contact : appel direct, prospects, tâches, coordonnées éditables.
+- Recherche globale (nom, entreprise, ville, téléphone normalisé), portée par l'URL.
+- Accueil : bloc « Ce qui presse » alimenté par `dashboard_counts()`.
+
+**Agenda (Phase 3, sauf Google Calendar)**
+- `appointments` avec les huit états du cycle de vie.
+- **Contrainte d'exclusion GiST** : deux rendez-vous actifs ne peuvent pas se chevaucher.
+  La seconde réservation simultanée échoue en base. L'IA n'est jamais le verrou.
+- Holds avec expiration, libérés avant chaque réservation.
+- `available_slots()` calcule les créneaux réellement libres (horaires, rendez-vous,
+  holds, absences, marge).
+- Écran Agenda : réservation par choix de créneau réel, regroupement par jour, actions
+  selon l'état. Bloc « Aujourd'hui » de l'accueil alimenté.
+
+## Ce qui est écrit mais jamais exercé
+
+Le registre `src/lib/providers/status.ts` fait foi. Un test interdit d'y déclarer une
+intégration externe `PRODUCTION_READY`.
+
+| Élément | État | Ce qui manque |
+|---|---|---|
+| Google Calendar | `BLOCKED_EXTERNAL_CONFIG` | projet Google Cloud et identifiants OAuth. Tout le code existe : OAuth, chiffrement des jetons, synchronisation incrémentale, webhook, job de rattrapage, écriture des rendez-vous. **Aucune requête n'est jamais partie vers Google.** |
+| Sophie Voice | `BLOCKED_EXTERNAL_CONFIG` | compte Vapi en région européenne. La partie testable sans compte l'est : signature HMAC, décodage, endpoint d'outils, deux outils métier. |
 
 ## Ce qui est partiel
 
 | Élément | État |
 |---|---|
-| Onboarding | sept étapes fonctionnelles ; l'étape agenda annonce Google Calendar pour la Phase 3 au lieu de connecter |
-| Écrans Prospects, Agenda, Appels, Sophie | états vides honnêtes, aucune donnée derrière |
-| `src/types/database.ts` | écrit à la main (ADR-012), à régénérer dès que le projet Supabase existe |
-| Tests d'isolation | écrits et complets, mais **jamais exécutés** faute de base de test |
+| Écran Appels | état vide honnête ; la téléphonie est en Phase 4 |
+| Écran Sophie | état vide ; l'écran *Sophie → Connaissances* reste à faire (la table `business_knowledge` existe) |
+| Paramètres | pas d'édition des services et horaires après l'onboarding ; pas de gestion des absences |
+| `src/types/database.ts` | écrit à la main (ADR-012), à régénérer depuis le schéma réel |
 
 ## Ce qui n'est pas commencé
-tâches, recherche, Google Calendar, `AvailabilityEngine`, holds, rendez-vous, téléphonie,
-`SophieEngine`, Voice, enregistrement audio, lecteur, transcription, résumé, extraction,
-jobs asynchrones, SMS, notifications, console plateforme, abonnements, observabilité.
+
+Téléphonie, `SophieEngine`, `VoiceAIProvider`, outils métier de Sophie, transfert et
+repli, enregistrement audio, lecteur, transcription, résumé, extraction, jobs asynchrones,
+SMS, notifications, console plateforme, abonnements et usage, observabilité.
 
 ---
 
@@ -70,25 +107,37 @@ Next.js App Router sur Vercel, sans back-end séparé (ADR-001). L'isolation des
 repose sur RLS PostgreSQL, pas sur des filtres applicatifs (ADR-003). Le flux audio d'un
 appel **ne passe jamais par Vercel** : notre application n'expose que des outils HTTP
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
-projet.
+projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations
+## Migrations — seize, toutes appliquées et vérifiées
 
 ```
-0001_extensions_and_helpers   extensions, set_updated_at, normalize_phone, slugify
-0002_core_identity            profiles, organizations, organization_members, invitations
-0003_activity_and_audit       activities (lisible par le tenant), audit_logs (jamais)
-0004_authorization_functions  is_org_member, org_role, has_org_role, my_organizations,
-                              create_organization
-0005_rls_policies             RLS + une policy par opération
-0006_audio_retention_policy   enregistrement désactivé par défaut, rétention audio
-                              plafonnée à 30 jours en base, table de preuve de purge
-0007_recording_notice_templates  textes d'annonce par pays et par langue, non validés
-                              par défaut ; recording_allowed() refuse l'enregistrement
-                              d'un appel réel sans annonce validée
-0008_test_organizations       is_test_organization ; un appel de test n'est reconnu que
-                              dans une organisation d'essai ; call_is_test() fait foi
+0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
+0002_core_identity               profiles, organizations, organization_members, invitations
+0003_activity_and_audit          activities (lisible par le tenant), audit_logs (jamais)
+0004_authorization_functions     is_org_member, org_role, has_org_role, my_organizations,
+                                 create_organization
+0005_rls_policies                RLS + une policy par opération
+0006_audio_retention_policy      enregistrement désactivé par défaut, rétention audio
+                                 plafonnée à 30 jours en base, preuve de purge
+0007_recording_notice_templates  annonces par pays et langue, non validées par défaut ;
+                                 recording_allowed() bloque l'enregistrement réel
+0008_test_organizations          is_test_organization ; call_is_test() fait foi
+0009_profession_templates        modèles de métier + catalogue de douze métiers
+0010_business_configuration      business_profiles, services, business_hours, absences
+0011_sophie_configuration        sophie_configurations, business_knowledge,
+                                 apply_profession_template(), set_onboarding_step()
+0012_table_grants                privilèges de table (bug trouvé par les tests)
+0013_crm                         contacts (déduplication téléphone), leads, tasks
+0014_crm_search                  search_crm(), dashboard_counts(), find_contact_by_phone()
+0015_appointments                appointments + contrainte d'exclusion anti-doublon,
+                                 book_appointment(), set_appointment_status()
+0016_availability                available_slots(), appointments_for_day(),
+                                 calendar_connections, vue calendar_status
 ```
+
+`supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
+schéma en lecture seule. Les lancer après toute nouvelle migration.
 
 **Règle absolue** : toute nouvelle table portant un `organization_id` reçoit RLS, ses
 policies, **son `GRANT` à `authenticated`** et son index `(organization_id, …)` dans la
@@ -102,29 +151,31 @@ toutes passer. Quatre contrôles positifs ont été ajoutés ; garder ce réflex
 
 ## Variables d'environnement
 
-Requises en Phase 0 : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`SUPABASE_SERVICE_ROLE_KEY`. Toutes les autres sont déclarées dans `.env.example`, groupées
-par phase, et ne sont pas encore utilisées.
+Requises aujourd'hui : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`. Pour lancer la suite d'isolation : `SUPABASE_TEST_URL`,
+`SUPABASE_TEST_ANON_KEY`, `SUPABASE_TEST_SERVICE_ROLE_KEY` dans `.env.local`, **jamais sur
+Vercel**. `npm run check:env` diagnostique le fichier sans afficher aucune valeur.
+
+Les variables des phases suivantes sont déclarées dans `.env.example`, groupées par phase,
+et pas encore utilisées.
 
 ---
 
 ## Décisions importantes déjà prises
 
-Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au code :
+Voir `DECISIONS.md` pour le détail (ADR-001 à ADR-019). Celles à connaître avant de
+toucher au code :
 
 - **ADR-002** — la voix ne transite pas par Vercel ; `SophieEngine` est un ensemble
-  d'endpoints, pas un processus.
+  d'endpoints HTTP courts, pas un processus.
 - **ADR-003** — l'isolation est dans la base, pas dans le code.
 - **ADR-004** — les fonctions d'autorisation sont `SECURITY DEFINER` pour éviter la
   récursion RLS ; `search_path` figé, filtrage sur `auth.uid()`.
 - **ADR-005** — `organizations` n'a **aucune** policy INSERT ; la création passe par
   `create_organization()`.
-- **ADR-008** — polices auto-hébergées via npm : le build est hermétique et aucune requête
-  ne part vers Google.
 - **ADR-013** — l'audio est conservé **30 jours maximum**, plafond appliqué par une
   contrainte en base ; la transcription et le résumé survivent à la purge.
-- **ADR-014** — lancement limité à la France et à la Belgique ; ouvrir un pays est une
-  décision juridique avant d'être une ligne de code.
+- **ADR-014** — lancement limité à la France et à la Belgique.
 - **ADR-015** — le texte d'annonce est une donnée, non validée par défaut ; le blocage de
   l'enregistrement réel est en base.
 - **ADR-016** — trois états : `TECHNICALLY READY`, `LEGAL REVIEW REQUIRED`,
@@ -133,90 +184,88 @@ Voir `DECISIONS.md` pour le détail. Les cinq à connaître avant de toucher au 
   ouverte**. Ne pas inventer de valeur.
 - **ADR-019** — le mode test appartient à l'organisation, pas à l'appel. En Phase 4, le
   moteur d'appel doit qualifier chaque appel via `call_is_test()`, jamais faire confiance
-  à un drapeau reçu de l'extérieur.
+  à un drapeau reçu du fournisseur téléphonique.
+- **ADR-020** — fournisseur de voix : **Vapi en région européenne, trunk SIP apporté**.
+  Ce qui tranche n'est pas le code : l'API Realtime d'OpenAI en mode SIP exige une
+  WebSocket maintenue pendant tout l'appel, ce que Vercel ne permet pas.
+- **ADR-021** — les jetons d'agenda sont chiffrés par l'application et leurs colonnes
+  n'ont aucun privilège pour `authenticated`.
+- **ADR-022** — acquisition des numéros de téléphone : **décision ouverte**. Contrainte
+  réglementaire réelle en France et en Belgique. Ne pas la trancher seul.
 
-## Problèmes connus
+## Problèmes connus et leçons apprises
 
-1. ~~Les tests d'isolation n'ont jamais tourné.~~ **Résolu le 2026-09-08** : les douze
-   contrôles d'isolation et les quatre contrôles positifs s'exécutent contre une vraie base
-   Supabase. Ils ont révélé la migration `0012` manquante (privilèges de table).
-2. ~~Aucune migration n'a été appliquée.~~ **Résolu** : les douze migrations sont
-   appliquées et vérifiées par `supabase/checks/01_verify_schema.sql`.
-3. **`src/types/database.ts` est manuel** et peut dériver du schéma réel. À régénérer avec
-   `npx supabase gen types typescript --project-id <ref> > src/types/database.ts`, puis
-   corriger les écarts que `npm run typecheck` remontera. C'est désormais le principal
-   point ouvert côté technique.
-4. Le contrôle « toute table publique a RLS » dans la suite de tests s'appuie sur une
-   fonction utilitaire absente par défaut ; il s'ignore silencieusement. À remplacer par une
-   vraie vérification en Phase 8.
+1. ~~Les tests d'isolation n'ont jamais tourné.~~ **Résolu le 2026-09-08.**
+2. ~~Aucune migration appliquée.~~ **Résolu** : les seize sont appliquées et vérifiées.
+3. **`src/types/database.ts` est manuel** et peut dériver du schéma réel. Une tentative de
+   régénération a échoué (la CLI attendait une connexion, masquée par la redirection `>`).
+   Principal point technique ouvert, sans effet connu aujourd'hui.
+4. Le contrôle « toute table publique a RLS » dans les tests s'appuie sur une fonction
+   absente par défaut ; il s'ignore silencieusement. À remplacer en Phase 8.
 5. **Une variable `NEXT_PUBLIC_` absente au build devient une chaîne vide, pas
    `undefined`.** Toute validation de configuration doit convertir les chaînes vides en
-   `undefined`, sinon une variable facultative fait échouer l'application en production
-   alors que le développement fonctionne. Vu en vrai le 2026-09-08.
+   `undefined`. Vu en production le 2026-09-08.
 6. **Ne jamais rediriger une page vers elle-même.** Une redirection calculée depuis un
-   état stocké doit être comparée à la route courante avant d'être suivie ; sinon la
-   boucle apparaît en production sous forme d'exception opaque. Vu en vrai le 2026-09-08.
-7. **Un fichier `"use server"` n'exporte que des fonctions asynchrones.** Un objet ou une
-   constante exportés y passent le build et le typecheck, puis échouent au moment où
-   l'utilisateur soumet le formulaire. Couvert par `tests/server-actions.test.ts`.
+   état stocké doit être comparée à la route courante. Vu en production le 2026-09-08.
+7. **Un fichier `"use server"` n'exporte que des fonctions asynchrones.** Un objet exporté
+   passe le build et le typecheck, puis échoue quand l'utilisateur soumet le formulaire.
+   Couvert par `tests/server-actions.test.ts`.
 8. **Toute page dépendant de la session doit porter `export const dynamic =
-   "force-dynamic"`.** Sans cela, Next tente de la prérendre au build, où il n'existe ni
-   session ni variable d'environnement, et le déploiement échoue. Vérifier ce point à
-   chaque nouvelle page sous `(app)`.
+   "force-dynamic"`.** Sinon Next la prérend au build, sans session ni variables.
+9. **Vercel exécutait les fonctions à `iad1` (Washington)** alors que le registre des
+   sous-traitants engage un traitement en UE. `vercel.json` fixe `fra1` ; à confirmer dans
+   les réglages du projet. Le middleware sur le réseau de périphérie reste un point ouvert.
+10. **Les quatre bugs de production du 2026-09-08 ont tous passé typecheck, lint et
+    build.** Ils n'ont été trouvés qu'en parcourant l'application réelle. Des tests de
+    bout en bout (navigateur automatisé sur le parcours d'inscription) manquent toujours ;
+    ils étaient prévus en Phase 8 et devraient venir plus tôt.
+11. **Un commentaire qui affirme une propriété de sécurité ne la garantit pas.** La faille
+    des jetons d'agenda (ADR-021) a survécu à une relecture parce que l'intention était
+    écrite juste à côté du code qui la contredisait. Vérifier les `grant` et les policies,
+    pas les commentaires.
+12. **Un avertissement de variable inutilisée au build signale souvent une modification
+    à moitié appliquée.** C'est ainsi qu'a été repérée la section agenda manquante de la
+    page Plus, le 2026-09-24. Ne pas les ignorer.
 
 ---
 
 ## Prochaines tâches recommandées
 
-**Fait le 2026-09-08** : douze migrations appliquées, scripts de vérification verts,
-suite d'isolation exécutée avec succès contre une vraie base.
+**Immédiat — appliquer la migration 0017.** Elle corrige la faille des jetons d'agenda.
+Puis relancer `supabase/checks/01_verify_schema.sql`.
 
-**Avant la Phase 2 :**
+**Ensuite — créer le projet Google Cloud** (`docs/DEPLOYMENT.md`, section 2). Gratuit.
+Tant qu'il n'existe pas, Google Calendar reste `BLOCKED_EXTERNAL_CONFIG` et Sophie
+proposera des créneaux déjà pris dans l'agenda personnel de l'artisan.
 
-1. Régénérer `src/types/database.ts` avec `supabase gen types` et corriger les écarts.
-2. Renseigner les variables d'environnement sur Vercel et vérifier que le taux d'erreur
-   retombe à zéro.
-3. Pousser sur GitHub depuis un dépôt cloné, pas depuis un dossier extrait d'archive.
+**Puis — le spike Vapi.** Critère de réussite, à ne pas assouplir :
+appel entrant réel → Sophie répond → conversation dans les deux sens → Sophie appelle
+`check_availability` sur notre backend → le backend répond → Sophie utilise la réponse
+pendant l'appel.
 
-**Phase 3 — Agenda (cible 0.4.0)**
+L'endpoint `/api/voice/tools` et l'outil `check_availability` sont écrits et testés pour
+la partie qui ne demande pas de compte. Ce qui manque est le compte Vapi et un numéro.
 
-Google Calendar (compte Google Cloud et identifiants OAuth à préparer), `AvailabilityEngine`,
-holds avec expiration, rendez-vous et leurs états, prévention de la double réservation par
-contrainte d'exclusion — l'extension `btree_gist` est installée depuis la Phase 0 pour ça.
+**Ne pas écrire le reste de la Phase 4 avant que le spike soit validé.** Un adaptateur
+écrit contre une API devinée produit du code qui a l'air fini et ne marche pas.
 
-**Ancienne Phase 2 — CRM (livrée en 0.3.0 à 0.3.2)**
-
-Migrations : `contacts` (déduplication par téléphone normalisé — `normalize_phone()` existe
-déjà), `leads` avec le pipeline `NEW → QUALIFIED → APPOINTMENT → CUSTOMER → WON | LOST`,
-`tasks`. Puis les écrans Prospects et fiche contact, la recherche globale (prévoir `pg_trgm`
-et des index GIN), et le remplissage réel du bloc « À traiter » de l'accueil.
-
-Restent aussi de la Phase 1, volontairement laissés de côté : l'écran
-*Sophie → Connaissances* (la table `business_knowledge` existe), l'édition des services et
-horaires depuis les paramètres après l'onboarding, et la gestion des absences.
-
-Aucun compte externe supplémentaire n'est nécessaire pour la Phase 2.
+**Dettes utiles à tout moment** : écran *Sophie → Connaissances*, édition des services et
+horaires depuis les paramètres, gestion des absences, tests de bout en bout.
 
 ---
 
-## Ce qui attend une décision de votre part
+## Ce qui attend une décision
 
-**Tranché** : pays (France et Belgique), rétention audio (30 jours maximum).
+**Tranché** : pays (France et Belgique), rétention audio (30 jours), design et palette,
+domaine de production (**zelicall.com**, ADR-023).
 
-**Reste ouvert**, détaillé dans `PRODUCT_SPEC.md` : le modèle de numéro de téléphone
-(fourni par Sophie IA, renvoi depuis le numéro existant, ou portage), et le choix du
-fournisseur de téléphonie et de voix — à trancher pendant la Phase 3, avant la Phase 4.
+**Ouvert** : nom commercial du produit — le domaine est zelicall.com, le code dit
+« Sophie IA » partout (ADR-023) ; modèle de numéro de téléphone (fourni, renvoi ou
+portage) ; fournisseur de téléphonie et de voix ; fournisseur IA post-appel ; durées de conservation autres que
+l'audio (ADR-018) ; région d'hébergement des fournisseurs (ADR-017) ; région du middleware.
 
-**Chantiers non techniques** : voir `docs/LEGAL_COMPLIANCE.md`, douze points numérotés L1
-à L12, avec pour chacun ce qu'il bloque. Ils peuvent avancer en parallèle des phases 1 à 3.
-
-**Décisions ouvertes à ne pas combler par une hypothèse** :
-- durées de conservation de la transcription, du résumé, des contacts, des journaux
-  d'audit et des comptes résiliés (ADR-018) ;
-- région d'hébergement des fournisseurs de téléphonie, de voix et d'IA — inconnue tant
-  qu'ils ne sont pas choisis (ADR-017) ;
-- région d'exécution du middleware Next.js sur le réseau de périphérie de Vercel : à
-  vérifier et consigner avant production.
+**Chantiers non techniques** : `docs/LEGAL_COMPLIANCE.md`, points L1 à L12, avec pour
+chacun ce qu'il bloque. Ils peuvent avancer en parallèle du développement.
 
 Si une session future a besoin d'une de ces valeurs, la réponse correcte est de la
 demander, pas de la choisir.
@@ -231,6 +280,7 @@ demander, pas de la choisir.
 4. Mettre à jour `DECISIONS.md`, `CHANGELOG.md`, ce fichier.
 5. Incrémenter la version dans `package.json`.
 6. `npm run release:zip`.
-7. Indiquer clairement ce qui fonctionne réellement et ce qui attend une clé externe.
-8. Proposer le message de commit.
-9. **Attendre la validation avant la phase suivante.**
+7. Indiquer ce qui fonctionne réellement et ce qui attend une clé externe.
+8. Annoncer l'état de maturité.
+9. Proposer le message de commit.
+10. **Attendre la validation avant la phase suivante.**
