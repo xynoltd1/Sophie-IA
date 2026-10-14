@@ -11,6 +11,11 @@
 --
 -- Correction : privileges au niveau COLONNE. Les colonnes de jetons ne sont
 -- accessibles qu au role service_role.
+--
+-- CE SCRIPT EST REJOUABLE. Chaque instruction supporte d etre executee plusieurs
+-- fois. C est necessaire parce que les migrations sont appliquees a la main dans
+-- l editeur SQL de Supabase : si un script s arrete au milieu, il faut pouvoir
+-- le relancer en entier sans desosser ce qui est deja passe.
 -- =============================================================================
 
 revoke all on public.calendar_connections from authenticated;
@@ -46,7 +51,7 @@ alter table public.calendar_connections
 -- les donnees sont a jour. Si elles ne le sont pas, Sophie ne propose rien et
 -- annonce que le professionnel confirmera (section 19 et 43).
 -- -----------------------------------------------------------------------------
-create table public.calendar_busy_blocks (
+create table if not exists public.calendar_busy_blocks (
   id                uuid primary key default gen_random_uuid(),
   organization_id   uuid not null references public.organizations (id) on delete cascade,
   connection_id     uuid not null references public.calendar_connections (id) on delete cascade,
@@ -71,10 +76,10 @@ create table public.calendar_busy_blocks (
 comment on table public.calendar_busy_blocks is
   'Plages occupees importees d un agenda externe. Le contenu des evenements n est pas stocke, seulement leur emprise horaire et un intitule facultatif.';
 
-create unique index calendar_busy_blocks_unique_idx
+create unique index if not exists calendar_busy_blocks_unique_idx
   on public.calendar_busy_blocks (connection_id, external_event_id);
 
-create index calendar_busy_blocks_window_idx
+create index if not exists calendar_busy_blocks_window_idx
   on public.calendar_busy_blocks (organization_id, starts_at, ends_at)
   where transparency = 'opaque';
 
@@ -83,6 +88,9 @@ alter table public.calendar_busy_blocks enable row level security;
 -- Lecture seule pour les membres : ces lignes viennent de Google, pas du
 -- navigateur. L ecriture est reservee au service de synchronisation.
 grant select on public.calendar_busy_blocks to authenticated;
+
+drop policy if exists "occupations agenda: lecture par les membres"
+  on public.calendar_busy_blocks;
 
 create policy "occupations agenda: lecture par les membres"
   on public.calendar_busy_blocks for select to authenticated

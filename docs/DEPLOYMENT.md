@@ -285,13 +285,39 @@ encore tranché.
 
 # Traitements planifiés
 
-`vercel.json` déclare une tâche toutes les quinze minutes sur
+`vercel.json` déclare **une tâche quotidienne** (`0 4 * * *`) sur
 `/api/jobs/calendar-sync`. Elle rattrape les agendas dont la synchronisation a échoué ou
-dont l'abonnement aux notifications a expiré.
+dont l'abonnement aux notifications a expiré, et que personne n'a consultés entre-temps.
+
+### La limite du plan est une contrainte de déploiement, pas de code
+
+| Plan | Intervalle minimum | Précision |
+|---|---|---|
+| Hobby | **une fois par jour** | à l'heure près (± 59 min) |
+| Pro | une fois par minute | à la minute |
+
+Une expression plus fréquente que la limite du plan **fait échouer le déploiement**, avec
+ce message :
+
+> Hobby accounts are limited to daily cron jobs. This cron expression would run more than
+> once per day.
+
+Ce refus intervient **avant la compilation**. Ni `typecheck`, ni `lint`, ni `test`, ni
+`build` ne peuvent le détecter : c'est exactement ce qui a bloqué la version 0.5.1.
+`tests/vercel-config.test.ts` couvre désormais ce cas ; sa constante `PLAN` est à changer
+le jour où le compte passe en Pro.
+
+### La fraîcheur ne dépend pas de cette tâche
+
+Un agenda n'est considéré fiable que trente minutes après sa dernière lecture. Une tâche
+quotidienne ne peut donc pas garantir la fraîcheur. C'est `ensureCalendarFresh()` qui s'en
+charge, au moment où une réponse en dépend : ouverture de la page Agenda, et avant tout
+`check_availability` pendant un appel (ADR-024). Le produit fonctionne donc complètement
+sur un plan Hobby.
 
 Elle exige `CRON_SECRET`. Sans cette variable, l'endpoint répond 401 et la
-synchronisation ne se fait que par les notifications de Google — qui expirent au bout de
-quelques jours.
+synchronisation planifiée ne se fait pas — la synchronisation à la demande, elle,
+continue de fonctionner.
 
 **Vérification** : après déploiement, ouvrez *Vercel → votre projet → Cron Jobs*. La tâche
 doit apparaître et afficher des exécutions réussies.

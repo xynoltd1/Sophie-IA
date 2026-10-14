@@ -3,6 +3,35 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.5.2] — 2026-10-14 — Déploiement débloqué, agenda synchronisé à la demande
+
+### Corrigé
+- **Le déploiement de la 0.5.1 était refusé par Vercel.** La tâche planifiée de
+  synchronisation d'agenda était réglée sur toutes les quinze minutes ; un compte Hobby
+  n'accepte qu'une exécution quotidienne et rejette le déploiement avant la compilation.
+  La version 0.5.1 n'a donc jamais pu être mise en ligne, et la connexion Google Calendar
+  a semblé absente du produit alors qu'elle était écrite et testée.
+
+### Ajouté
+- `ensureCalendarFresh()` : synchronisation de l'agenda au moment où une réponse en dépend
+  — ouverture de la page Agenda, et avant tout `check_availability` pendant un appel.
+  Ne synchronise que si les données sont périmées, abandonne au bout de six secondes,
+  ignore une connexion qui échoue en boucle, ne lève jamais.
+- `tests/vercel-config.test.ts` : échoue si `vercel.json` déclare une tâche plus fréquente
+  que quotidienne, ou si la région de déploiement quitte l'Europe. Seul contrôle local
+  capable d'attraper cette classe d'erreur.
+- ADR-024.
+
+### Modifié
+- `vercel.json` : tâche planifiée à `0 4 * * *`, une fois par jour.
+- `/api/jobs/calendar-sync` : seuil porté à une heure. Ce travail ne garantit plus la
+  fraîcheur, il rattrape les connexions que personne n'a consultées.
+
+### Pourquoi ralentir la tâche n'aurait pas suffi
+Un agenda est considéré fiable moins de trente minutes après sa dernière lecture. Une
+synchronisation quotidienne l'aurait laissé périmé vingt-trois heures sur vingt-quatre, et
+Sophie aurait refusé presque tous les rendez-vous sans que rien n'ait l'air cassé.
+
 ## [0.5.1] — 2026-10-13 — Domaine zelicall.com
 
 ### Modifié

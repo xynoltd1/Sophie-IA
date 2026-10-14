@@ -25,6 +25,7 @@ with attendu_tables (migration, objet) as (
     ('0010', 'business_hours'),
     ('0010', 'absences'),
     ('0011', 'sophie_configurations'),
+    ('0017', 'calendar_busy_blocks'),
     ('0011', 'business_knowledge')
 ),
 attendu_fonctions (migration, objet) as (
@@ -42,13 +43,18 @@ attendu_fonctions (migration, objet) as (
     ('0007', 'recording_allowed'),
     ('0008', 'call_is_test'),
     ('0011', 'apply_profession_template'),
+    ('0017', 'calendar_sync_state'),
     ('0011', 'set_onboarding_step')
 ),
 attendu_colonnes (migration, objet) as (
   values
     ('0006', 'organizations.audio_retention_days'),
     ('0006', 'organizations.recording_enabled'),
-    ('0008', 'organizations.is_test_organization')
+    ('0008', 'organizations.is_test_organization'),
+    ('0017', 'calendar_connections.sync_token'),
+    ('0017', 'calendar_connections.consecutive_failures'),
+    ('0017', 'appointments.external_sync_error'),
+    ('0017', 'appointments.external_synced_at')
 )
 
 -- 1. Tables
@@ -146,5 +152,36 @@ where n.nspname = 'public'
     where p.schemaname = 'public' and p.tablename = c.relname and p.cmd in ('SELECT', 'ALL')
   )
   and not has_table_privilege('authenticated', c.oid, 'SELECT')
+  -- Un privilege accorde COLONNE PAR COLONNE ne compte pas comme un privilege
+  -- de table : has_table_privilege renvoie faux alors que la table est bel et
+  -- bien lisible. C est le cas de calendar_connections depuis la migration
+  -- 0017, ou seules les colonnes non sensibles sont accordees.
+  -- Sans cette exception, le controle signalait une faille inexistante.
+  and not exists (
+    select 1
+    from information_schema.columns col
+    where col.table_schema = 'public'
+      and col.table_name = c.relname
+      and has_column_privilege('authenticated', c.oid, col.column_name, 'SELECT')
+  )
+
+union all
+
+-- 7. Controle de securite : les jetons d agenda ne doivent JAMAIS etre lisibles
+--    par un utilisateur connecte. C est la faille corrigee par la migration
+--    0017 : la 0016 accordait select sur toute la table, jetons compris.
+--
+--    Une ligne ici signifie qu un membre connecte peut lire le jeton de
+--    rafraichissement Google de son organisation.
+select
+  '0017',
+  'securite',
+  'authenticated peut lire calendar_connections.' || c.column_name,
+  'MANQUANT'
+from information_schema.columns c
+where c.table_schema = 'public'
+  and c.table_name = 'calendar_connections'
+  and c.column_name in ('access_token', 'refresh_token')
+  and has_column_privilege('authenticated', 'public.calendar_connections', c.column_name, 'SELECT')
 
 order by 1, 2, 3;

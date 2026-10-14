@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureCalendarFresh } from "@/lib/providers/calendar/service";
 import type { VoiceToolDefinition } from "@/lib/providers/voice/types";
 
 /**
@@ -123,6 +124,13 @@ const checkAvailability: SophieTool = {
     const timezone = (org?.timezone as string | undefined) ?? "Europe/Brussels";
 
     // Fraîcheur de l'agenda AVANT de proposer quoi que ce soit.
+    //
+    // On tente d'abord une synchronisation : la tâche planifiee ne tourne
+    // qu'une fois par jour (ADR-024), elle ne suffit pas a garantir la
+    // fraîcheur pendant un appel. Si Google ne répond pas assez vite, on
+    // n'insiste pas et la regle ci-dessous s'applique.
+    await ensureCalendarFresh(context.organizationId);
+
     const { data: etatBrut } = await admin.rpc("calendar_sync_state", {
       org_id: context.organizationId,
     });

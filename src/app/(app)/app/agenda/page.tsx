@@ -12,6 +12,7 @@ import {
   todayISO,
 } from "@/lib/crm/agenda";
 import { getCalendarState, calendarMessage } from "@/lib/crm/calendar-state";
+import { ensureCalendarFresh } from "@/lib/providers/calendar/service";
 import Link from "next/link";
 import type { AppointmentRow } from "@/types/database";
 
@@ -21,6 +22,11 @@ export const metadata = { title: "Agenda — Sophie IA" };
 export default async function AgendaPage() {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
+
+  // La tâche planifiee ne tourne qu'une fois par jour sur Vercel Hobby
+  // (ADR-024). On rafraîchit donc ici, au moment où l'affichage en dépend.
+  // Ne lève jamais : un échec se traduit par un agenda marqué « périmé ».
+  await ensureCalendarFresh(activeOrganization.organization_id);
 
   const [rdvRes, agendaRes] = await Promise.all([
     supabase

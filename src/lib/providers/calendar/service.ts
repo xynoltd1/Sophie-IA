@@ -27,6 +27,19 @@ export function getCalendarProvider(): CalendarProvider {
 const SYNC_WINDOW_DAYS_AHEAD = 90;
 const SYNC_WINDOW_DAYS_BACK = 7;
 
+/**
+ * Doit rester identique au seuil de `calendar_sync_state` (migration 0017).
+ * Si les deux divergent, l'application croira synchroniser alors que la base
+ * considerera toujours l'agenda comme perime.
+ */
+const FRESHNESS_WINDOW_MINUTES = 30;
+
+/**
+ * Au-dela, on rend la main sans attendre Google. Pendant un appel telephonique,
+ * faire patienter le client est pire que proposer de le rappeler.
+ */
+const ON_DEMAND_SYNC_TIMEOUT_MS = 6_000;
+
 /** On rafraîchit avant l'expiration réelle : une requête en vol ne doit pas expirer. */
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
@@ -503,4 +516,65 @@ export async function removeAppointment(params: {
     .from("appointments")
     .update({ external_event_id: null })
     .eq("id", params.appointmentId);
+}
+
+/**
+ * Synchronisation à la demande.
+ *
+ * Pourquoi cette fonction existe : la synchronisation périodique ne peut pas
+ * tourner plus d'une fois par jour sur un compte Vercel Hobby, alors que
+ * `calendar_sync_state` considère un agenda comme fiable seulement s'il a été
+ * relu il y a moins de 30 minutes. Dépendre de la tâche planifiée rendrait donc
+ * l'agenda « périmé » presque en permanence, et Sophie refuserait de proposer
+ * le moindre créneau (sections 19 et 43). Voir ADR-024.
+ *
+ * On synchronise donc au moment où la réponse en dépend : ouverture de l'agenda,
+ * recherche de créneau pendant un appel. La tâche planifiée n'est plus qu'un
+ * filet pour les connexions que personne n'a consultées.
+ *
+ * Trois garde-fous :
+ *  - on ne synchronise que si les données sont réellement périmées ;
+ *  - une connexion qui échoue en boucle est ignorée, elle ne doit pas ralentir
+ *    chaque page ;
+ *  - un dépassement de délai n'est jamais une erreur visible : on rend la main,
+ *    l'appelant verra simplement un agenda « périmé » et agira en conséquence.
+ *
+ * Cette fonction ne lève jamais. Un agenda non synchronisé est un cas prévu,
+ * pas une panne.
+ */
+export async function ensureCalendarFresh(
+  organizationId: string,
+  options: { timeoutMs?: number } = {},
+): Promise<{ synced: boolean; reason: "FRESH" | "SYNCED" | "SKIPPED" | "TIMEOUT" | "FAILED" }> {
+  const admin = createAdminClient();
+  const seuil = new Date(Date.now() - FRESHNESS_WINDOW_MINUTES * 60_000).toISOString();
+
+  const { data } = await admin
+    .from("calendar_connections")
+    .select("id, last_synced_at, consecutive_failures")
+    .eq("organization_id", organizationId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!data) return { synced: false, reason: "SKIPPED" };
+
+  const dernière = data.last_synced_at as string | null;
+  if (dernière && dernière > seuil) return { synced: false, reason: "FRESH" };
+
+  // Une connexion cassée (jeton révoqué, agenda supprimé) ne doit pas ajouter
+  // son délai d'attente à chaque chargement de page.
+  if ((data.consecutive_failures as number | null) !== null && (data.consecutive_failures as number) >= 3) {
+    return { synced: false, reason: "SKIPPED" };
+  }
+
+  const timeoutMs = options.timeoutMs ?? ON_DEMAND_SYNC_TIMEOUT_MS;
+
+  type Issue = "SYNCED" | "FAILED" | "TIMEOUT";
+
+  const course = await Promise.race<Issue>([
+    syncCalendar(organizationId).then((r): Issue => (r.ok ? "SYNCED" : "FAILED")),
+    new Promise<Issue>((resolve) => setTimeout(() => resolve("TIMEOUT"), timeoutMs)),
+  ]);
+
+  return { synced: course === "SYNCED", reason: course };
 }

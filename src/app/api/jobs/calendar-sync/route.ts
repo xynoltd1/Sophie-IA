@@ -13,6 +13,12 @@ export const maxDuration = 60;
  * peuvent se perdre. Ce travail planifié est le filet : il rattrape les
  * connexions dont la dernière synchronisation est trop ancienne.
  *
+ * Il ne tourne qu'une fois par jour : un compte Vercel Hobby n'autorise pas
+ * mieux, et un déploiement portant une fréquence supérieure est refusé avant
+ * même la compilation (ADR-024). La fraîcheur réelle vient donc de
+ * `ensureCalendarFresh`, appelée au moment où une réponse en dépend. Ce travail
+ * ne sert plus qu'aux connexions que personne n'a consultées depuis longtemps.
+ *
  * Déclenché par Vercel Cron. Protégé par un secret partagé, sinon n'importe qui
  * pourrait le déclencher en boucle et épuiser le quota Google.
  */
@@ -45,7 +51,10 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = createAdminClient();
-  const seuil = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  // Une heure, pas trente minutes : ce qui est juste « un peu » périmé sera
+  // rafraîchi à la demande de toute façon. Ici on vise ce que personne ne
+  // consulte.
+  const seuil = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
   const { data: connexions } = await admin
     .from("calendar_connections")

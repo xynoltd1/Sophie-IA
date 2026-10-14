@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.5.1 · **Phase 3 écrite en entier ; Phase 4 au stade du spike** · **Vérifié le 2026-09-24**
+**Version** 0.5.2 · **Phase 3 écrite en entier ; Phase 4 au stade du spike** · **Vérifié le 2026-10-14**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -20,14 +20,21 @@ normalement.
 **Sophie ne répond pas encore au téléphone.** C'est la Phase 4, et elle dépend d'un
 fournisseur non choisi.
 
-### Vérifications passées, exécutées le 2026-09-24
+### Vérifications passées, exécutées le 2026-10-14
 
 ```
 npm run typecheck   ✓
-npm run lint        ✓  (via next build)
-npm run test        ✓  90 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run lint        ✓
+npm run test        ✓  93 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
+
+**Ces quatre contrôles ne suffisent pas.** La version 0.5.1 les passait tous et son
+déploiement a pourtant été refusé par Vercel : la tâche planifiée était trop fréquente pour
+un compte Hobby, ce qui est une règle de la plateforme, appliquée avant la compilation
+(ADR-024). `tests/vercel-config.test.ts` couvre désormais ce cas. Avant d'annoncer une
+version livrable, **vérifier qu'un déploiement réel est passé**, pas seulement que le build
+est vert en local.
 
 Les 17 tests ignorés sont la suite d'isolation multi-tenant et un contrôle de
 configuration. Ils **ont tourné avec succès contre la vraie base le 2026-09-08** ; ils

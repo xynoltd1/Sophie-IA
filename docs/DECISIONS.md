@@ -437,3 +437,71 @@ autorisés dans Google Cloud.
 prénom de l'assistante ? Le code, les documents et l'interface disent aujourd'hui
 « Sophie IA » partout. Un changement de nom est une décision produit, pas une correction
 technique : il n'a pas été fait.
+
+---
+
+## ADR-024 — La fraîcheur de l'agenda vient de la demande, pas de la tâche planifiée
+
+**Date** 2026-10-14 · **Statut** acceptée
+
+### Ce qui s'est passé
+
+La version 0.5.1 déclarait une tâche planifiée de synchronisation d'agenda toutes les
+quinze minutes. Le déploiement a été **refusé par Vercel**, avec ce motif :
+
+> Hobby accounts are limited to daily cron jobs. This cron expression would run more than
+> once per day.
+
+`typecheck`, `lint`, `test` et `build` étaient tous verts en local. Aucun d'eux ne pouvait
+voir le problème : il ne s'agit pas de code, mais d'une règle du compte, appliquée avant
+la compilation. La conséquence a été qu'une version livrée comme terminée n'a jamais pu
+être mise en ligne, et que la fonctionnalité Google Calendar a semblé absente du produit
+alors qu'elle était écrite.
+
+### Pourquoi ralentir la tâche ne suffisait pas
+
+`calendar_sync_state` (migration 0017) ne considère un agenda comme fiable que s'il a été
+relu il y a moins de trente minutes. Au-delà, l'application se déclare incapable de
+garantir un créneau et Sophie refuse d'en proposer — c'est voulu (sections 19 et 43).
+
+Une synchronisation quotidienne aurait donc laissé l'agenda « périmé » environ
+vingt-trois heures sur vingt-quatre. Sophie aurait refusé presque tous les rendez-vous,
+sans que rien n'ait l'air cassé. L'erreur se serait déplacée d'un échec visible vers une
+dégradation silencieuse, ce qui est pire.
+
+### Décision
+
+La synchronisation a lieu **au moment où une réponse en dépend** :
+
+- à l'ouverture de la page Agenda ;
+- avant tout `check_availability` appelé par Sophie pendant un appel.
+
+`ensureCalendarFresh()` ne synchronise que si les données sont réellement périmées,
+abandonne au bout de six secondes, ignore une connexion qui échoue en boucle, et ne lève
+jamais. Un échec se traduit par un agenda marqué périmé — une situation déjà prévue.
+
+La tâche planifiée reste, à raison d'une fois par jour. Elle ne garantit plus la fraîcheur :
+elle rattrape les connexions que personne n'a consultées.
+
+### Conséquences
+
+Cette architecture ne dépend plus du plan Vercel. Passer en Pro permettrait de resserrer la
+tâche, mais ne changerait rien au fonctionnement. Elle consomme aussi moins : on
+synchronise quand quelqu'un regarde, pas toutes les quinze minutes pour rien.
+
+Contrepartie assumée : la première ouverture de l'agenda après une longue absence peut
+attendre jusqu'à six secondes. Pendant un appel, le délai joue contre nous — d'où
+l'abandon, qui fait basculer Sophie sur « le professionnel vous confirmera ».
+
+### Garde-fou
+
+`tests/vercel-config.test.ts` échoue si `vercel.json` déclare une tâche plus fréquente que
+quotidienne. C'est le seul contrôle local capable d'attraper cette classe d'erreur. La
+constante `PLAN` en tête du fichier est à changer le jour où le compte passe en Pro.
+
+### Leçon
+
+Une suite de tests verte ne dit rien des règles de la plateforme d'hébergement. Les limites
+du plan (fréquence des tâches, régions, durée d'exécution) appartiennent à la configuration
+de déploiement et doivent être vérifiées explicitement, comme n'importe quelle autre
+contrainte.
