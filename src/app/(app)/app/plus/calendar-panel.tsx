@@ -11,6 +11,12 @@ const MESSAGES: Record<string, string> = {
   connecte: "Agenda Google connecté.",
   refuse: "Vous avez refusé l'autorisation. Rien n'a changé.",
   echec: "La connexion a échoué. Réessayez.",
+  echec_google:
+    "Google a refusé l'autorisation au dernier moment. Recommencez la connexion depuis cette page.",
+  echec_sans_renouvellement:
+    "Google n'a pas donné d'autorisation durable. Dans votre compte Google, retirez l'accès à cette application, puis reconnectez-la ici.",
+  echec_enregistrement:
+    "Google a bien autorisé l'accès, mais l'enregistrement a échoué de notre côté. Votre agenda n'est pas connecté. Réessayez ; si cela se reproduit, le détail est consigné dans le journal technique.",
   etat_invalide: "Le retour de Google n'a pas pu être vérifié. Recommencez la connexion.",
   etat_expire: "La demande a expiré. Recommencez la connexion.",
   session_differente: "La session a changé pendant l'autorisation. Recommencez.",

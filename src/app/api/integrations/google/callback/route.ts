@@ -57,5 +57,18 @@ export async function GET(request: NextRequest) {
     code,
   });
 
-  return retour(origin, resultat.ok ? "connecte" : "echec");
+  if (resultat.ok) return retour(origin, "connecte");
+
+  // On transmet le motif exact. Un « la connexion a echoue » generique obligerait
+  // a ouvrir les journaux pour savoir quoi faire (ADR-025).
+  const statut =
+    resultat.failure === "ECHANGE_REFUSE"
+      ? "echec_google"
+      : resultat.failure === "SANS_RENOUVELLEMENT"
+        ? "echec_sans_renouvellement"
+        : resultat.failure === "ENREGISTREMENT"
+          ? "echec_enregistrement"
+          : "echec";
+
+  return retour(origin, statut);
 }

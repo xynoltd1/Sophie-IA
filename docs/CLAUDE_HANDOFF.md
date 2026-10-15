@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.5.2 · **Phase 3 écrite en entier ; Phase 4 au stade du spike** · **Vérifié le 2026-10-14**
+**Version** 0.5.3 · **Phase 3 écrite en entier ; Phase 4 au stade du spike** · **Vérifié le 2026-10-14**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -25,7 +25,7 @@ fournisseur non choisi.
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  93 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  99 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
 

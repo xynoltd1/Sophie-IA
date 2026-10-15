@@ -162,9 +162,20 @@ async function freshAccessToken(connection: ConnectionRow): Promise<string> {
   }
 }
 
+/**
+ * Motif d'echec, destine a l'interface.
+ *
+ * Trois causes distinctes qui appellent trois gestes differents : refaire la
+ * connexion, revoquer l'acces chez Google, ou prevenir que le probleme est de
+ * notre cote. Les confondre derriere un « reessayez » generique oblige a aller
+ * lire les journaux pour comprendre (ADR-025).
+ */
+export type ConnectFailure = "ECHANGE_REFUSE" | "SANS_RENOUVELLEMENT" | "ENREGISTREMENT";
+
 export interface ConnectResult {
   ok: boolean;
   account?: string;
+  failure?: ConnectFailure;
   error?: string;
 }
 
@@ -192,6 +203,7 @@ export async function connectCalendar(params: {
     });
     return {
       ok: false,
+      failure: "ECHANGE_REFUSE",
       error: "Google a refusé l'autorisation. Réessayez en repartant des paramètres.",
     };
   }
@@ -199,8 +211,13 @@ export async function connectCalendar(params: {
   if (!tokens.refreshToken) {
     // Sans jeton de rafraîchissement, l'accès meurt dans une heure. Mieux vaut
     // refuser la connexion que livrer un agenda qui cessera de fonctionner.
+    // Cet echec aussi doit laisser une trace : sans elle, il reste invisible.
+    await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "ERROR", {
+      reason: "aucun jeton de rafraîchissement renvoyé par Google",
+    });
     return {
       ok: false,
+      failure: "SANS_RENOUVELLEMENT",
       error:
         "Google n'a pas fourni d'autorisation durable. Révoquez l'accès dans votre compte Google, puis reconnectez.",
     };
@@ -228,7 +245,11 @@ export async function connectCalendar(params: {
     await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "ERROR", {
       reason: upsertError.message,
     });
-    return { ok: false, error: "La connexion n'a pas pu être enregistrée." };
+    return {
+      ok: false,
+      failure: "ENREGISTREMENT",
+      error: "La connexion n'a pas pu être enregistrée.",
+    };
   }
 
   await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "SUCCESS", {

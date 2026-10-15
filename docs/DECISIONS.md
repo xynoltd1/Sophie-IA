@@ -505,3 +505,69 @@ Une suite de tests verte ne dit rien des règles de la plateforme d'hébergement
 du plan (fréquence des tâches, régions, durée d'exécution) appartiennent à la configuration
 de déploiement et doivent être vérifiées explicitement, comme n'importe quelle autre
 contrainte.
+
+
+---
+
+## ADR-025 — Une contrainte d'unicité destinée à un upsert porte sur des colonnes, jamais sur une expression
+
+**Date** 2026-10-14 · **Statut** acceptée
+
+### Ce qui s'est passé
+
+La connexion d'un agenda Google échouait à la toute dernière étape. Google acceptait, les
+jetons étaient en main, et l'enregistrement en base était rejeté :
+
+> there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+La migration 0016 garantissait l'unicité par un index sur **expression** :
+
+```sql
+create unique index calendar_connections_unique_idx
+  on calendar_connections (
+    organization_id,
+    coalesce(member_id, '000...'::uuid),
+    provider
+  );
+```
+
+Le `coalesce` était là pour une bonne raison : en SQL deux `NULL` ne sont pas égaux, donc
+un index unique ordinaire aurait laissé passer plusieurs connexions « sans intervenant
+désigné » dans une même organisation.
+
+Mais PostgreSQL ne déduit un index que si l'expression passée à `ON CONFLICT` correspond
+exactement à celle de l'index. Le code écrivait trois noms de colonnes nus. L'index
+existait, il garantissait bien l'unicité voulue, et il était inutilisable pour un upsert.
+
+### Décision
+
+`nulls not distinct` (PostgreSQL 15+) donne la même sémantique — deux `NULL` comptent
+comme égaux — avec un index sur colonnes simples, donc déductible (migration 0018).
+
+Règle générale : **une contrainte d'unicité qui sert de cible à un upsert porte sur des
+colonnes.** Si une expression est indispensable, le code lit puis écrit, il ne fait pas
+d'upsert.
+
+### Garde-fou
+
+`tests/upsert-constraints.test.ts` relie le code aux migrations : pour chaque `onConflict`
+trouvé dans `src/`, il exige une contrainte unique sur colonnes simples dans
+`supabase/migrations/`. Un index contenant une parenthèse — donc un appel de fonction —
+est rejeté. Ce test a été vérifié dans les deux sens : il échoue sur l'état d'avant la
+migration 0018, il passe après.
+
+### La seconde erreur, et sa correction
+
+L'interface affichait « La connexion a échoué. Réessayez. » alors que le code connaissait
+le motif exact. Comprendre a demandé d'ouvrir `audit_logs` à la main. `connectCalendar`
+renvoie désormais un motif (`ECHANGE_REFUSE`, `SANS_RENOUVELLEMENT`, `ENREGISTREMENT`) et
+l'écran dit quoi faire — recommencer, révoquer l'accès chez Google, ou constater que le
+problème vient de nous. Le cas « pas de jeton de rafraîchissement » n'était en outre pas
+journalisé du tout : il l'est maintenant.
+
+### Leçon
+
+Ces deux erreurs partagent une cause. Un contrôle qui n'est jamais exécuté contre la
+réalité ne prouve rien : ni l'index, ni le message d'erreur ne pouvaient échouer avant
+qu'un vrai agenda soit connecté. Les chemins qui ne s'exécutent qu'en présence d'un service
+externe doivent être couverts par un contrôle statique quand un test réel est impossible.

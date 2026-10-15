@@ -3,6 +3,29 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.5.3] — 2026-10-14 — Connexion Google Calendar réparée
+
+### Corrigé
+- **La connexion d'un agenda Google échouait à la dernière étape.** Google acceptait, les
+  jetons étaient en main, et l'écriture en base était rejetée : la contrainte d'unicité de
+  `calendar_connections` portait sur une expression (`coalesce`), que `ON CONFLICT` ne peut
+  pas déduire. Migration 0018 : index sur colonnes simples avec `nulls not distinct`, même
+  garantie, cette fois utilisable.
+- L'écran affichait « La connexion a échoué » alors que le code connaissait le motif exact.
+  Trois motifs distincts sont maintenant transmis et expliqués, avec le geste à faire.
+- L'échec « Google n'a pas fourni de jeton de rafraîchissement » n'était pas journalisé.
+  Il l'est.
+
+### Ajouté
+- `tests/upsert-constraints.test.ts` : pour chaque `onConflict` du code, exige une
+  contrainte unique sur colonnes simples dans les migrations. Vérifié dans les deux sens —
+  il échoue sur l'état d'avant la migration 0018.
+- ADR-025.
+
+### À faire après mise à jour
+Appliquer la migration `0018_calendar_connection_upsert.sql` dans Supabase **avant** de
+retenter la connexion. Sans elle, le code corrigé échouera de la même façon.
+
 ## [0.5.2] — 2026-10-14 — Déploiement débloqué, agenda synchronisé à la demande
 
 ### Corrigé
