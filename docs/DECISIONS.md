@@ -724,3 +724,67 @@ tests et build etaient verts les trois fois.
 La seule parade trouvee jusqu ici est de faire porter un test sur l artefact lui-meme — le
 `vercel.json`, le SQL des migrations — plutot que sur le code TypeScript. Ces trois tests
 existent maintenant. Ils ne couvrent pas la categorie entiere.
+
+
+---
+
+## ADR-028 — Une application Google en mode Test perd ses autorisations tous les sept jours
+
+**Date** 2026-10-22 · **Statut** constat · **Prerequis de mise en production**
+
+### L incident
+
+L agenda Google a ete connecte le 15 octobre et fonctionnait. Le 22 octobre, Sophie
+repondait « les disponibilites ne sont pas verifiables » a chaque appel. En base :
+
+```
+consecutive_failures : 5
+last_error : invalid_grant — Token has been expired or revoked
+```
+
+Sept jours, jour pour jour.
+
+### La cause
+
+Google revoque les jetons de rafraichissement des applications dont l etat de publication
+est **Test** au bout de **sept jours**. Ce n est pas une panne : c est le comportement
+documente et voulu de Google pour les applications non validees.
+
+### Ce que l application faisait de travers
+
+Trois defauts en chaine, tous de notre cote.
+
+`invalid_grant` arrive avec un code HTTP **400**, pas 401. Il etait donc classe comme une
+simple requete invalide, et reessaye indefiniment alors qu aucune tentative ne peut
+aboutir : l autorisation est morte, seul le professionnel peut en redonner une.
+
+La connexion restait marquee **active**, alors que le code prevoyait de la desactiver — la
+desactivation ne se declenchait que sur un 401.
+
+L interface annoncait « synchronisation en retard », ce qui laisse croire que ca reviendra
+tout seul. Rien ne revient tout seul.
+
+### Corrections apportees
+
+`invalid_grant` est reconnu avant les codes HTTP et classe comme autorisation morte. Un
+etat `EXPIRED` distinct de `STALE` existe cote interface, avec un message qui dit de
+reconnecter et un lien pour le faire.
+
+### Ce qui n est PAS corrige, et ne peut pas l etre par du code
+
+**Le probleme se reproduira chez chaque client, une semaine apres chaque connexion**, tant
+que l application Google reste en mode Test. Aucune astuce technique ne contourne cela.
+
+La seule issue est de publier l application et d obtenir sa validation par Google, ce qui
+exige une politique de confidentialite en ligne, des conditions d utilisation, un domaine
+verifie, et un examen qui prend plusieurs semaines pour les acces sensibles — l agenda en
+est un.
+
+C est donc un **prerequis de mise en production**, au meme titre que la checklist juridique,
+et il doit etre lance tot : le delai de validation ne se rattrape pas.
+
+### Lecon
+
+Un comportement documente d un fournisseur n est pas une panne, mais il devient une panne
+si le produit ne le prevoit pas. La question a se poser pour chaque integration est : que
+se passe-t-il au bout d une semaine, d un mois, de six mois, si personne ne touche a rien ?

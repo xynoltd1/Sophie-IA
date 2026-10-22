@@ -3,6 +3,51 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.8.3] — 2026-10-22 — L'autorisation Google expire au bout de sept jours
+
+### La cause de la panne du jour
+L'agenda avait été connecté le 15 octobre. Google révoque les autorisations des
+applications en mode **Test** au bout de **sept jours**. Nous étions le 22. Ce n'est pas une
+panne de Google : c'est son comportement documenté pour les applications non validées.
+
+### Corrigé
+- `invalid_grant` arrive avec un code **400**, pas 401. Il était donc classé comme une
+  simple requête invalide et réessayé indéfiniment, alors qu'aucune tentative ne peut
+  aboutir. Il est maintenant reconnu avant les codes HTTP, et la connexion est désactivée.
+- Nouvel état `EXPIRED`, distinct de `STALE`. « Synchronisation en retard » laissait croire
+  que ça reviendrait tout seul. L'écran dit désormais « Autorisation Google expirée » et
+  propose « Reconnecter mon agenda ».
+
+### Ce qui n'est pas corrigeable par du code
+Le problème se reproduira chez **chaque client, une semaine après chaque connexion**, tant
+que l'application Google n'est pas publiée et validée. Voir ADR-028 : c'est un prérequis de
+mise en production, et le délai de validation ne se rattrape pas.
+
+## [0.8.2] — 2026-10-22 — Une réponse d'outil doit dire quoi faire ensuite
+
+### Corrigé
+- **Sophie appelait le même outil 61 fois dans un seul appel.** L'agenda était considéré
+  comme périmé, `check_availability` répondait « les disponibilités ne sont pas
+  vérifiables », et le modèle réessayait indéfiniment : rien ne lui disait d'arrêter.
+- Les trois sorties non nominales de `check_availability` nomment désormais l'action
+  suivante : ne plus appeler cet outil, prendre les préférences du client, enregistrer la
+  demande avec `create_lead`.
+
+### Ce que ça coûtait
+Au téléphone, une boucle d'outil se paie trois fois : l'appel s'allonge, les crédits
+brûlent, et le client entend une machine bloquée. Le mode dégradé avait pourtant bien
+fonctionné — Sophie n'a inventé aucun créneau. C'est l'absence d'issue qui manquait, pas la
+prudence.
+
+### Garde-fou
+`tests/tool-loops.test.ts` vérifie que chaque sortie non nominale dit au modèle d'arrêter
+et propose un repli concret. Le texte de ces réponses **est** l'interface avec le modèle :
+le modifier sans y penser rouvre la boucle.
+
+### Non résolu
+La cause première reste à trouver : l'agenda répondait correctement le matin même. Le
+diagnostic est en cours.
+
 ## [0.8.1] — 2026-10-22 — Trois messages d'erreur qui disent enfin quoi faire
 
 ### Corrigé

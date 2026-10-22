@@ -149,10 +149,16 @@ const checkAvailability: SophieToolType = {
     const etat = Array.isArray(etatBrut) ? etatBrut[0] : etatBrut;
 
     if (etat?.connected && !etat?.is_fresh) {
+      // La consigne d'ARRÊTER compte autant que le message lui-même. Sans elle,
+      // le modèle relance l'outil en boucle — observé 61 fois sur un seul appel :
+      // il reçoit une réponse inutilisable et réessaie, ce qui allonge l'appel,
+      // brûle des crédits et donne au client l'impression d'une machine bloquée.
       return {
         result:
-          "Les disponibilités ne sont pas vérifiables en ce moment. Proposez au client " +
-          "d'indiquer ses préférences, et dites que le professionnel confirmera lui-même.",
+          "Les disponibilités ne sont pas vérifiables en ce moment. " +
+          "N'appelle plus check_availability pendant cet appel. Demande au client " +
+          "quels jours et quelles heures l'arrangeraient, enregistre sa demande avec " +
+          "create_lead, et dis-lui que le professionnel le rappellera pour confirmer.",
       };
     }
 
@@ -171,8 +177,10 @@ const checkAvailability: SophieToolType = {
     if (error) {
       return {
         error:
-          "Impossible de consulter l'agenda. Prenez les coordonnées du client et dites " +
-          "que le professionnel le rappellera.",
+          "Impossible de consulter l'agenda. N'appelle plus check_availability pendant " +
+          "cet appel. Prends les coordonnées du client avec save_caller_details, " +
+          "enregistre sa demande avec create_lead, et dis-lui que le professionnel " +
+          "le rappellera.",
       };
     }
 
@@ -180,7 +188,9 @@ const checkAvailability: SophieToolType = {
 
     if (creneaux.length === 0) {
       return {
-        result: `Aucun créneau libre le ${jourParle(`${date}T12:00:00Z`, timezone)}. Proposez un autre jour.`,
+        result: `Aucun créneau libre le ${jourParle(`${date}T12:00:00Z`, timezone)}. ` +
+          "Propose un autre jour au client, puis rappelle cet outil avec cette " +
+          "nouvelle date. Ne rappelle jamais cet outil avec la même date.",
       };
     }
 

@@ -72,6 +72,23 @@ export function googleCalendarConfigured(): boolean {
 
 /** Traduit un code HTTP Google en erreur que le domaine sait interpréter. */
 function toCalendarError(status: number, body: string): CalendarError {
+  // `invalid_grant` arrive avec un code 400, pas 401 — et c'est un piège.
+  // Classé comme une simple requête invalide, il était réessayé indéfiniment
+  // alors qu'aucune nouvelle tentative ne peut aboutir : l'autorisation est
+  // morte, seul le professionnel peut en redonner une.
+  //
+  // Cas le plus fréquent, et de loin : une application Google en mode « Test »
+  // voit ses autorisations révoquées au bout de SEPT JOURS. Tant que
+  // l'application n'est pas publiée et validée, chaque agenda connecté cesse de
+  // fonctionner une semaine plus tard, sans que personne n'ait rien fait.
+  if (/invalid_grant/i.test(body)) {
+    return new CalendarError(
+      "UNAUTHORIZED",
+      "L'autorisation Google a expiré ou été révoquée. Reconnectez l'agenda.",
+      status,
+    );
+  }
+
   if (status === 401) {
     return new CalendarError(
       "UNAUTHORIZED",

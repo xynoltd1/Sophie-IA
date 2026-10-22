@@ -61,16 +61,22 @@ export default async function AgendaPage() {
       {calendrier.confidence !== "FRESH" ? (
         <Sheet tone="attention" className="flex flex-col gap-2">
           <p className="font-medium">
-            {calendrier.connected
-              ? "Synchronisation de l\u2019agenda en retard"
-              : "Agenda Google non connecté"}
+            {calendrier.confidence === "EXPIRED"
+              ? "Autorisation Google expirée"
+              : calendrier.connected
+                ? "Synchronisation de l\u2019agenda en retard"
+                : "Agenda Google non connecté"}
           </p>
           <p className="text-sm text-ink-soft">{calendarMessage(calendrier)}</p>
           <Link
             href="/app/plus"
             className="text-sm font-medium text-signal underline underline-offset-4"
           >
-            {calendrier.connected ? "Vérifier dans les paramètres" : "Connecter mon agenda"}
+            {calendrier.confidence === "EXPIRED"
+              ? "Reconnecter mon agenda"
+              : calendrier.connected
+                ? "Vérifier dans les paramètres"
+                : "Connecter mon agenda"}
           </Link>
         </Sheet>
       ) : null}
