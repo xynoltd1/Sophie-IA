@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { VapiVoiceProvider } from "@/lib/providers/voice/vapi";
-import { closeCall, openCall, schedulePostCall } from "@/lib/calls/registry";
+import { closeCall, openCall, openTestCall, schedulePostCall } from "@/lib/calls/registry";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +58,12 @@ export async function POST(request: NextRequest) {
   try {
     switch (evenement.type) {
       case "CALL_STARTED":
-        await demarrer(rawBody, evenement.providerCallId, evenement.occurredAt);
+        await demarrer(
+          rawBody,
+          evenement.providerCallId,
+          evenement.occurredAt,
+          request.nextUrl,
+        );
         break;
 
       case "CALL_ENDED":
@@ -99,23 +104,44 @@ function lire(rawBody: string): EventPayload {
   }
 }
 
-async function demarrer(rawBody: string, providerCallId: string, occurredAt: Date) {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function demarrer(
+  rawBody: string,
+  providerCallId: string,
+  occurredAt: Date,
+  requestUrl: URL,
+) {
   const payload = lire(rawBody);
 
   const numeroAppele =
     payload.message?.phoneNumber?.number ?? payload.message?.call?.phoneNumber?.number;
 
-  // Un essai depuis le navigateur n'a aucun numéro appelé. Il n'y a alors rien
-  // à rattacher : on ne force pas, et aucun appel n'est créé. C'est voulu —
-  // inventer une organisation serait pire que de ne rien enregistrer.
-  if (!numeroAppele) return;
-
   const appelant = payload.message?.customer?.number ?? payload.message?.call?.customer?.number;
 
-  await openCall({
+  if (numeroAppele) {
+    // Chemin normal : le numéro appelé désigne l'organisation, et la table
+    // `phone_numbers` dit si cette ligne est une ligne d'essai.
+    await openCall({
+      provider: "VAPI",
+      providerCallId,
+      toNumber: numeroAppele,
+      fromNumber: appelant ?? null,
+      startedAt: occurredAt,
+    });
+    return;
+  }
+
+  // Essai depuis le navigateur : aucun numéro appelé. L'organisation vient de
+  // l'adresse que nous avons configurée, et l'appel est forcément un essai —
+  // personne ne peut composer un numéro qui n'existe pas.
+  const org = requestUrl.searchParams.get("org");
+  if (!org || !UUID.test(org)) return;
+
+  await openTestCall({
+    organizationId: org,
     provider: "VAPI",
     providerCallId,
-    toNumber: numeroAppele,
     fromNumber: appelant ?? null,
     startedAt: occurredAt,
   });

@@ -97,3 +97,44 @@ describe("migration 0019", () => {
     );
   });
 });
+
+/**
+ * Un appel sans numero appele est forcement un essai.
+ *
+ * Personne ne peut composer un numero qui n'existe pas : un appel arrive sans
+ * numero de destination vient necessairement du bouton d'essai. Le marquer
+ * autrement polluerait les statistiques de l'artisan avec des appels qui n'ont
+ * jamais eu lieu.
+ *
+ * Ce test porte sur le code source parce que la regle est une decision, pas un
+ * calcul : elle doit rester lisible et ne pas se perdre dans une refonte.
+ */
+describe("essais depuis le navigateur", () => {
+  const registre = readFileSync(
+    resolve(process.cwd(), "src/lib/calls/registry.ts"),
+    "utf-8",
+  );
+  const evenements = readFileSync(
+    resolve(process.cwd(), "src/app/api/voice/events/route.ts"),
+    "utf-8",
+  );
+
+  it("force is_test sur un appel sans numero appele", () => {
+    const bloc = registre.slice(registre.indexOf("export async function openTestCall"));
+    expect(bloc).toMatch(/is_test:\s*true/);
+    // Et surtout : pas de numero de destination invente.
+    expect(bloc).toMatch(/to_e164:\s*null/);
+  });
+
+  it("verifie l'organisation avant de creer l'appel", () => {
+    const bloc = registre.slice(registre.indexOf("export async function openTestCall"));
+    expect(bloc).toMatch(/from\("organizations"\)/);
+  });
+
+  it("n'utilise ce chemin que faute de numero appele", () => {
+    // Si ce chemin devenait le chemin normal, un vrai appel pourrait etre
+    // marque comme essai et disparaitre des statistiques.
+    const bloc = evenements.slice(evenements.indexOf("async function demarrer"));
+    expect(bloc.indexOf("openCall(")).toBeLessThan(bloc.indexOf("openTestCall("));
+  });
+});

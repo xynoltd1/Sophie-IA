@@ -21,9 +21,16 @@
 | Déploiement | poussé sur GitHub, Vercel affiche **Ready** |
 | Assistant Vapi | les outils doivent être déclarés (voir § Déclarer les outils) |
 
-**Un vrai numéro de téléphone est nécessaire** à partir de la vérification 2.
-Les essais depuis le navigateur (bouton *Talk*) ne créent aucun appel, et c'est
-voulu : sans numéro appelé, rien ne dit à quelle entreprise rattacher l'appel.
+**Les vérifications 2 à 8 se font depuis le navigateur**, avec le bouton *Talk*,
+sans numéro de téléphone et sans frais. Il suffit que l'adresse des événements
+déclarée dans l'assistant porte `?org=<identifiant de votre entreprise>`.
+
+Ces appels sont **toujours** marqués comme essais et n'entrent dans aucune
+statistique. C'est automatique et non modifiable : un appel sans numéro appelé
+ne peut venir que du bouton d'essai.
+
+**Un vrai numéro reste nécessaire** pour une seule chose : vérifier que la
+téléphonie elle-même fonctionne. C'est la vérification 9, et elle peut attendre.
 
 Le numéro d'essai ne doit **jamais** être publié. La frontière entre test et
 production est un numéro différent, pas une case à cocher : le vrai risque

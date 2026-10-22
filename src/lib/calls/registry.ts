@@ -217,3 +217,81 @@ export async function schedulePostCall(
 
   await admin.from("calls").update(champs).eq("id", callId);
 }
+
+/**
+ * Ouvre un appel d'essai, sans numéro appelé.
+ *
+ * Un essai depuis le navigateur n'a aucun numéro : il n'y a donc rien à
+ * résoudre, et l'organisation doit être fournie explicitement par la
+ * configuration que nous avons écrite chez le fournisseur.
+ *
+ * **`is_test` est forcé à vrai, et ce n'est pas une commodité.** Un appel sans
+ * numéro appelé est inatteignable par un vrai client : personne ne peut
+ * composer un numéro qui n'existe pas. Il ne peut donc rien être d'autre qu'un
+ * essai, et le marquer autrement polluerait les statistiques de l'artisan avec
+ * des appels qui n'ont jamais eu lieu.
+ *
+ * Le pendant de cette règle : ce chemin ne doit JAMAIS servir à un appel
+ * téléphonique réel. Un vrai appel passe par `openCall`, qui exige un numéro
+ * déclaré dans `phone_numbers`.
+ */
+export async function openTestCall(params: {
+  organizationId: string;
+  provider: string;
+  providerCallId: string;
+  fromNumber?: string | null;
+  startedAt?: Date;
+}): Promise<CallRecord | null> {
+  const admin = createAdminClient();
+
+  const { data: existant } = await admin
+    .from("calls")
+    .select("*")
+    .eq("provider", params.provider)
+    .eq("provider_call_id", params.providerCallId)
+    .maybeSingle();
+
+  if (existant) return { call: existant as CallRow, created: false };
+
+  // L'organisation est vérifiée avant usage : même venue de notre propre
+  // configuration, une valeur n'entre pas en base sans contrôle.
+  const { data: org } = await admin
+    .from("organizations")
+    .select("id")
+    .eq("id", params.organizationId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (!org) return null;
+
+  const { data, error } = await admin
+    .from("calls")
+    .insert({
+      organization_id: params.organizationId,
+      phone_number_id: null,
+      provider: params.provider,
+      provider_call_id: params.providerCallId,
+      direction: "INBOUND",
+      from_e164: params.fromNumber ?? null,
+      to_e164: null,
+      status: "RINGING",
+      is_test: true,
+      started_at: (params.startedAt ?? new Date()).toISOString(),
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    const { data: concurrent } = await admin
+      .from("calls")
+      .select("*")
+      .eq("provider", params.provider)
+      .eq("provider_call_id", params.providerCallId)
+      .maybeSingle();
+
+    if (concurrent) return { call: concurrent as CallRow, created: false };
+    return null;
+  }
+
+  return { call: data as CallRow, created: true };
+}

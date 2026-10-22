@@ -3,6 +3,28 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.7.1] — 2026-10-22 — Tester sans numéro de téléphone
+
+### Ajouté
+- Un essai depuis le navigateur crée désormais un appel dans l'application, à condition que
+  l'adresse des événements porte `?org=<uuid>`.
+
+### Pourquoi
+Les numéros gratuits de Vapi sont américains. Les appeler depuis la Belgique coûte à
+l'opérateur de l'utilisatrice, et un vrai numéro français ou belge demande un K-bis ou un
+extrait BCE, un numéro de TVA et environ 72 heures de validation — à faire avant de vendre,
+pas avant de tester.
+
+Ce chemin permet de vérifier tout le produit — contacts, prospects, tâches, rendez-vous,
+fiche d'appel — sans numéro et sans frais.
+
+### Garde-fou
+`is_test` est **forcé** à vrai sur ces appels, et `to_e164` reste nul. Un appel sans numéro
+appelé est inatteignable par un vrai client : personne ne compose un numéro qui n'existe
+pas. Trois tests verrouillent cette règle, dont un qui vérifie que le chemin normal reste
+prioritaire — si celui-ci passait devant, un vrai appel pourrait être marqué comme essai et
+disparaître des statistiques.
+
 ## [0.7.0] — 2026-10-22 — Sophie sait travailler
 
 > **Écrit, non vérifié.** Rien de cette version n'a été exercé avec un vrai appel.
