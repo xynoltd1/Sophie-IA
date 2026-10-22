@@ -3,6 +3,28 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.8.1] — 2026-10-22 — Trois messages d'erreur qui disent enfin quoi faire
+
+### Corrigé
+- **La région par défaut pointait vers l'Europe.** `.env.example` et l'adaptateur Vapi
+  annonçaient `api.eu.vapi.ai`, hérité de l'époque où ADR-020 supposait la région
+  européenne accessible. ADR-026 a constaté le contraire le 19 octobre, et ces deux valeurs
+  ne l'avaient pas suivi. Une clé américaine envoyée au serveur européen est refusée
+  exactement comme une clé fausse — d'où une demi-heure passée à soupçonner la clé.
+- **Le rattachement des outils à l'assistant échouait.** Vapi *remplace* l'objet `model`
+  au lieu de le fusionner : envoyer seulement `toolIds` efface le modèle et le provider, et
+  la requête est refusée. Le script relit désormais l'assistant et renvoie son modèle
+  complet.
+- **Le script traduisait `401` par « unauthorized ».** Il nomme maintenant les deux causes
+  réelles, dans l'ordre de fréquence : la région avant la clé.
+- **Le script n'affichait jamais l'adresse du fournisseur**, seulement la nôtre. S'il
+  l'avait fait, l'erreur de région se voyait en une seconde.
+
+### Ce que cette série dit
+Trois pannes aujourd'hui, trois messages muets. L'en-tête mal nommé, la durée à virgule, la
+région périmée : aucune n'était difficile à corriger, toutes ont été difficiles à trouver.
+Le coût n'était pas dans le bug, il était dans ce que le programme refusait de dire.
+
 ## [0.8.0] — 2026-10-22 — Les outils se déclarent tout seuls
 
 ### Le problème

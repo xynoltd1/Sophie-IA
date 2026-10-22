@@ -19,7 +19,10 @@ import type {
  * forme de réponses.
  */
 
-const API = process.env.VOICE_API_BASE_URL?.trim() || "https://api.eu.vapi.ai";
+// Par défaut la région américaine : l'Europe de Vapi n'est pas accessible en
+// libre-service (ADR-026), et un défaut qui pointe vers une région inaccessible
+// produit un « 401 unauthorized » que rien n'explique.
+const API = process.env.VOICE_API_BASE_URL?.trim() || "https://api.vapi.ai";
 
 /** Au-delà, une requête rejouée est refusée même si sa signature est valide. */
 const MAX_SIGNATURE_AGE_MS = 5 * 60 * 1000;

@@ -67,6 +67,22 @@ async function vapi(chemin, options = {}) {
   const texte = await reponse.text();
 
   if (!reponse.ok) {
+    if (reponse.status === 401) {
+      // « unauthorized » tout court ne dit rien, et la cause la plus fréquente
+      // n'est pas la clé : c'est la région. Une clé américaine envoyée au
+      // serveur européen est refusée exactement comme une clé fausse.
+      throw new Error(
+        `Le fournisseur a refusé la clé (401).\n\n` +
+          `Adresse utilisée : ${API}\n\n` +
+          `Deux causes possibles, dans cet ordre :\n` +
+          `  1. VOICE_API_BASE_URL ne correspond pas à votre compte.\n` +
+          `     Compte américain → https://api.vapi.ai\n` +
+          `     Compte européen  → https://api.eu.vapi.ai\n` +
+          `  2. VOICE_API_KEY n'est pas une clé privée, ou a été copiée masquée.\n` +
+          `     Utilisez le bouton copier du tableau de bord, pas la souris.`,
+      );
+    }
+
     // Le corps de la réponse porte la vraie raison. L'afficher évite la séance
     // de devinettes qu'impose un simple « 400 Bad Request ».
     throw new Error(`${options.method || "GET"} ${chemin} → ${reponse.status}\n${texte}`);
@@ -113,7 +129,8 @@ function corpsOutil(definition) {
 
 async function main() {
   console.log(APPLIQUER ? "Mode : écriture réelle" : "Mode : simulation (ajoutez --apply pour écrire)");
-  console.log(`Serveur d'outils : ${URL_OUTILS}\n`);
+  console.log(`Fournisseur de voix : ${API}`);
+  console.log(`Serveur d'outils    : ${URL_OUTILS}\n`);
 
   const attendus = await catalogue();
   console.log(`${attendus.length} outils déclarés par le serveur.\n`);
@@ -154,11 +171,24 @@ async function main() {
 
   if (ASSISTANT) {
     if (APPLIQUER) {
+      // Vapi REMPLACE l'objet `model` au lieu de le fusionner : envoyer
+      // seulement `toolIds` efface le modèle et le provider, et la requête est
+      // refusée. On relit donc l'assistant et on renvoie son modèle complet.
+      const assistant = await vapi(`/assistant/${ASSISTANT}`);
+      const modele = assistant?.model;
+
+      if (!modele?.provider) {
+        throw new Error(
+          `L'assistant ${ASSISTANT} n'a pas de modèle lisible.\n` +
+            `Rattachez les outils à la main dans le tableau de bord.`,
+        );
+      }
+
       // On remplace la liste entière : un outil retiré du code doit disparaître
       // de l'assistant, sinon le modèle continuera de l'appeler dans le vide.
       await vapi(`/assistant/${ASSISTANT}`, {
         method: "PATCH",
-        body: JSON.stringify({ model: { toolIds: ids } }),
+        body: JSON.stringify({ model: { ...modele, toolIds: ids } }),
       });
     }
     console.log(`Assistant ${ASSISTANT} : ${ids.length} outils rattachés.`);
