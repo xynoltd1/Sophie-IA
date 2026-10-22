@@ -354,3 +354,80 @@ export interface DayAppointmentRow {
   contact_name: string | null;
   city: string | null;
 }
+
+/* ---------------------------------------------------------------------------
+ * Appels (migration 0019)
+ * ------------------------------------------------------------------------- */
+
+export type CallStatus =
+  | "RINGING"
+  | "ANSWERED"
+  | "COMPLETED"
+  | "MISSED"
+  | "FAILED"
+  | "TRANSFERRED";
+
+export type CallDirection = "INBOUND" | "OUTBOUND";
+
+/**
+ * Cycle de vie des trois traitements post-appel.
+ *
+ * `NOT_APPLICABLE` n'est pas un échec : c'est le cas d'un appel dont
+ * l'enregistrement était désactivé, ou d'une transcription jamais demandée.
+ * Le confondre avec `FAILED` ferait réessayer indéfiniment un travail que
+ * personne n'a demandé.
+ */
+export type ProcessingStatus =
+  | "NOT_APPLICABLE"
+  | "PENDING"
+  | "RUNNING"
+  | "DONE"
+  | "FAILED";
+
+export interface PhoneNumberRow {
+  id: string;
+  organization_id: string;
+  e164: string;
+  label: string | null;
+  provider: string;
+  provider_number_id: string | null;
+  assistant_external_id: string | null;
+  is_test: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CallRow {
+  id: string;
+  organization_id: string;
+  phone_number_id: string | null;
+  provider: string;
+  provider_call_id: string;
+  direction: CallDirection;
+  from_e164: string | null;
+  to_e164: string | null;
+  contact_id: string | null;
+  status: CallStatus;
+  recording_status: ProcessingStatus;
+  transcription_status: ProcessingStatus;
+  summary_status: ProcessingStatus;
+  recording_path: string | null;
+  recording_expires_at: string | null;
+  started_at: string;
+  answered_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  ended_reason: string | null;
+  is_test: boolean;
+  correlation_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Résultat de `organization_for_number()`. */
+export interface NumberOwnerRow {
+  organization_id: string;
+  phone_number_id: string;
+  is_test: boolean;
+}

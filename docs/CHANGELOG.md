@@ -3,6 +3,84 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.6.1] — 2026-10-22 — L'organisation peut venir de l'adresse de l'outil
+
+### Ajouté
+- `/api/voice/tools` accepte `?org=<uuid>` comme source d'organisation, en plus du numéro
+  appelé, de l'appel déjà ouvert et des métadonnées de l'assistant.
+
+### Pourquoi
+Un essai depuis le navigateur n'a aucun numéro appelé, et l'interface de Vapi ne laisse plus
+modifier les métadonnées de l'assistant à la main. L'adresse du serveur, elle, reste un champ
+texte éditable partout. Elle est configurée par nous, pas par le modèle : même niveau de
+confiance que les métadonnées, pour une mise en œuvre plus robuste aux changements
+d'interface du fournisseur.
+
+L'ordre de résolution reste inchangé : le numéro appelé passe toujours devant, parce que
+c'est la seule source vérifiée contre nos propres tables.
+
+## [0.6.0] — 2026-10-20 — Un appel existe dans le produit (Phase 4, début)
+
+### Corrigé — à appliquer avant tout essai téléphonique
+- **Les outils de Sophie échouaient systématiquement pendant un appel.** `is_org_member()`
+  exigeait un utilisateur connecté ; pendant un appel il n'y en a aucun, c'est le serveur
+  qui agit. `check_availability` aurait répondu « impossible de consulter l'agenda » à
+  chaque appel. Migration 0020 et ADR-027.
+
+### Ajouté
+- Migration 0019 : tables `phone_numbers` et `calls`.
+  - `phone_numbers` relie un numéro appelé à une organisation. C'est ce lien qui permet à
+    Sophie de savoir chez qui elle travaille (ADR-022 : l'artisan renvoie son numéro vers
+    le nôtre).
+  - `calls` porte l'appel, avec quatre statuts indépendants — l'appel, l'enregistrement, la
+    transcription et le résumé échouent séparément (sections 12 et 16).
+  - Aucun droit d'écriture sur `calls` depuis le navigateur : un appel est un fait constaté
+    par le fournisseur, jamais une affirmation du client.
+- `src/lib/calls/registry.ts` : ouverture et fermeture d'un appel, idempotentes. Un webhook
+  rejoué ne crée pas de doublon et ne fait pas revivre un appel terminé.
+- `src/lib/sophie/announcement.ts` : construit l'annonce de début d'appel — nature d'IA,
+  enregistrement quand il a réellement lieu, et moyen de s'opposer.
+- Tests : transitions d'état, garde-fous sur la migration, détection des formulations
+  d'annonce insuffisantes, et vérification que les fonctions appelées par le serveur
+  acceptent le serveur.
+
+### Modifié
+- **La transparence sur la nature d'IA n'est plus désactivable.** `disclose_ai` est
+  verrouillée à vrai par contrainte. Article 50 du règlement (UE) 2024/1689, applicable
+  depuis le 2 août 2026. Un client ne peut pas désactiver une obligation légale depuis son
+  tableau de bord — et c'est nous qui serions en faute de le lui permettre.
+
+### Pas encore fait
+La couche qui parle à Vapi n'est pas vérifiée contre un vrai appel. Rien n'est construit
+par-dessus tant que l'essai n'a pas eu lieu.
+
+## [0.5.4] — 2026-10-15 — Google Calendar vérifié en conditions réelles
+
+### Modifié
+- `google-calendar` passe de `BLOCKED_EXTERNAL_CONFIG` à **`TESTED`**. Exercé contre Google
+  le 2026-10-15 : autorisation, jetons, synchronisation, puis vérification par l'usage —
+  un événement réel de 10h à 11h a retiré les créneaux de 09:00 à 11:00 des disponibilités
+  proposées, marge de 15 minutes comprise.
+- `INTEGRATIONS.md` : ce qui a été exercé, ce qui ne l'est pas encore (écriture d'un
+  rendez-vous, suppression, webhook — Phase 6), et ce qui manque avant d'ouvrir à des
+  clients.
+
+### Note
+Pas `PRODUCTION_READY`. L'application Google est en mode Test : seules les adresses
+inscrites comme testeurs peuvent connecter un agenda, 100 au maximum. Aucun client réel ne
+le pourra avant la validation de l'application par Google.
+
+### Corrigé
+- `tests/calendar.test.ts` épinglait l'état `BLOCKED_EXTERNAL_CONFIG` de Google Calendar.
+  Un test qui fige un état transitoire oblige à modifier un test chaque fois qu'un travail
+  avance — c'est-à-dire qu'il apprend à modifier les tests. Il vérifie désormais ce qui doit
+  rester vrai : les variables indispensables sont déclarées, et une intégration bloquée dit
+  toujours par quoi.
+
+### Aucun changement de comportement
+Cette version ne contient que des corrections d'état et de documentation. Rien ne presse
+pour la déployer ; elle peut accompagner la prochaine livraison fonctionnelle.
+
 ## [0.5.3] — 2026-10-14 — Connexion Google Calendar réparée
 
 ### Corrigé

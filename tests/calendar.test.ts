@@ -69,10 +69,26 @@ describe("registre des intégrations", () => {
     }
   });
 
-  it("connaît Google Calendar et son blocage", () => {
+  /**
+   * Ce test n'epingle pas l'etat courant de l'integration — il change avec le
+   * projet, et un test qui le fige oblige a modifier un test chaque fois qu'un
+   * travail avance, ce qui apprend a modifier les tests. Il verifie ce qui doit
+   * rester vrai : les variables indispensables sont declarees, et rien n'est
+   * annonce comme pret pour la production sans validation juridique.
+   */
+  it("déclare les variables indispensables de Google Calendar", () => {
     const google = integrationStatus("google-calendar");
-    expect(google?.status).toBe("BLOCKED_EXTERNAL_CONFIG");
+    expect(google).toBeDefined();
     expect(google?.requiredEnv).toContain("GOOGLE_OAUTH_CLIENT_ID");
+    expect(google?.requiredEnv).toContain("GOOGLE_OAUTH_CLIENT_SECRET");
     expect(google?.requiredEnv).toContain("SECRETS_ENCRYPTION_KEY");
+  });
+
+  it("explique ce qui manque des qu'une integration est bloquee", () => {
+    for (const entry of INTEGRATIONS) {
+      if (entry.status === "BLOCKED_EXTERNAL_CONFIG") {
+        expect(entry.blockedBy, `${entry.key} est bloquee sans dire par quoi`).toBeTruthy();
+      }
+    }
   });
 });

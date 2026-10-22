@@ -17,12 +17,12 @@ Quatre états, et un seul autorise à dire qu'une intégration fonctionne.
 **La source de vérité est `src/lib/providers/status.ts`**, pas ce tableau. Un test
 vérifie qu'aucune intégration externe n'y est déclarée `PRODUCTION_READY`.
 
-## État au 2026-09-24
+## État au 2026-10-15
 
 | Intégration | État | Ce qui manque |
 |---|---|---|
 | Supabase | `TESTED` | rien |
-| Google Calendar | `BLOCKED_EXTERNAL_CONFIG` | projet Google Cloud et identifiants OAuth |
+| Google Calendar | `TESTED` | validation Google avant d'ouvrir à des clients |
 | Téléphonie | `BLOCKED_EXTERNAL_CONFIG` | compte opérateur et numéro |
 | Sophie Voice | `BLOCKED_EXTERNAL_CONFIG` | compte Vapi en région européenne |
 | Transcription et résumé | `BLOCKED_EXTERNAL_CONFIG` | fournisseur non choisi |
@@ -48,7 +48,22 @@ automatique, synchronisation incrémentale avec reprise complète quand Google r
 jeton, webhook de notification, job planifié de rattrapage, écriture des rendez-vous
 confirmés dans l'agenda, suppression à l'annulation.
 
-**Ce qui n'a jamais été exercé** : tout. Aucune requête n'est encore partie vers Google.
+**Ce qui a été exercé contre Google, le 2026-10-15** : autorisation OAuth complète,
+échange du code, chiffrement et stockage des jetons, synchronisation de l'agenda, puis
+vérification par l'usage. Un événement réel de 10h à 11h placé dans l'agenda Google a
+retiré les créneaux de 09:00 à 11:00 des disponibilités proposées par l'application, marge
+de 15 minutes comprise. C'est cette dernière étape qui prouve l'intégration : la connexion
+seule ne dit rien de ce que Sophie voit.
+
+**Ce qui n'est pas encore exercé** : l'écriture d'un rendez-vous confirmé dans l'agenda
+(`pushAppointment`), sa suppression à l'annulation, et le webhook de notification. Ces
+chemins ne s'exécutent qu'à partir de la Phase 6.
+
+**Ce qui reste avant d'ouvrir à des clients** : l'application Google est en mode **Test**.
+Seules les adresses inscrites comme testeurs — 100 au maximum — peuvent connecter un
+agenda. Un client réel ne le pourra pas. La validation de l'application par Google est un
+prérequis de mise en production, listé dans `LEGAL_COMPLIANCE.md` ; elle exige notamment
+une politique de confidentialité publiée et un domaine vérifié.
 
 **Périmètre OAuth demandé** : `calendar.events` uniquement — lire et écrire des
 événements, rien d'autre. Pas d'accès aux contacts, pas aux e-mails, pas de création

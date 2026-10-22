@@ -390,8 +390,8 @@ juste à côté du code qui la contredisait.
 
 ---
 
-## ADR-022 — Acquisition des numéros de téléphone : décision ouverte
-**Date** 2026-09-24 · **Statut** **ouverte — décision produit et juridique requise**
+## ADR-022 — Acquisition des numéros de téléphone : le client garde son numéro
+**Date** 2026-09-24, **tranchée le 2026-10-19** · **Statut** acceptée
 
 La recherche a mis au jour une contrainte réglementaire qui touche le modèle commercial,
 indépendamment du fournisseur de voix retenu.
@@ -410,9 +410,43 @@ Deux modèles possibles, et ils ne se valent pas :
 - **Un dossier réglementaire par client.** Juridiquement plus propre, mais demande à un
   plombier de fournir un K-bis avant d'essayer le produit — ce qui tue l'inscription.
 
-**Aucune de ces options ne sera choisie sans vous.** Elle engage une structure
-juridique, un coût, et le discours commercial. Voir aussi le point L8 de
+### Décision
+
+**Le professionnel garde son propre numéro et le renvoie vers Sophie.** Nous ne détenons
+aucun numéro pour le compte d'un client et ne devenons pas son intermédiaire téléphonique.
+
+Raisons retenues :
+
+- Le numéro imprimé sur une camionnette ou gravé sur une plaque ne se change pas. Demander
+  à un artisan d'adopter un numéro qui ne lui appartient pas est l'objection la plus
+  coûteuse à lever ; « gardez votre numéro » la supprime.
+- Aucune avance de trésorerie sur des abonnements de lignes, aucune entité par pays,
+  aucun dossier réglementaire à monter pour chaque client.
+- Le client coupe le renvoi quand il veut. Essayer le produit devient réversible, ce qui
+  abaisse la barrière à l'essai et, accessoirement, à la résiliation — assumé.
+
+Contreparties assumées :
+
+- L'inscription demande une manipulation chez l'opérateur du client, que tous ne feront pas
+  seuls. Il faudra une aide au renvoi, opérateur par opérateur. C'est un coût de support,
+  pas un coût technique.
+- Nous dépendons d'un réglage que nous ne contrôlons pas. Un renvoi désactivé par erreur
+  se traduit par « Sophie ne reçoit plus rien », et c'est nous qu'on appellera. Il faudra
+  donc détecter l'absence d'appels et savoir la distinguer d'un creux d'activité.
+
+### Ce que cela ne décide pas
+
+Le numéro vers lequel le renvoi pointe doit bien exister quelque part. Pour l'essai
+technique, un numéro d'essai fourni par le fournisseur de voix suffit et ne demande aucun
+document. Le statut réglementaire de ce numéro de destination en production reste à
+trancher, et dépend du fournisseur retenu — voir ADR-020 et le point L8 de
 `LEGAL_COMPLIANCE.md`.
+
+### L'architecture ne se ferme pas
+
+`TelephonyProvider` reste une abstraction. Si un client exige un jour un numéro fourni par
+nous, rien dans le code n'y fait obstacle ; c'est une décision commerciale, pas un
+chantier technique.
 
 ---
 
@@ -571,3 +605,122 @@ Ces deux erreurs partagent une cause. Un contrôle qui n'est jamais exécuté co
 réalité ne prouve rien : ni l'index, ni le message d'erreur ne pouvaient échouer avant
 qu'un vrai agenda soit connecté. Les chemins qui ne s'exécutent qu'en présence d'un service
 externe doivent être couverts par un contrôle statique quand un test réel est impossible.
+
+
+---
+
+## ADR-026 — La region europeenne de Vapi n'est pas accessible en libre-service
+
+**Date** 2026-10-19 · **Statut** constat — remet ADR-020 en question
+
+### Le fait
+
+`dashboard.eu.vapi.ai` ne propose aucune inscription. La page offre « Sign in »,
+« Sign in with SSO » et « Contact sales », rien d'autre. La documentation de Vapi indique
+que la region europeenne est reservee au « Premier Success Package » et renvoie au service
+commercial. Verifie le 2026-10-19.
+
+Un fil du support de Vapi affirme l'inverse (« creez simplement un compte sur
+dashboard.eu.vapi.ai »). Il est faux ou perime. L'essai reel tranche : pas d'inscription.
+
+Une inscription en libre-service sur `dashboard.vapi.ai` fonctionne, mais cree un compte
+en region **americaine**. Les deux regions sont des environnements isoles : ni les comptes,
+ni les cles, ni les agents, ni les numeros ne traversent.
+
+### Pourquoi cela compte
+
+ADR-020 retenait Vapi **parce que** la region europeenne existait. Un enregistrement
+d'appel contient une voix, un nom, souvent une adresse. Pour des clients francais et
+belges, faire transiter ces donnees par les Etats-Unis ajoute des obligations listees dans
+`LEGAL_COMPLIANCE.md`. Le motif principal du choix tombe donc, ou devient payant à un
+niveau inconnu.
+
+### Ce qui n'est pas remis en cause
+
+L'architecture. `VoiceAIProvider`, `/api/voice/tools` et les outils de `SophieEngine` sont
+neutres vis-a-vis du fournisseur — c'etait l'objet d'ADR-002 et d'ADR-020. La partie
+specifique a Vapi tient dans un seul fichier (`src/lib/providers/voice/vapi.ts`) :
+verification de signature et lecture de la charge utile. Changer de fournisseur coute un
+adaptateur, pas une reecriture.
+
+C'est ce qui rend un essai technique en region americaine defendable : il valide une chaine
+qui ne depend pas du fournisseur.
+
+### Decision
+
+**Ouverte.** Elle engage un cout et le traitement de donnees personnelles ; elle n'est pas
+prise sans l'utilisatrice. Trois voies identifiees :
+
+1. Demander un devis a Vapi pour la region europeenne.
+2. Faire l'essai technique en region americaine, **avec de fausses donnees uniquement**,
+   enregistrement desactive, et trancher la production ensuite.
+3. Comparer d'autres fournisseurs de voix heberges en Europe avant d'ecrire la Phase 4.
+
+Aucun appel reel, aucun client reel et aucun enregistrement tant que la question de la
+region n'est pas tranchee.
+
+---
+
+## ADR-027 — Le serveur n'est pas un utilisateur, et les fonctions metier doivent le savoir
+
+**Date** 2026-10-20 · **Statut** acceptee
+
+### Le bug
+
+`is_org_member()` repondait a la question « l utilisateur connecte est-il membre de cette
+organisation ? », en lisant `auth.uid()`. Correct pour une requete venue du navigateur.
+
+Mais pendant un appel telephonique, **il n y a aucun utilisateur connecte**. C est notre
+serveur qui agit, avec la cle `service_role`, apres avoir verifie la signature du
+fournisseur de voix. `auth.uid()` est nul, la garde renvoie faux, et la fonction leve
+« Droits insuffisants ».
+
+Consequence : `check_availability` aurait repondu « impossible de consulter l agenda »
+pendant chaque appel, alors que l agenda etait parfaitement accessible. Le meme probleme
+touchait `appointments_for_day()`, `calendar_sync_state()` et `find_contact_by_phone()`.
+
+Trouve avant le premier essai telephonique, en relisant les signatures pour ecrire les
+outils suivants — pas par un test.
+
+### Decision
+
+Une fonction `is_server_context()` detecte le role porte par le jeton, et `is_org_member()`
+l accepte desormais en plus de l appartenance personnelle.
+
+La correction est faite **dans `is_org_member()` et nulle part ailleurs**. Toutes les
+fonctions qui l appellent en beneficient sans etre reecrites. Une correction repetee quatre
+fois est une correction qu on oubliera la cinquieme.
+
+`org_role()` et `has_org_role()` ne sont **pas** modifiees. Un role appartient a une
+personne ; le serveur n en a pas. Une action reservee au proprietaire ne doit pas devenir
+declenchable par n importe quel chemin serveur.
+
+### Pourquoi cela n ouvre rien
+
+`service_role` ne passe pas par les policies RLS : Postgres les ignore pour lui. Les
+policies sont donc inchangees.
+
+Et a l interieur des fonctions SECURITY DEFINER, la garde ne protegeait rien : `service_role`
+a deja un acces direct et complet aux tables sous-jacentes. Elle l empechait seulement
+d emprunter le chemin le plus sur, celui des fonctions metier.
+
+Ce qui protege reellement l organisation sur ce chemin est ailleurs : la verification de
+signature du webhook, et le fait que l `organizationId` soit lu dans une configuration que
+nous avons ecrite — jamais dans ce que le modele raconte.
+
+### Garde-fou
+
+`tests/server-rpc.test.ts` releve chaque fonction SQL appelee avec le client
+d administration et verifie qu aucune n exige un role personnel. Verifie dans les deux sens :
+il echoue sur l etat d avant la migration 0020.
+
+### La lecon, pour la troisieme fois
+
+ADR-024 (frequence de tache refusee par Vercel), ADR-025 (contrainte non deductible par
+ON CONFLICT) et celle-ci partagent une cause unique : **un chemin qui ne s execute que
+lorsqu un service externe appelle n est atteint par aucun controle local**. Typecheck, lint,
+tests et build etaient verts les trois fois.
+
+La seule parade trouvee jusqu ici est de faire porter un test sur l artefact lui-meme — le
+`vercel.json`, le SQL des migrations — plutot que sur le code TypeScript. Ces trois tests
+existent maintenant. Ils ne couvrent pas la categorie entiere.

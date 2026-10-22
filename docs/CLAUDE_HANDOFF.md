@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.5.3 · **Phase 3 écrite en entier ; Phase 4 au stade du spike** · **Vérifié le 2026-10-14**
+**Version** 0.6.0 · **Phase 3 terminée et vérifiée ; Phase 4 commencée, essai téléphonique non encore réalisé** · **Vérifié le 2026-10-20**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -17,15 +17,19 @@ Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
 enregistrement réel tant qu'elle ne l'est pas. Le développement technique continue
 normalement.
 
-**Sophie ne répond pas encore au téléphone.** C'est la Phase 4, et elle dépend d'un
-fournisseur non choisi.
+**Sophie ne répond pas encore au téléphone.** C'est la Phase 4. Le fournisseur de voix est
+choisi (Vapi EU, ADR-020) ; il manque un compte et un numéro de téléphone, et le modèle
+d'acquisition des numéros reste une décision ouverte (ADR-022).
+
+**Google Calendar est vérifié de bout en bout depuis le 2026-10-15** : un événement réel
+placé dans l'agenda retire bien les créneaux correspondants des disponibilités proposées.
 
 ### Vérifications passées, exécutées le 2026-10-14
 
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  99 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  121 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
 

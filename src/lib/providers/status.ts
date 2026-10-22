@@ -59,9 +59,7 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
   {
     key: "google-calendar",
     label: "Google Calendar",
-    status: "BLOCKED_EXTERNAL_CONFIG",
-    blockedBy:
-      "Projet Google Cloud, API Calendar activée, écran de consentement et identifiants OAuth à créer.",
+    status: "TESTED",
     requiredEnv: [
       "GOOGLE_OAUTH_CLIENT_ID",
       "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -69,7 +67,12 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
       "SECRETS_ENCRYPTION_KEY",
     ],
     notes:
-      "Flux OAuth, rafraîchissement de jeton, synchronisation incrémentale et webhook écrits. Rien n'a jamais parlé à Google.",
+      "Exercé contre Google le 2026-10-15 : autorisation OAuth, chiffrement et stockage des " +
+      "jetons, synchronisation, puis vérification par l'usage — un événement réel de 10h à 11h " +
+      "dans l'agenda a retiré les créneaux de 09:00 à 11:00 des disponibilités proposées, marge " +
+      "de 15 minutes comprise. Pas encore PRODUCTION_READY : l'application Google est en mode " +
+      "Test, donc seules les adresses inscrites comme testeurs peuvent connecter un agenda. " +
+      "La validation Google est un prérequis de mise en production (LEGAL_COMPLIANCE.md).",
   },
   {
     key: "telephony",
