@@ -1,0 +1,178 @@
+#!/usr/bin/env node
+/**
+ * Déclare les outils de Sophie chez le fournisseur de voix.
+ *
+ * POURQUOI CE SCRIPT EXISTE
+ *
+ * Le modèle ne peut appeler que les outils déclarés chez le fournisseur. Les
+ * recopier à la main dans sept formulaires web est long, et surtout c'est ainsi
+ * qu'ils divergent du code : un paramètre renommé d'un côté et pas de l'autre,
+ * et Sophie appelle un outil avec des arguments que le serveur ne comprend
+ * plus. L'erreur est alors invisible — elle ne se voit qu'au téléphone.
+ *
+ * Le catalogue est lu depuis le serveur RÉELLEMENT DÉPLOYÉ, et non depuis le
+ * code local : si votre machine est en avance sur la production, c'est la
+ * production qui a raison, puisque c'est elle qui répondra aux appels.
+ *
+ * USAGE
+ *
+ *   node --env-file=.env.local scripts/sync-vapi-tools.mjs
+ *   node --env-file=.env.local scripts/sync-vapi-tools.mjs --apply
+ *
+ * Sans `--apply`, le script n'écrit RIEN : il montre ce qu'il ferait. C'est le
+ * mode par défaut à dessein — un script qui modifie un service externe dès la
+ * première exécution est un script qu'on lance une fois de trop.
+ *
+ * VARIABLES ATTENDUES dans .env.local
+ *
+ *   VOICE_API_KEY          clé privée du tableau de bord Vapi
+ *   VOICE_WEBHOOK_SECRET   le même secret que dans Vercel
+ *   NEXT_PUBLIC_APP_URL    https://zelicall.com
+ *   SOPHIE_ORG_ID          identifiant de l'organisation
+ *   VOICE_ASSISTANT_ID     facultatif : rattache les outils à cet assistant
+ *
+ * Aucune de ces valeurs n'est affichée par le script.
+ */
+
+const API = (process.env.VOICE_API_BASE_URL || "https://api.vapi.ai").replace(/\/$/, "");
+const APPLIQUER = process.argv.includes("--apply");
+
+const requis = ["VOICE_API_KEY", "VOICE_WEBHOOK_SECRET", "NEXT_PUBLIC_APP_URL", "SOPHIE_ORG_ID"];
+const manquantes = requis.filter((nom) => !process.env[nom]?.trim());
+
+if (manquantes.length > 0) {
+  console.error(`Variables manquantes dans .env.local : ${manquantes.join(", ")}`);
+  console.error("Le script ne devine rien : il s'arrête.");
+  process.exit(1);
+}
+
+const CLE = process.env.VOICE_API_KEY.trim();
+const SECRET = process.env.VOICE_WEBHOOK_SECRET.trim();
+const BASE = process.env.NEXT_PUBLIC_APP_URL.trim().replace(/\/$/, "");
+const ORG = process.env.SOPHIE_ORG_ID.trim();
+const ASSISTANT = process.env.VOICE_ASSISTANT_ID?.trim() || null;
+
+const URL_OUTILS = `${BASE}/api/voice/tools?org=${ORG}`;
+
+async function vapi(chemin, options = {}) {
+  const reponse = await fetch(`${API}${chemin}`, {
+    ...options,
+    headers: {
+      authorization: `Bearer ${CLE}`,
+      "content-type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  const texte = await reponse.text();
+
+  if (!reponse.ok) {
+    // Le corps de la réponse porte la vraie raison. L'afficher évite la séance
+    // de devinettes qu'impose un simple « 400 Bad Request ».
+    throw new Error(`${options.method || "GET"} ${chemin} → ${reponse.status}\n${texte}`);
+  }
+
+  return texte ? JSON.parse(texte) : null;
+}
+
+async function catalogue() {
+  const reponse = await fetch(`${BASE}/api/voice/tools/manifest`, {
+    headers: { "x-vapi-secret": SECRET },
+  });
+
+  if (reponse.status === 401) {
+    throw new Error(
+      "Le serveur a refusé le secret. VOICE_WEBHOOK_SECRET doit être identique\n" +
+        "dans .env.local et dans les variables Vercel du déploiement en cours.",
+    );
+  }
+
+  if (!reponse.ok) {
+    throw new Error(`Catalogue indisponible : ${reponse.status} ${await reponse.text()}`);
+  }
+
+  const { tools } = await reponse.json();
+  return tools;
+}
+
+function corpsOutil(definition) {
+  return {
+    type: "function",
+    function: {
+      name: definition.name,
+      description: definition.description,
+      parameters: definition.parameters,
+    },
+    server: {
+      url: URL_OUTILS,
+      timeoutSeconds: 20,
+      headers: { "x-vapi-secret": SECRET },
+    },
+  };
+}
+
+async function main() {
+  console.log(APPLIQUER ? "Mode : écriture réelle" : "Mode : simulation (ajoutez --apply pour écrire)");
+  console.log(`Serveur d'outils : ${URL_OUTILS}\n`);
+
+  const attendus = await catalogue();
+  console.log(`${attendus.length} outils déclarés par le serveur.\n`);
+
+  const existants = await vapi("/tool");
+  const parNom = new Map(
+    (Array.isArray(existants) ? existants : []).map((o) => [o.function?.name, o]),
+  );
+
+  const ids = [];
+  let crees = 0;
+  let majs = 0;
+
+  for (const definition of attendus) {
+    const existant = parNom.get(definition.name);
+    const corps = corpsOutil(definition);
+
+    if (!existant) {
+      if (APPLIQUER) {
+        const cree = await vapi("/tool", { method: "POST", body: JSON.stringify(corps) });
+        ids.push(cree.id);
+      }
+      crees += 1;
+      console.log(`  + ${definition.name}`);
+      continue;
+    }
+
+    ids.push(existant.id);
+
+    if (APPLIQUER) {
+      await vapi(`/tool/${existant.id}`, { method: "PATCH", body: JSON.stringify(corps) });
+    }
+    majs += 1;
+    console.log(`  ~ ${definition.name}`);
+  }
+
+  console.log(`\n${crees} à créer, ${majs} à mettre à jour.`);
+
+  if (ASSISTANT) {
+    if (APPLIQUER) {
+      // On remplace la liste entière : un outil retiré du code doit disparaître
+      // de l'assistant, sinon le modèle continuera de l'appeler dans le vide.
+      await vapi(`/assistant/${ASSISTANT}`, {
+        method: "PATCH",
+        body: JSON.stringify({ model: { toolIds: ids } }),
+      });
+    }
+    console.log(`Assistant ${ASSISTANT} : ${ids.length} outils rattachés.`);
+  } else {
+    console.log(
+      "VOICE_ASSISTANT_ID non renseignée : les outils ne sont rattachés à aucun assistant.\n" +
+        "Ajoutez-la, ou rattachez-les à la main dans le tableau de bord.",
+    );
+  }
+
+  if (!APPLIQUER) console.log("\nRien n'a été écrit. Relancez avec --apply.");
+}
+
+main().catch((erreur) => {
+  console.error(`\n${erreur.message}`);
+  process.exit(1);
+});

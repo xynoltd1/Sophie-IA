@@ -1,6 +1,6 @@
 {
   "name": "sophie-ia",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "private": true,
   "description": "Sophie IA — secretaire virtuelle pour artisans et professionnels de terrain",
   "engines": {
@@ -18,7 +18,8 @@
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
-    "release:zip": "node scripts/make-zip.mjs"
+    "release:zip": "node scripts/make-zip.mjs",
+    "vapi:tools": "node --env-file=.env.local scripts/sync-vapi-tools.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

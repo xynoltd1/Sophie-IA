@@ -3,6 +3,36 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.8.0] — 2026-10-22 — Les outils se déclarent tout seuls
+
+### Le problème
+Sophie n'avait qu'un seul outil déclaré chez Vapi. Les sept autres existaient dans le code
+mais lui étaient inaccessibles : elle écoutait poliment un client donner son nom et son
+adresse, et ne gardait rien. Rien n'apparaissait dans Prospects, et c'était normal.
+
+Les déclarer à la main demande sept formulaires web. C'est long, et c'est surtout ainsi
+qu'ils divergent du code : un paramètre renommé d'un côté et pas de l'autre, et Sophie
+appelle un outil avec des arguments que le serveur ne comprend plus. L'erreur ne se voit
+alors qu'au téléphone.
+
+### Ajouté
+- `GET /api/voice/tools/manifest` : le catalogue des outils tel que le serveur les connaît,
+  protégé par le secret des webhooks.
+- `scripts/sync-vapi-tools.mjs`, via `npm run vapi:tools` : lit ce catalogue et déclare les
+  outils chez le fournisseur.
+
+### Deux choix de conception
+**Le catalogue est lu depuis le serveur déployé**, pas depuis le code local. Si votre
+machine est en avance sur la production, c'est la production qui a raison : c'est elle qui
+répondra aux appels.
+
+**Le script n'écrit rien par défaut.** Il faut `--apply`. Un script qui modifie un service
+externe dès sa première exécution est un script qu'on lance une fois de trop.
+
+### Ajouté aussi
+`SOPHIE_ORG_ID` et `VOICE_ASSISTANT_ID` dans `.env.example`. Elles servent au script local
+uniquement et n'ont rien à faire sur Vercel.
+
 ## [0.7.3] — 2026-10-22 — Les appels sans numéro visible
 
 ### Ajouté
