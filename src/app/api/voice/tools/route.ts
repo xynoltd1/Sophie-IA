@@ -99,12 +99,23 @@ export async function POST(request: NextRequest) {
     requested_test: true,
   });
 
+  // L'appel tel que NOUS l'avons enregistré. Le numéro de l'appelant vient du
+  // réseau téléphonique, jamais de ce que le modèle a cru entendre : c'est la
+  // seule donnée de la conversation qu'on ne peut pas mal comprendre.
+  const { data: appelEnregistre } = await admin
+    .from("calls")
+    .select("id, from_e164")
+    .eq("provider_call_id", appel.providerCallId)
+    .maybeSingle();
+
   try {
     const resultat = await outil.handler(appel.arguments, {
       organizationId,
       providerCallId: appel.providerCallId,
       // ADR-019 : un appel n'est un test que dans une organisation d'essai.
       isTest: Boolean(estTest),
+      callerNumber: (appelEnregistre?.from_e164 as string | null) ?? callerNumber(rawBody),
+      callId: (appelEnregistre?.id as string | null) ?? null,
     });
 
     await admin.from("activities").insert({
@@ -280,4 +291,29 @@ function calledNumber(payload: VapiContext): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Numéro de l'appelant lu dans la charge utile.
+ *
+ * Repli utilisé tant que l'appel n'a pas été enregistré chez nous — un outil
+ * peut arriver avant l'événement de début d'appel, les webhooks n'étant pas
+ * ordonnés. Moins fiable que notre propre table, d'où sa place en second.
+ */
+function callerNumber(rawBody: string): string | null {
+  try {
+    const payload = JSON.parse(rawBody) as {
+      message?: {
+        customer?: { number?: string };
+        call?: { customer?: { number?: string } };
+      };
+    };
+
+    const brut =
+      payload.message?.customer?.number ?? payload.message?.call?.customer?.number;
+
+    return typeof brut === "string" && brut.trim().length > 0 ? brut.trim() : null;
+  } catch {
+    return null;
+  }
 }

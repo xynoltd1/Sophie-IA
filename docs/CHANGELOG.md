@@ -3,6 +3,49 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.7.0] — 2026-10-22 — Sophie sait travailler
+
+> **Écrit, non vérifié.** Rien de cette version n'a été exercé avec un vrai appel.
+> `docs/VERIFICATION_PHASE4.md` liste les appels à passer et ce qu'il faut observer.
+> Les contrôles automatiques passent, ce qui ne prouve rien : les trois bugs de la semaine
+> avaient tous un build vert.
+
+### Ajouté — les outils métier de Sophie
+Six outils, qui parlent à la base et non au fournisseur de voix. Ils restent valables si le
+fournisseur change.
+
+- `identify_caller` — reconnaît un client à son numéro. Le numéro vient du réseau, jamais
+  du modèle : c'est la seule donnée de l'appel qu'on ne peut pas mal entendre.
+- `save_caller_details` — nom, adresse, e-mail. N'écrit que les champs réellement fournis :
+  un client qui ne redonne pas son adresse ne doit pas la voir effacée.
+- `create_lead` — la demande, avec l'urgence si le client l'exprime.
+- `create_task` — « rappelez-moi demain matin » devient un rappel daté.
+- `create_pending_appointment` — toujours `PENDING_APPROVAL`. Sophie ne confirme jamais à
+  la place de l'artisan (section 22). Si la base refuse le créneau, Sophie en propose un
+  autre : la prévention des doubles réservations est dans la base, pas dans l'IA.
+- `request_human_transfer` — dit la vérité quand aucun transfert n'est possible, plutôt que
+  de faire patienter pour rien.
+
+Aucun outil ne permet de confirmer, refuser ou annuler un rendez-vous. Un test interdit
+leur apparition : ce serait une régression de principe, pas un ajout de fonctionnalité.
+
+### Ajouté — l'écran des appels
+- Liste des appels, et fiche détaillée : qui, quand, combien de temps, le rendez-vous issu
+  de l'appel, et le lecteur audio.
+- Quand l'audio, la transcription ou le résumé manquent, la fiche **dit pourquoi**. Un bloc
+  vide fait croire à une panne.
+
+### Corrigé
+- `Number("")` vaut zéro : une durée non renseignée devenait un rendez-vous de zéro minute.
+  Trouvé par un test écrit en même temps que le code.
+- Deux paramètres d'outil n'avaient pas de description. La description est tout ce que le
+  modèle lit pour décider quoi y mettre ; sans elle, il remplit au hasard.
+
+### Pas encore fait
+L'audio dans l'espace européen, la transcription, le résumé, et la configuration
+automatique de l'assistant depuis les écrans de réglage. Les quatre demandent
+`VOICE_API_KEY` sur Vercel.
+
 ## [0.6.2] — 2026-10-22 — Premier appel réel, et ce qu'il a appris
 
 **Premier essai vocal réussi.** Sophie a répondu, appelé `check_availability`, et notre

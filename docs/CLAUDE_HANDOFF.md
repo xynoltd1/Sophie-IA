@@ -1,5 +1,9 @@
 # Reprise du projet
 
+> **Avant tout : lire `docs/VERIFICATION_PHASE4.md`.** La version 0.7.0 contient du code
+> écrit mais jamais exercé contre un vrai appel. Ne pas construire par-dessus avant que ces
+> vérifications aient été faites.
+>
 > Ce document est le point d'entrée d'une nouvelle session. Lisez-le en premier, puis
 > `PROJECT.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `LEGAL_COMPLIANCE.md`, `CHANGELOG.md`.
 > **Le code et les tests font foi.** Si ce document et le code divergent, vérifiez le code,
@@ -9,7 +13,7 @@
 
 ## Où en est le projet
 
-**Version** 0.6.2 · **Phase 3 terminée ; Phase 4 : premier appel vocal réel réussi le 2026-10-22** · **Vérifié le 2026-10-22**
+**Version** 0.7.0 · **Phase 4 : outils métier écrits, NON vérifiés par un appel réel** · **Vérifié le 2026-10-22**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de

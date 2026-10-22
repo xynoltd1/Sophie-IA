@@ -3,6 +3,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureCalendarFresh } from "@/lib/providers/calendar/service";
 import type { VoiceToolDefinition } from "@/lib/providers/voice/types";
+import { CRM_TOOLS } from "./tools-crm";
+import type { SophieTool as SophieToolType } from "./tool-types";
 
 /**
  * Outils métier de Sophie (section 11).
@@ -19,29 +21,12 @@ import type { VoiceToolDefinition } from "@/lib/providers/voice/types";
  * à un changement de prestataire (ADR-020).
  */
 
-export interface ToolContext {
-  organizationId: string;
-  providerCallId: string;
-  /** Vrai seulement dans une organisation d'essai (ADR-019). */
-  isTest: boolean;
-}
-
-export interface ToolOutcome {
-  /** Texte destiné à être prononcé ou utilisé par l'assistant. */
-  result?: string;
-  /** Erreur métier. Renvoyée avec un code HTTP 200 : voir la note du endpoint. */
-  error?: string;
-}
-
-export type ToolHandler = (
-  args: Record<string, unknown>,
-  context: ToolContext,
-) => Promise<ToolOutcome>;
-
-export interface SophieTool {
-  definition: VoiceToolDefinition;
-  handler: ToolHandler;
-}
+export type {
+  ToolContext,
+  ToolOutcome,
+  ToolHandler,
+  SophieTool,
+} from "./tool-types";
 
 /** Formate une heure pour être prononcée en français. */
 function heureParlee(iso: string, timezone: string): string {
@@ -72,7 +57,7 @@ function jourParle(iso: string, timezone: string): string {
  * 43). Sophie annonce alors que le professionnel confirmera. Laisser cette
  * règle au modèle reviendrait à espérer qu'il s'en souvienne.
  */
-const checkAvailability: SophieTool = {
+const checkAvailability: SophieToolType = {
   definition: {
     name: "check_availability",
     description:
@@ -217,7 +202,7 @@ const checkAvailability: SophieTool = {
  * Elle ne récite que ce que le professionnel a saisi. Rien n'est déduit, rien
  * n'est calculé (section 9).
  */
-const getBusinessInformation: SophieTool = {
+const getBusinessInformation: SophieToolType = {
   definition: {
     name: "get_business_information",
     description:
@@ -330,12 +315,13 @@ const getBusinessInformation: SophieTool = {
   },
 };
 
-export const SOPHIE_TOOLS: readonly SophieTool[] = [
+export const SOPHIE_TOOLS: readonly SophieToolType[] = [
   checkAvailability,
   getBusinessInformation,
-] as const;
+  ...CRM_TOOLS,
+];
 
-export function findTool(name: string): SophieTool | undefined {
+export function findTool(name: string): SophieToolType | undefined {
   return SOPHIE_TOOLS.find((tool) => tool.definition.name === name);
 }
 
