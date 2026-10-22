@@ -3,6 +3,26 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.9.0] — 2026-10-22 — Premier appel complet, et le décalage horaire
+
+**Le scénario du cahier des charges a fonctionné de bout en bout.** Un appel, un contact
+créé, une demande enregistrée en urgent, un rendez-vous « À valider » visible dans l'agenda.
+
+### Corrigé
+- **Un rendez-vous demandé à 8 h était enregistré à 10 h.** `new Date("...T08:00:00")` sans
+  suffixe est interprété dans le fuseau de la machine ; sur Vercel, cette machine est en
+  temps universel. L'heure dictée par le client est une heure **murale** : elle est
+  désormais convertie dans le fuseau de l'organisation.
+
+### Pourquoi ce bug était difficile à voir
+Les deux valeurs sont des heures parfaitement valides. Aucune erreur n'est levée, rien
+n'est anormal dans les journaux. Seul un humain qui compare ce qu'il a dit et ce qu'il voit
+s'en aperçoit — et seulement s'il y pense.
+
+### Ajouté
+`src/lib/crm/timezone.ts` et six tests, dont un sur le jour du changement d'heure et un qui
+vérifie que la France et la Belgique donnent bien le même instant.
+
 ## [0.8.3] — 2026-10-22 — L'autorisation Google expire au bout de sept jours
 
 ### La cause de la panne du jour

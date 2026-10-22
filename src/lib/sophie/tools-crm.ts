@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { instantDepuisHeureLocale } from "@/lib/crm/timezone";
 import {
   nombre,
   texte,
@@ -482,15 +483,27 @@ const createPendingAppointment: SophieTool = {
 
     const duree = Math.min(Math.max(Math.round(nombre(args, "duration_minutes") ?? 60), 15), 480);
 
-    const debut = new Date(`${date}T${heure}:00`);
-    if (Number.isNaN(debut.getTime())) {
+    const admin = createAdminClient();
+
+    // L'heure dictée est une heure MURALE : celle de la pendule du client. La
+    // convertir dans le fuseau de l'organisation est indispensable — sans ça,
+    // elle est lue comme de l'heure universelle et le rendez-vous se décale de
+    // tout l'écart horaire du pays.
+    const { data: org } = await admin
+      .from("organizations")
+      .select("timezone")
+      .eq("id", context.organizationId)
+      .maybeSingle();
+
+    const timezone = (org?.timezone as string | undefined) ?? "Europe/Brussels";
+
+    const debut = instantDepuisHeureLocale(date, heure, timezone);
+    if (!debut) {
       return { error: "Date ou heure incompréhensible. Faites répéter le client." };
     }
 
     const fin = new Date(debut.getTime() + duree * 60_000);
     const contactId = await contactDeLAppelant(context);
-
-    const admin = createAdminClient();
 
     const { data, error } = await admin.rpc("book_appointment", {
       org_id: context.organizationId,
