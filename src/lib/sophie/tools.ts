@@ -107,10 +107,37 @@ const checkAvailability: SophieTool = {
 
     // Une date passée ne peut pas accueillir un rendez-vous, quelle que soit
     // la confiance du modèle dans ce qu'il a compris.
+    //
+    // Le message rappelle la date du jour, et ce n'est pas du confort : un
+    // modèle de langage n'a pas d'horloge. Interprété seul, « lundi prochain »
+    // est calculé à partir d'une date imaginaire, souvent celle de son
+    // entraînement, et tombe dans le passé. Sans cette précision, Sophie
+    // répète la même erreur indéfiniment parce que rien ne la contredit.
+    //
+    // La date du jour est normalement injectée dans ses instructions par le
+    // fournisseur de voix. Ceci est le filet : si cette injection manque ou
+    // échoue, l'outil rattrape au lieu de boucler.
     const aujourdHui = new Date();
     aujourdHui.setUTCHours(0, 0, 0, 0);
     if (jour < aujourdHui) {
-      return { error: "Cette date est déjà passée. Proposez une date à venir." };
+      return {
+        error:
+          `Cette date est déjà passée. Nous sommes aujourd'hui le ` +
+          `${aujourdHui.toISOString().slice(0, 10)}. Recalculez la date demandée ` +
+          `à partir d'aujourd'hui, puis rappelez cet outil.`,
+      };
+    }
+
+    // Un an est une limite de bon sens pour un artisan. Au-delà, c'est presque
+    // toujours une erreur d'année du modèle, pas une vraie demande.
+    const limite = new Date(aujourdHui);
+    limite.setUTCFullYear(limite.getUTCFullYear() + 1);
+    if (jour > limite) {
+      return {
+        error:
+          `Cette date est trop lointaine. Nous sommes aujourd'hui le ` +
+          `${aujourdHui.toISOString().slice(0, 10)}. Vérifiez l'année avec le client.`,
+      };
     }
 
     const admin = createAdminClient();

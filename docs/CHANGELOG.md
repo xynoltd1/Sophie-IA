@@ -3,6 +3,30 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.6.2] — 2026-10-22 — Premier appel réel, et ce qu'il a appris
+
+**Premier essai vocal réussi.** Sophie a répondu, appelé `check_availability`, et notre
+serveur a répondu pendant la conversation. La chaîne complète tient. Deux problèmes relevés
+pendant cet essai, corrigés ici.
+
+### Corrigé
+- **« Lundi prochain est déjà passé ».** Un modèle de langage n'a pas d'horloge : il
+  calculait les dates relatives à partir d'une date imaginaire, souvent celle de son
+  entraînement. `check_availability` rappelle maintenant la date du jour dans son message
+  d'erreur, et refuse aussi les dates à plus d'un an — presque toujours une erreur d'année.
+  La vraie correction est dans les instructions de l'assistant, où la date du jour doit
+  être injectée par le fournisseur de voix ; ceci est le filet.
+
+### Ajouté
+- `/api/voice/events` : les appels apparaissent enfin dans le produit. Ouverture à la
+  sonnerie, fermeture à la fin, programmation des traitements post-appel.
+  - Répond toujours 200 sauf sur signature invalide : un code d'erreur ferait réessayer le
+    fournisseur, et ses réessais arrivent dans le désordre.
+  - Un essai depuis le navigateur n'a pas de numéro appelé et ne crée donc aucun appel.
+    C'est voulu : inventer une organisation serait pire que de ne rien enregistrer.
+  - Distingue un appel échoué techniquement d'un appel terminé normalement — l'artisan ne
+    réagit pas pareil aux deux.
+
 ## [0.6.1] — 2026-10-22 — L'organisation peut venir de l'adresse de l'outil
 
 ### Ajouté

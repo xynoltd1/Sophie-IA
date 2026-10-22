@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.6.0 · **Phase 3 terminée et vérifiée ; Phase 4 commencée, essai téléphonique non encore réalisé** · **Vérifié le 2026-10-20**
+**Version** 0.6.2 · **Phase 3 terminée ; Phase 4 : premier appel vocal réel réussi le 2026-10-22** · **Vérifié le 2026-10-22**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -17,7 +17,9 @@ Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
 enregistrement réel tant qu'elle ne l'est pas. Le développement technique continue
 normalement.
 
-**Sophie ne répond pas encore au téléphone.** C'est la Phase 4. Le fournisseur de voix est
+**Sophie répond.** Premier essai vocal réel le 2026-10-22 (Vapi, région US, essai navigateur) : elle a parlé français, appelé `check_availability`, et utilisé la réponse du serveur pendant la conversation. Reste à faire : l'appel sur un vrai numéro, l'audio dans notre espace européen, et le post-appel.
+
+**Ancienne note, conservée pour mémoire :** C'est la Phase 4. Le fournisseur de voix est
 choisi (Vapi EU, ADR-020) ; il manque un compte et un numéro de téléphone, et le modèle
 d'acquisition des numéros reste une décision ouverte (ADR-022).
 
