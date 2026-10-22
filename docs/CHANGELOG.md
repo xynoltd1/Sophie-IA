@@ -3,6 +3,28 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.7.2] — 2026-10-22 — Un appel se termine vraiment
+
+### Corrigé
+- **Les appels restaient « en cours » pour toujours.** Vapi envoie la durée en virgule
+  flottante ; la colonne est un entier. PostgreSQL rejetait la mise à jour **entière**, donc
+  le statut, la fin et la durée ne s'écrivaient jamais. L'écriture suivante, elle,
+  réussissait : la fiche affichait un appel en cours dont l'enregistrement était déjà en
+  attente de traitement — un état impossible.
+- **`closeCall` jetait le message d'erreur de la base.** C'est ce qui a rendu le bug
+  invisible : l'écriture échouait sans que rien ne le signale. L'erreur est maintenant
+  journalisée, et la fonction renvoie `null` au lieu de faire comme si tout allait bien.
+
+### Ajouté
+- `dureeEnSecondes()` : arrondit, et préfère l'absence à une valeur absurde. Une durée
+  fausse dans une statistique est plus difficile à repérer qu'un trou.
+- Trois tests, dont un qui vérifie que l'erreur d'écriture n'est plus avalée.
+
+### La leçon
+Deux fautes dans le même bug, et la seconde est la pire. Convertir une valeur avant de
+l'écrire est une étourderie ordinaire. Ignorer le message d'erreur que la base renvoie
+transforme une étourderie en énigme, et c'est un choix qui avait été fait à l'écriture.
+
 ## [0.7.1] — 2026-10-22 — Tester sans numéro de téléphone
 
 ### Ajouté

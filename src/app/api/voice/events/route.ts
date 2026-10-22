@@ -162,6 +162,8 @@ async function terminer(rawBody: string, providerCallId: string, occurredAt: Dat
 
   const raison = payload.message?.endedReason ?? null;
 
+  // La durée est arrondie par `closeCall`. Elle est transmise telle quelle ici
+  // pour que l'arrondi reste à un seul endroit.
   await closeCall(appel.id as string, {
     // La distinction est celle que l'artisan lira sur sa fiche : un appel
     // qu'il a manqué et un appel qui a échoué techniquement n'appellent pas

@@ -174,7 +174,7 @@ export async function closeCall(
 
   const terminal = ["COMPLETED", "MISSED", "FAILED", "TRANSFERRED"].includes(closure.status);
 
-  const { data } = await admin
+  const { data, error } = await admin
     .from("calls")
     .update({
       status: closure.status,
@@ -182,14 +182,39 @@ export async function closeCall(
       // terminal. On la respecte ici plutôt que de laisser la base refuser.
       ended_at: terminal ? (closure.endedAt ?? new Date()).toISOString() : null,
       answered_at: closure.answeredAt ? closure.answeredAt.toISOString() : undefined,
-      duration_seconds: closure.durationSeconds ?? null,
+      duration_seconds: dureeEnSecondes(closure.durationSeconds),
       ended_reason: closure.endedReason ?? null,
     })
     .eq("id", callId)
     .select("*")
     .maybeSingle();
 
+  if (error) {
+    // Ne JAMAIS avaler cette erreur. Elle a déjà coûté une séance de débogage :
+    // la durée arrivait avec des décimales, la colonne n'accepte que des
+    // entiers, PostgreSQL refusait toute la mise à jour, et l'appel restait
+    // « en cours » pour toujours. Comme l'écriture suivante réussissait, la
+    // fiche affichait un état impossible sans que rien ne le signale.
+    console.error("[calls] fermeture refusée", callId, closure.status, error.message);
+    return null;
+  }
+
   return (data as CallRow | null) ?? null;
+}
+
+/**
+ * Durée d'appel en secondes entières.
+ *
+ * Les fournisseurs de téléphonie comptent en virgule flottante — 23.456
+ * secondes — et la colonne est un entier. Sans arrondi, PostgreSQL rejette la
+ * ligne entière, pas seulement ce champ.
+ *
+ * Une durée négative ou absurde vaut mieux absente : une valeur fausse dans une
+ * statistique est plus difficile à repérer qu'un trou.
+ */
+export function dureeEnSecondes(valeur: number | null | undefined): number | null {
+  if (typeof valeur !== "number" || !Number.isFinite(valeur) || valeur < 0) return null;
+  return Math.round(valeur);
 }
 
 /**

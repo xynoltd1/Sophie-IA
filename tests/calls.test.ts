@@ -138,3 +138,45 @@ describe("essais depuis le navigateur", () => {
     expect(bloc.indexOf("openCall(")).toBeLessThan(bloc.indexOf("openTestCall("));
   });
 });
+
+/**
+ * La duree d'un appel.
+ *
+ * Bug reel du 2026-10-22 : Vapi envoie une duree en virgule flottante,
+ * la colonne est un entier, et PostgreSQL rejetait la mise a jour ENTIERE.
+ * L'appel restait « en cours » pour toujours, pendant que l'ecriture suivante
+ * reussissait — donc la fiche affichait un etat impossible, sans aucune erreur
+ * visible, parce que le code jetait le message d'erreur.
+ *
+ * Deux lecons dans un seul bug : convertir avant d'ecrire, et ne jamais avaler
+ * une erreur d'ecriture.
+ */
+describe("duree d'un appel", () => {
+  it("arrondit une duree a virgule", async () => {
+    const { dureeEnSecondes } = await import("@/lib/calls/registry");
+    expect(dureeEnSecondes(23.456)).toBe(23);
+    expect(dureeEnSecondes(23.5)).toBe(24);
+    expect(dureeEnSecondes(60)).toBe(60);
+    expect(dureeEnSecondes(0)).toBe(0);
+  });
+
+  it("prefere l'absence a une valeur absurde", async () => {
+    const { dureeEnSecondes } = await import("@/lib/calls/registry");
+    expect(dureeEnSecondes(-5)).toBeNull();
+    expect(dureeEnSecondes(null)).toBeNull();
+    expect(dureeEnSecondes(undefined)).toBeNull();
+    expect(dureeEnSecondes(Number.NaN)).toBeNull();
+    expect(dureeEnSecondes(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+
+  it("signale une fermeture refusee au lieu de la taire", () => {
+    const registre = readFileSync(
+      resolve(process.cwd(), "src/lib/calls/registry.ts"),
+      "utf-8",
+    );
+    const bloc = registre.slice(registre.indexOf("export async function closeCall"));
+    // Une erreur d'ecriture avalee produit un etat impossible et silencieux.
+    expect(bloc).toMatch(/const \{ data, error \}/);
+    expect(bloc).toMatch(/console\.error/);
+  });
+});
