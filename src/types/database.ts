@@ -233,6 +233,9 @@ export type LeadPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
 export type TaskStatus = "OPEN" | "DONE" | "CANCELLED";
 export type EntitySource = "MANUAL" | "SOPHIE" | "SYSTEM";
 
+/** Provenance d'un numéro (migration 0021). `NETWORK` est certain. */
+export type PhoneOrigin = "NETWORK" | "DICTATED" | "MANUAL";
+
 export interface ContactRow {
   id: string;
   organization_id: string;
@@ -252,6 +255,7 @@ export interface ContactRow {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  phone_origin: PhoneOrigin | null;
 }
 
 export interface LeadRow {

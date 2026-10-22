@@ -3,6 +3,38 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.9.1] — 2026-10-22 — Un numéro mal entendu est pire qu'un numéro absent
+
+### Le problème
+La transcription a rendu `04 72 12 34` pour un numéro dicté au téléphone — trop court pour
+exister. Le serveur l'a enregistré sans rien signaler. L'artisan aurait rappelé dans le
+vide, ou dérangé quelqu'un qui n'a jamais appelé.
+
+### Trois protections, de la plus solide à la plus faible
+
+**Le serveur refuse l'impossible.** `src/lib/crm/phone.ts` vérifie la vraisemblance avant
+toute écriture. Strict pour la France et la Belgique, dont les longueurs sont connues ;
+permissif ailleurs, parce que prétendre connaître tous les plans de numérotation ferait
+perdre de vrais clients. Le refus est formulé pour être prononcé : « il en faut neuf,
+faites-le répéter chiffre par chiffre ».
+
+**Un numéro dicté n'écrase jamais un numéro du réseau.** Le réseau ne se trompe pas, la
+reconnaissance vocale si. Remplacer le certain par l'incertain serait une perte sèche.
+
+**L'artisan voit la différence avant de composer.** Migration 0021 : `contacts.phone_origin`
+vaut `NETWORK`, `DICTATED` ou `MANUAL`. La fiche contact affiche « Numéro communiqué par
+l'appelant, pas transmis par l'opérateur. À vérifier. »
+
+### Et une quatrième, qui dépend de Sophie
+La description du paramètre lui demande de relire le numéro chiffre par chiffre et de le
+faire confirmer. C'est la moins fiable des quatre — elle dépend du modèle — d'où sa place
+en dernier.
+
+### Portée réelle
+En production, le numéro vient du réseau et ce problème ne se pose presque jamais. Il ne
+concerne que les appels masqués, et les essais depuis le navigateur — qui n'ont jamais de
+numéro, donc tombent dans ce cas à chaque fois.
+
 ## [0.9.0] — 2026-10-22 — Premier appel complet, et le décalage horaire
 
 **Le scénario du cahier des charges a fonctionné de bout en bout.** Un appel, un contact

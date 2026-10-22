@@ -72,12 +72,22 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
           </p>
         ) : null}
         {contact.phone ? (
-          <a
-            href={`tel:${contact.phone.replace(/\s/g, "")}`}
-            className="mt-3 flex min-h-12 items-center justify-center rounded-control bg-signal px-4 font-medium text-white"
-          >
-            Appeler {contact.phone}
-          </a>
+          <>
+            <a
+              href={`tel:${contact.phone.replace(/\s/g, "")}`}
+              className="mt-3 flex min-h-12 items-center justify-center rounded-control bg-signal px-4 font-medium text-white"
+            >
+              Appeler {contact.phone}
+            </a>
+            {contact.phone_origin === "DICTATED" ? (
+              /* Un numéro dicté a traversé la reconnaissance vocale. Le dire
+                 AVANT que l'artisan compose évite deux pertes : son temps, et
+                 la tranquillité de l'inconnu qu'il risque d'appeler. */
+              <p className="mt-2 text-sm text-attention">
+                Numéro communiqué par l’appelant, pas transmis par l’opérateur. À vérifier.
+              </p>
+            ) : null}
+          </>
         ) : null}
       </section>
 

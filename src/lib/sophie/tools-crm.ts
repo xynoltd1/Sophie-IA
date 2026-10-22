@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { instantDepuisHeureLocale } from "@/lib/crm/timezone";
+import { checkPhone } from "@/lib/crm/phone";
 import {
   nombre,
   texte,
@@ -93,6 +94,10 @@ async function contactDeLAppelant(
   const numero = context.callerNumber ?? (numeroDicte ?? null);
   if (!numero) return null;
 
+  // Un numéro venu du réseau est certain ; un numéro dicté a traversé la
+  // reconnaissance vocale. La distinction suit le contact jusqu'à l'écran.
+  const origine = context.callerNumber ? "NETWORK" : "DICTATED";
+
   const { data: existant } = await admin.rpc("find_contact_by_phone", {
     org_id: context.organizationId,
     numero,
@@ -105,6 +110,7 @@ async function contactDeLAppelant(
     .insert({
       organization_id: context.organizationId,
       phone: numero,
+      phone_origin: origine,
       source: "SOPHIE",
       is_provisional: true,
     })
@@ -213,8 +219,9 @@ const saveCallerDetails: SophieTool = {
         phone: {
           type: "string",
           description:
-            "Numéro de téléphone dicté par l'appelant. À demander uniquement si son " +
-            "numéro ne s'affiche pas.",
+            "Numéro de téléphone dicté par l'appelant, à demander uniquement si son " +
+            "numéro ne s'affiche pas. Relis-le toujours chiffre par chiffre et fais-le " +
+            "confirmer avant de l'envoyer.",
         },
       },
       required: [],
@@ -222,7 +229,20 @@ const saveCallerDetails: SophieTool = {
   },
 
   async handler(args, context): Promise<ToolOutcome> {
-    const numeroDicte = texte(args, "phone");
+    const numeroBrut = texte(args, "phone");
+
+    // On vérifie AVANT d'écrire quoi que ce soit. Un numéro impossible
+    // enregistré est pire qu'un numéro absent : l'artisan rappellera dans le
+    // vide, ou dérangera quelqu'un qui n'a rien demandé.
+    let numeroDicte: string | null = null;
+    if (numeroBrut) {
+      const verdict = checkPhone(numeroBrut);
+      if (!verdict.plausible) {
+        return { error: verdict.reason ?? "Ce numéro ne semble pas correct." };
+      }
+      numeroDicte = verdict.e164;
+    }
+
     const contactId = await contactDeLAppelant(context, numeroDicte);
 
     if (!contactId) {
@@ -247,10 +267,28 @@ const saveCallerDetails: SophieTool = {
     }
 
     const admin = createAdminClient();
+
+    // Un numéro dicté n'écrase jamais un numéro venu du réseau. Le réseau ne
+    // se trompe pas ; la reconnaissance vocale, si. Remplacer le certain par
+    // l'incertain serait une perte sèche d'information.
+    let numeroAEcrire: { phone: string; phone_origin: "DICTATED" } | null = null;
+    if (numeroDicte && !context.callerNumber) {
+      const { data: actuel } = await admin
+        .from("contacts")
+        .select("phone, phone_origin")
+        .eq("id", contactId)
+        .maybeSingle();
+
+      if (actuel?.phone_origin !== "NETWORK") {
+        numeroAEcrire = { phone: numeroDicte, phone_origin: "DICTATED" };
+      }
+    }
+
     const { error } = await admin
       .from("contacts")
       .update({
         ...champs,
+        ...(numeroAEcrire ?? {}),
         // Dès qu'un nom est connu, le contact n'est plus un simple numéro.
         ...(champs.full_name ? { is_provisional: false } : {}),
       })
