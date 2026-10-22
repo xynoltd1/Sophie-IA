@@ -3,6 +3,25 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.7.3] — 2026-10-22 — Les appels sans numéro visible
+
+### Ajouté
+- `save_caller_details` accepte un numéro **dicté** par l'appelant, et Sophie sait le
+  demander quand le numéro ne s'affiche pas.
+- Une fois le contact identifié, il est rattaché à l'appel : tous les outils suivants le
+  retrouvent sans redemander le numéro.
+
+### Pourquoi
+Deux situations bien réelles, pas seulement le confort des essais. Un client sur appel
+masqué ne pouvait être rattaché à aucune fiche : ni prospect, ni rendez-vous, ni
+historique. Et un essai depuis le navigateur n'a jamais de numéro, ce qui rendait la moitié
+du produit invérifiable sans acheter une ligne téléphonique.
+
+### Ordre de confiance, inchangé dans son principe
+Le contact déjà rattaché à l'appel, puis le numéro venu du réseau, puis seulement le numéro
+dicté. Le dernier passe par la reconnaissance vocale : il est le moins sûr, il arrive donc
+en dernier.
+
 ## [0.7.2] — 2026-10-22 — Un appel se termine vraiment
 
 ### Corrigé

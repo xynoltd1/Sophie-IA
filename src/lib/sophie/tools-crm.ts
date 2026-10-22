@@ -55,33 +55,70 @@ async function activite(
 /**
  * Retrouve le contact de l'appelant, ou le crée.
  *
- * Le numéro vient du réseau téléphonique, jamais du modèle : c'est la seule
- * donnée de l'appel qu'on ne peut pas mal entendre. Un contact créé ici est
- * marqué provisoire — il n'a pas encore de nom, et l'artisan doit pouvoir
- * distinguer « client connu » de « numéro vu une fois ».
+ * Trois sources, dans cet ordre.
+ *
+ * **1. Le contact déjà rattaché à cet appel.** Une fois identifié, il ne change
+ * plus pendant la conversation. C'est aussi ce qui permet à tous les outils
+ * suivants de travailler même quand le numéro est masqué : il a suffi qu'il
+ * soit connu une fois.
+ *
+ * **2. Le numéro de l'appelant**, venu du réseau. C'est la seule donnée d'un
+ * appel qu'on ne peut pas mal entendre.
+ *
+ * **3. Un numéro dicté par le client.** Nécessaire dans deux cas bien réels :
+ * l'appelant masque son numéro — ce qui arrive tous les jours — et l'essai
+ * depuis le navigateur, qui n'en a aucun. Moins fiable que le réseau, puisqu'il
+ * passe par la reconnaissance vocale, d'où sa dernière place.
+ *
+ * Un contact créé ici est marqué provisoire : il n'a pas encore de nom, et
+ * l'artisan doit pouvoir distinguer « client connu » de « numéro vu une fois ».
  */
-async function contactDeLAppelant(context: ToolContext): Promise<string | null> {
-  if (!context.callerNumber) return null;
-
+async function contactDeLAppelant(
+  context: ToolContext,
+  numeroDicte?: string | null,
+): Promise<string | null> {
   const admin = createAdminClient();
+
+  if (context.callId) {
+    const { data: appel } = await admin
+      .from("calls")
+      .select("contact_id")
+      .eq("id", context.callId)
+      .maybeSingle();
+
+    if (appel?.contact_id) return appel.contact_id as string;
+  }
+
+  const numero = context.callerNumber ?? (numeroDicte ?? null);
+  if (!numero) return null;
 
   const { data: existant } = await admin.rpc("find_contact_by_phone", {
     org_id: context.organizationId,
-    numero: context.callerNumber,
+    numero,
   });
 
   if (typeof existant === "string" && existant.length > 0) return existant;
 
-  const { data } = await admin
+  const { data, error } = await admin
     .from("contacts")
     .insert({
       organization_id: context.organizationId,
-      phone: context.callerNumber,
+      phone: numero,
       source: "SOPHIE",
       is_provisional: true,
     })
     .select("id")
     .single();
+
+  if (error) {
+    // Course entre deux outils appelés presque en même temps : l'index unique
+    // sur le numéro a tranché. On relit plutôt que d'échouer.
+    const { data: concurrent } = await admin.rpc("find_contact_by_phone", {
+      org_id: context.organizationId,
+      numero,
+    });
+    return typeof concurrent === "string" && concurrent.length > 0 ? concurrent : null;
+  }
 
   return (data?.id as string | undefined) ?? null;
 }
@@ -108,10 +145,13 @@ const identifyCaller: SophieTool = {
 
   async handler(_args, context): Promise<ToolOutcome> {
     if (!context.callerNumber) {
+      // Numéro masqué, ou essai depuis le navigateur. Sophie doit le demander
+      // plutôt que de faire comme si l'appelant était inconnu : sans numéro,
+      // rien ne pourra être rattaché à une fiche client.
       return {
         result:
-          "Le numéro de l'appelant n'est pas disponible. Demandez son nom et son numéro " +
-          "de téléphone.",
+          "Le numéro de l'appelant ne s'affiche pas. Demandez-lui son nom et son numéro " +
+          "de téléphone, puis enregistrez-les avec save_caller_details.",
       };
     }
 
@@ -169,18 +209,26 @@ const saveCallerDetails: SophieTool = {
         postal_code: { type: "string", description: "Code postal." },
         city: { type: "string", description: "Commune." },
         email: { type: "string", description: "Adresse e-mail, si elle est donnée." },
+        phone: {
+          type: "string",
+          description:
+            "Numéro de téléphone dicté par l'appelant. À demander uniquement si son " +
+            "numéro ne s'affiche pas.",
+        },
       },
       required: [],
     },
   },
 
   async handler(args, context): Promise<ToolOutcome> {
-    const contactId = await contactDeLAppelant(context);
+    const numeroDicte = texte(args, "phone");
+    const contactId = await contactDeLAppelant(context, numeroDicte);
+
     if (!contactId) {
       return {
         error:
-          "Impossible d'enregistrer les coordonnées sans numéro d'appelant. " +
-          "Continuez la conversation, le professionnel notera lui-même.",
+          "Le numéro de l'appelant ne s'affiche pas. Demandez-lui son numéro de " +
+          "téléphone, puis rappelez cet outil avec le champ phone.",
       };
     }
 
