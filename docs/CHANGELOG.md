@@ -3,6 +3,45 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.12.0] — 2026-10-23 — L'audio arrive chez vous
+
+Fin de la Phase 5. « Écouter l'appel » n'est plus un bouton décoratif.
+
+### Ajouté
+- **Migration 0024** : un bucket **privé** `call-recordings`. Aucune policy n'y est posée,
+  et c'est délibéré : seul le serveur y accède. Un navigateur ne doit même pas pouvoir
+  essayer.
+- **Rapatriement de l'enregistrement** juste après l'appel, dans le traitement du webhook.
+  Pas dans une tâche de nuit : les adresses du fournisseur expirent, une tâche nocturne ne
+  trouverait que des liens morts.
+- **Route `/api/calls/[id]/audio`**. L'interface pointait vers elle depuis la Phase 4 alors
+  qu'elle n'existait pas — un lecteur branché sur une 404 ne dit rien, il reste muet. Elle
+  vérifie la session, vérifie que l'appel appartient à l'entreprise active, puis redirige
+  vers une adresse signée valable cinq minutes.
+- **Écran Sophie → Enregistrement des appels.** Il dit d'abord ce qui est vrai, et demande
+  ensuite. Il distingue surtout les deux choses que tout le monde confond : l'opérateur
+  enregistre de son côté selon ses règles, ce réglage ne gouverne que la copie conservée
+  chez vous.
+- **L'écran Sophie devient un vrai écran** : état de la ligne, et ce qui se règle.
+
+### Corrigé
+- **Le drapeau d'essai d'un appel ne suffisait pas à autoriser l'enregistrement.**
+  `call_is_test()` exige que l'ORGANISATION soit une organisation d'essai (ADR-019). Sans
+  ce passage, un appel réel marqué essai — ce qui arrive tant qu'aucun numéro n'est
+  déclaré — aurait profité de la dispense réservée aux essais. La base le vérifiait déjà ;
+  le serveur ne le lui demandait pas correctement.
+
+### Sécurité du chemin de fichier
+Le chemin est calculé par le serveur à partir de deux identifiants, et la fonction refuse
+tout ce qui n'est pas un UUID. Un chemin construit à partir d'une valeur libre est une
+traversée de répertoire qui attend son heure : `../autre-entreprise/appel.mp3` est une
+chaîne parfaitement valide.
+
+### Ce qui reste avant un vrai client
+L'annonce applicable au pays n'est pas validée juridiquement, donc `recording_allowed()`
+refuse l'enregistrement de tout appel réel. C'est voulu. Les appels d'essai, eux, sont
+conservés.
+
 ## [0.11.1] — 2026-10-23 — Le résumé, et la vérité sur l'enregistrement
 
 ### Le résumé était vide, et rien ne le disait

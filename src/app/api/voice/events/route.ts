@@ -2,10 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { VapiVoiceProvider } from "@/lib/providers/voice/vapi";
 import { closeCall, openCall, openTestCall, schedulePostCall } from "@/lib/calls/registry";
 import { etatsDepuisRapport, lireRapport } from "@/lib/calls/report";
+import { rapatrierEnregistrement } from "@/lib/calls/recording-storage";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+// 60 secondes, et non 30 : ce webhook rapatrie maintenant le fichier audio,
+// ce qui ajoute un téléchargement et un dépôt. C'est le maximum autorisé sur
+// le plan Hobby, et ce chemin n'est pas dans la conversation — contrairement
+// aux outils, où une seconde de trop s'entend au téléphone.
+export const maxDuration = 60;
 
 /**
  * Événements d'appel envoyés par le fournisseur de voix.
@@ -222,10 +227,20 @@ async function exploiterRapport(
   // 2. L'enregistrement n'est autorisé que si l'organisation l'a activé et a
   //    accepté la politique applicable (section 42). La question est tranchée
   //    en base, jamais ici.
+  //
+  //    Le drapeau d'essai porté par l'appel ne suffit pas : `call_is_test()`
+  //    exige que l'ORGANISATION soit une organisation d'essai (ADR-019). Sans
+  //    ce passage, un appel réel marqué essai — ce qui arrive tant qu'aucun
+  //    numéro n'est déclaré — profiterait de la dispense réservée aux essais.
   let enregistrementAutorise = false;
+  const { data: essaiEffectif } = await admin.rpc("call_is_test", {
+    org_id: organizationId,
+    requested_test: estEssai,
+  });
+
   const { data: autorise, error: refus } = await admin.rpc("recording_allowed", {
     org_id: organizationId,
-    is_test: estEssai,
+    is_test: essaiEffectif === true,
   });
   if (refus) console.error("[voice/events] recording_allowed indisponible", refus.message);
   else enregistrementAutorise = autorise === true;
@@ -265,6 +280,25 @@ async function exploiterRapport(
     summary: etats.resume,
     recording: etats.enregistrement,
   });
+
+  // 6. L'audio, en dernier, et seulement s'il y a quelque chose à rapatrier.
+  //
+  //    Fait ici et pas dans une tâche différée : les adresses du fournisseur
+  //    expirent. Une tâche de nuit ne trouverait que des liens morts.
+  if (etats.enregistrement === "PENDING" && rapport.audioUrl) {
+    const { data: org } = await admin
+      .from("organizations")
+      .select("audio_retention_days")
+      .eq("id", organizationId)
+      .maybeSingle();
+
+    await rapatrierEnregistrement({
+      callId,
+      organizationId,
+      sourceUrl: rapport.audioUrl,
+      retentionDays: (org?.audio_retention_days as number | undefined) ?? 30,
+    });
+  }
 }
 
 /** Les fins d'appel qui traduisent une panne, et non un raccrochage normal. */

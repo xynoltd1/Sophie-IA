@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.11.1 · **Phase 5 : transcription, résumé et extraction faits ; audio non commencé** · **Vérifié le 2026-10-23**
+**Version** 0.12.0 · **Phase 5 écrite en entier ; audio et résumé non encore constatés sur un appel** · **Vérifié le 2026-10-23**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -183,6 +183,8 @@ projet, et le premier critère de choix du fournisseur de voix.
 0020_server_context              is_server_context() : le serveur n'est pas un utilisateur
                                  (ADR-027)
 0021_phone_origin                contacts.phone_origin : reseau, dicte ou saisi
+0024_recording_storage           bucket prive call-recordings, metadonnees audio sur
+                                 calls, expired_recordings()
 0023_call_intelligence           call_events (rapport brut, purge 30 jours),
                                  call_transcript_segments, calls.summary,
                                  calls.structured_data, purge_expired_call_events()
@@ -309,7 +311,16 @@ Endpointing` `vapi`, `On No Punctuation Seconds` 2.0, `Number of Words` 2, `Voic
 **4. Vérifier l'acceptation d'un rendez-vous** de bout en bout : accepter un « À valider »
 et contrôler que l'événement apparaît dans Google Calendar.
 
-**5. Finir la Phase 5 — l'audio.** La transcription et le résumé sont faits depuis 0.11.0.
+**5. Constater la Phase 5 sur un appel réel.** Tout est écrit, rien n'est prouvé : le
+résumé, l'extraction structurée et le rapatriement de l'audio n'ont jamais été vus
+fonctionner. Un seul appel d'essai suffit à les vérifier tous les trois.
+
+Pour que l'audio soit conservé, l'organisation doit être une organisation d'essai
+(`is_test_organization`), parce que l'annonce applicable n'est pas validée juridiquement
+et que `recording_allowed()` refuse alors tout appel réel. **Remettre ce drapeau à faux
+avant le premier vrai client** : c'est un prérequis de mise en production.
+
+**6. Ancien point 5 — Finir la Phase 5 — l'audio.** La transcription et le résumé sont faits depuis 0.11.0.
 Il reste, dans cet ordre : un écran d'activation de l'enregistrement avec acceptation de la
 politique (sans lui, `recording_allowed()` renvoie faux et rien ne sera jamais enregistré) ;
 la copie du fichier vers un bucket privé ; la route `/api/calls/[id]/audio` qui sert une URL
