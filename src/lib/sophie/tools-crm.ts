@@ -55,6 +55,28 @@ async function activite(
 }
 
 /**
+ * Le fuseau horaire de l'entreprise.
+ *
+ * Tout ce que Sophie entend au téléphone est une heure MURALE : celle de la
+ * pendule du client. Sans cette conversion, elle est lue comme de l'heure
+ * universelle et l'écriture se décale de tout l'écart horaire du pays — un
+ * rendez-vous de 8 h devient 10 h (ADR-029).
+ */
+async function fuseauDeLOrganisation(context: ToolContext): Promise<string> {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("organizations")
+      .select("timezone")
+      .eq("id", context.organizationId)
+      .maybeSingle();
+    return (data?.timezone as string | undefined) ?? "Europe/Brussels";
+  } catch {
+    return "Europe/Brussels";
+  }
+}
+
+/**
  * Retrouve le contact de l'appelant, ou le crée.
  *
  * Trois sources, dans cet ordre.
@@ -364,6 +386,10 @@ const createLead: SophieTool = {
       .insert({
         organization_id: context.organizationId,
         contact_id: contactId,
+        // Le lien exact vers l'appel d'origine (migration 0022). C'est lui qui
+        // permet à l'accueil de distinguer un appel qui a produit quelque chose
+        // d'un appel resté sans suite.
+        call_id: context.callId,
         title: titre.slice(0, 200),
         description: texte(args, "description"),
         address_line1: texte(args, "address_line1"),
@@ -449,10 +475,15 @@ const createTask: SophieTool = {
 
     // Une échéance incomplète vaut mieux qu'une échéance inventée : sans heure,
     // on vise le début de journée, et l'artisan tranchera.
+    //
+    // « Demain matin » dicté au téléphone est une heure murale. La construire
+    // en UTC décalait le rappel d'une à deux heures selon la saison : la même
+    // faute que celle corrigée sur les rendez-vous (ADR-029).
     let echeance: string | null = null;
     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
       const h = heure && /^\d{2}:\d{2}$/.test(heure) ? heure : "08:00";
-      echeance = `${date}T${h}:00Z`;
+      const instant = instantDepuisHeureLocale(date, h, await fuseauDeLOrganisation(context));
+      echeance = instant ? instant.toISOString() : null;
     }
 
     const admin = createAdminClient();
@@ -462,6 +493,7 @@ const createTask: SophieTool = {
       .insert({
         organization_id: context.organizationId,
         contact_id: contactId,
+        call_id: context.callId,
         title: titre.slice(0, 200),
         description: texte(args, "description"),
         due_at: echeance,
@@ -523,18 +555,7 @@ const createPendingAppointment: SophieTool = {
 
     const admin = createAdminClient();
 
-    // L'heure dictée est une heure MURALE : celle de la pendule du client. La
-    // convertir dans le fuseau de l'organisation est indispensable — sans ça,
-    // elle est lue comme de l'heure universelle et le rendez-vous se décale de
-    // tout l'écart horaire du pays.
-    const { data: org } = await admin
-      .from("organizations")
-      .select("timezone")
-      .eq("id", context.organizationId)
-      .maybeSingle();
-
-    const timezone = (org?.timezone as string | undefined) ?? "Europe/Brussels";
-
+    const timezone = await fuseauDeLOrganisation(context);
     const debut = instantDepuisHeureLocale(date, heure, timezone);
     if (!debut) {
       return { error: "Date ou heure incompréhensible. Faites répéter le client." };
@@ -571,6 +592,21 @@ const createPendingAppointment: SophieTool = {
     }
 
     if (contactId) await lierAppelAuContact(context, contactId);
+
+    // Rattacher le rendez-vous à l'appel. `book_appointment` ne prend pas ce
+    // paramètre : sa signature est utilisée ailleurs, et la changer pour ce
+    // seul besoin aurait touché le chemin de réservation, qui est le plus
+    // sensible du produit (contrainte d'exclusion, holds). Une écriture de
+    // plus, juste après, est le choix prudent — et si elle échoue, le
+    // rendez-vous existe quand même, seule la traçabilité est incomplète.
+    if (data) {
+      const { error: lien } = await admin
+        .from("appointments")
+        .update({ call_id: context.callId })
+        .eq("id", data as unknown as string)
+        .eq("organization_id", context.organizationId);
+      if (lien) console.error("[sophie] rendez-vous non rattaché à l'appel", lien.message);
+    }
 
     await activite(context, "APPOINTMENT_PROPOSED", `Rendez-vous provisoire le ${date} à ${heure}`, {
       appointmentId: data,

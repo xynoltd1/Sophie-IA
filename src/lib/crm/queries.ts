@@ -28,6 +28,9 @@ export async function getDashboardCounts(
     tasks_today: 0,
     open_leads: 0,
     contacts_total: 0,
+    pending_appointments: 0,
+    calls_no_followup: 0,
+    calls_failed: 0,
   };
 
   if (error) return { counts: vide, error: true };
@@ -109,4 +112,54 @@ export async function getTodayAppointments(
 
   if (error) return [];
   return (data ?? []) as DayAppointmentRow[];
+}
+
+/**
+ * Ce que chaque appel a produit : demandes, rendez-vous, rappels.
+ *
+ * Trois requêtes plates plutôt qu'un comptage embarqué. PostgREST sait compter
+ * une relation dans la même requête, mais il faut qu'il déduise seul le lien
+ * entre `calls` et trois autres tables, et cette déduction n'échoue qu'à
+ * l'exécution, sur la page la plus importante du produit. Trois `in (...)` sur
+ * au plus cinquante identifiants ne coûtent rien et ne peuvent pas surprendre.
+ */
+export async function suitesDesAppels(
+  organizationId: string,
+  callIds: string[],
+): Promise<Map<string, { leads: number; appointments: number; tasks: number }>> {
+  const resultat = new Map<string, { leads: number; appointments: number; tasks: number }>();
+  for (const id of callIds) resultat.set(id, { leads: 0, appointments: 0, tasks: 0 });
+  if (callIds.length === 0) return resultat;
+
+  const supabase = await createServerSupabase();
+
+  const requete = (table: "leads" | "appointments" | "tasks") =>
+    supabase
+      .from(table)
+      .select("call_id")
+      .eq("organization_id", organizationId)
+      .in("call_id", callIds);
+
+  const [leads, rdvs, taches] = await Promise.all([
+    requete("leads"),
+    requete("appointments"),
+    requete("tasks"),
+  ]);
+
+  const compter = (
+    lignes: { call_id: string | null }[] | null,
+    champ: "leads" | "appointments" | "tasks",
+  ) => {
+    for (const ligne of lignes ?? []) {
+      if (!ligne.call_id) continue;
+      const entree = resultat.get(ligne.call_id);
+      if (entree) entree[champ] += 1;
+    }
+  };
+
+  compter(leads.data as { call_id: string | null }[] | null, "leads");
+  compter(rdvs.data as { call_id: string | null }[] | null, "appointments");
+  compter(taches.data as { call_id: string | null }[] | null, "tasks");
+
+  return resultat;
 }

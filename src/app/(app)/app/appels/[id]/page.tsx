@@ -10,9 +10,11 @@ import {
   formatDuration,
   formatPhone,
   processingLabel,
+  sansSuite,
 } from "@/lib/crm/calls";
 import { APPOINTMENT_STATUS_LABELS, formatDay, formatTime } from "@/lib/crm/agenda";
-import type { AppointmentRow, CallRow } from "@/types/database";
+import { LEAD_STATUS_LABELS } from "@/lib/crm/pipeline";
+import type { AppointmentRow, CallRow, LeadRow, TaskRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Appel — Sophie IA" };
@@ -57,24 +59,54 @@ export default async function FicheAppelPage({
     } | null;
   };
 
-  // Le rendez-vous éventuellement issu de cet appel. Recherché par contact et
-  // par fenêtre de temps : le lien direct appel → rendez-vous arrivera avec le
-  // traitement post-appel.
-  const { data: rdvData } = appel.contact_id
-    ? await supabase
-        .from("appointments")
-        .select("id, title, starts_at, ends_at, status")
-        .eq("organization_id", activeOrganization.organization_id)
-        .eq("contact_id", appel.contact_id)
-        .gte("created_at", appel.started_at)
-        .order("created_at")
-        .limit(1)
-    : { data: null };
+  // Ce que cet appel a produit.
+  //
+  // Le lien est direct depuis la migration 0022. Avant, il était déduit du
+  // contact et d'une fenêtre de temps : cette déduction se trompait dès que le
+  // même client rappelait dans la journée, et elle ne permettait pas de
+  // répondre à la question « cet appel a-t-il donné quelque chose ? ».
+  const orgId = activeOrganization.organization_id;
+  const [rdvs, demandes, rappels] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("id, title, starts_at, ends_at, status")
+      .eq("organization_id", orgId)
+      .eq("call_id", id)
+      .order("starts_at")
+      .limit(5),
+    supabase
+      .from("leads")
+      .select("id, title, status, priority")
+      .eq("organization_id", orgId)
+      .eq("call_id", id)
+      .limit(5),
+    supabase
+      .from("tasks")
+      .select("id, title, due_at, status")
+      .eq("organization_id", orgId)
+      .eq("call_id", id)
+      .limit(5),
+  ]);
 
-  const rdv = (rdvData?.[0] ?? null) as Pick<
+  const rdv = (rdvs.data?.[0] ?? null) as Pick<
     AppointmentRow,
     "id" | "title" | "starts_at" | "ends_at" | "status"
   > | null;
+
+  const leads = (demandes.data ?? []) as Pick<
+    LeadRow,
+    "id" | "title" | "status" | "priority"
+  >[];
+
+  const taches = (rappels.data ?? []) as Pick<TaskRow, "id" | "title" | "due_at" | "status">[];
+
+  // Un appel terminé dont rien n'est sorti : c'est un client qui attend
+  // peut-être un rappel, et personne ne le saurait sans le dire ici.
+  const rien =
+    leads.length === 0 &&
+    taches.length === 0 &&
+    rdv === null &&
+    sansSuite(appel, { leads: 0, appointments: 0, tasks: 0 });
 
   const nom =
     appel.contacts?.full_name ??
@@ -147,6 +179,16 @@ export default async function FicheAppelPage({
         )}
       </section>
 
+      {rien ? (
+        <Sheet tone="attention">
+          <p className="font-medium">Rien n’est sorti de cet appel</p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Sophie n’a noté ni demande, ni rendez-vous, ni rappel. Le client a peut-être
+            raccroché avant d’expliquer ce qu’il voulait.
+          </p>
+        </Sheet>
+      ) : null}
+
       <section>
         <SectionTitle>Résumé de Sophie</SectionTitle>
         <Sheet tone={appel.summary_status === "FAILED" ? "attention" : "neutral"}>
@@ -176,6 +218,47 @@ export default async function FicheAppelPage({
               Ouvrir l’agenda
             </Link>
           </Sheet>
+        </section>
+      ) : null}
+
+      {leads.length > 0 ? (
+        <section>
+          <SectionTitle>Demande enregistrée</SectionTitle>
+          <ul className="flex flex-col gap-2">
+            {leads.map((lead) => (
+              <li key={lead.id}>
+                <Link href="/app/prospects" className="block">
+                  <Sheet tone={lead.priority === "URGENT" ? "urgent" : "neutral"}>
+                    <p className="font-medium">{lead.title}</p>
+                    <p className="mt-1 text-sm text-ink-soft">
+                      {lead.priority === "URGENT" ? "Urgent · " : ""}
+                      {LEAD_STATUS_LABELS[lead.status]}
+                    </p>
+                  </Sheet>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {taches.length > 0 ? (
+        <section>
+          <SectionTitle>À faire après cet appel</SectionTitle>
+          <ul className="flex flex-col gap-2">
+            {taches.map((tache) => (
+              <li key={tache.id}>
+                <Sheet tone="neutral">
+                  <p className="font-medium">{tache.title}</p>
+                  {tache.due_at ? (
+                    <p className="mt-1 text-sm capitalize text-ink-soft">
+                      {formatDay(tache.due_at)} · {formatTime(tache.due_at)}
+                    </p>
+                  ) : null}
+                </Sheet>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

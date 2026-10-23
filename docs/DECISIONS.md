@@ -788,3 +788,109 @@ et il doit etre lance tot : le delai de validation ne se rattrape pas.
 Un comportement documente d un fournisseur n est pas une panne, mais il devient une panne
 si le produit ne le prevoit pas. La question a se poser pour chaque integration est : que
 se passe-t-il au bout d une semaine, d un mois, de six mois, si personne ne touche a rien ?
+
+---
+
+## ADR-029 — Toute heure dictee au telephone est une heure murale
+
+**Date** 2026-10-22 · **Statut** decide
+
+### Le probleme, vu une premiere fois sur les rendez-vous
+
+Un client a demande 8 heures. L application a enregistre 10 heures. Les deux valeurs sont
+des heures valides, aucune erreur n a ete levee, et rien n etait anormal dans les journaux.
+Seul un humain qui compare ce qu il a dit et ce qu il voit s en apercoit.
+
+La cause : `new Date("2026-10-23T08:00:00")` est interprete dans le fuseau de la machine, et
+sur Vercel cette machine est en temps universel. Ecrire `"...T08:00:00Z"` a la main a le
+meme defaut en sens inverse : cela declare que 8 heures est une heure universelle.
+
+### La regle
+
+Ce qu un client prononce au telephone est l heure de sa pendule. Elle n a de sens que
+rapportee au fuseau de l entreprise, et la conversion passe par
+`instantDepuisHeureLocale(date, heure, fuseau)` — jamais par une chaine de caracteres.
+
+Cela vaut pour **toutes** les heures que Sophie entend, pas seulement les rendez-vous. La
+meme faute decalait l echeance des rappels : « demandez-lui de me rappeler demain a 8 h »
+creait une tache a 9 ou 10 heures selon la saison. Corrige en 0.10.0.
+
+### Ce qui empeche la recidive
+
+`tests/call-followup.test.ts` interdit l assemblage manuel d une date et d une heure dans
+`src/lib/sophie/` : toute expression de la forme `${date}T${heure}` fait echouer la suite de
+tests. La regle n est plus seulement ecrite, elle est verifiee.
+
+### Portee
+
+La fonction `fuseauDeLOrganisation()` lit le fuseau de l organisation et retombe sur
+`Europe/Brussels` si la lecture echoue. Ce defaut est volontaire : les deux marches de
+lancement, la France et la Belgique, partagent le meme fuseau. Il devra etre revu au
+premier client hors de cette zone.
+
+---
+
+## ADR-030 — Le lien appel -> lead, rendez-vous et tache est une colonne, pas une deduction
+
+**Date** 2026-10-22 · **Statut** decide
+
+### La question a laquelle le produit ne savait pas repondre
+
+« Ce client a appele. Est-ce que quelque chose en est sorti ? »
+
+Un appel ou Sophie n a rien enregistre — le client a raccroche, n a pas explique son
+probleme, n a pas pris de rendez-vous — n apparaissait nulle part ailleurs que dans
+l onglet Appels. Personne ne rappelait ce client. C est la seule perte totalement invisible
+du produit : le client a appele, il a parle, et son appel figure dans une liste que
+l artisan n ouvre pas.
+
+### Pourquoi l ancienne methode ne pouvait pas y repondre
+
+La fiche appel retrouvait « le rendez-vous issu de cet appel » par deduction : meme contact,
+cree apres le debut de l appel. Cette heuristique a deux limites. Elle se trompe des que le
+meme client rappelle dans la journee. Et surtout, elle ne sait pas conclure a l absence :
+ne rien trouver pouvait aussi bien vouloir dire « rien n a ete cree » que « le lien n a pas
+ete reconstitue ».
+
+### La decision
+
+Migration 0022 : `leads.call_id`, `appointments.call_id`, `tasks.call_id`, en
+`on delete set null`. Supprimer un appel au titre de la retention audio (section 42) ne
+doit jamais supprimer le rendez-vous qui en est issu.
+
+`book_appointment` n a pas recu de parametre supplementaire. Sa signature est utilisee
+ailleurs, et la modifier aurait touche le chemin de reservation — contrainte d exclusion,
+holds, double reservation — qui est le plus sensible du produit. Le rattachement est une
+ecriture separee, juste apres la reservation. Si elle echoue, le rendez-vous existe quand
+meme : seule la tracabilite est incomplete, et c est le bon ordre de priorites.
+
+### Les seuils, et pourquoi ils existent
+
+Un appel est dit **sans suite** s il est termine, n est pas un essai, dure au moins
+**15 secondes**, a eu lieu depuis moins de **7 jours**, et n a produit ni demande, ni
+rendez-vous, ni tache.
+
+Les 15 secondes ecartent les faux numeros et les raccrochages immediats, qui ne sont pas
+des clients a rappeler. Les 7 jours evitent une liste qui ne se vide jamais : une liste qui
+ne se vide jamais finit par etre ignoree, et un signal ignore ne vaut pas mieux qu une
+absence de signal.
+
+Une duree **inconnue** n est pas traitee comme une duree courte. Un appel termine dont le
+fournisseur n a pas rendu la duree est une anomalie, et la masquer reviendrait a perdre le
+client une seconde fois.
+
+### La duplication assumee
+
+Le compteur de l accueil est calcule en base par `dashboard_counts()`, la liste est filtree
+dans l application par `sansSuite()`. La meme regle vit donc a deux endroits. Deux tests
+relient les deux : l un verifie que les seuils SQL et TypeScript sont identiques, l autre
+que les colonnes renvoyees par la fonction correspondent exactement au type
+`DashboardCounts`. Sans eux, l accueil annoncerait « 3 appels » et la liste en montrerait 5,
+ou un compteur vaudrait silencieusement zero.
+
+### Reprise de l historique
+
+La migration applique une derniere fois l ancienne heuristique — meme contact, dans les
+deux heures suivant le debut de l appel — pour rattacher les lignes existantes, puis ne s en
+sert plus jamais. Sans cette reprise, tous les appels deja passes seraient apparus comme
+« sans suite » des le deploiement, y compris ceux qui avaient produit un rendez-vous.

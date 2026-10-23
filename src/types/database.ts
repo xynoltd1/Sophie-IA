@@ -303,6 +303,12 @@ export interface DashboardCounts {
   tasks_today: number;
   open_leads: number;
   contacts_total: number;
+  /** Rendez-vous provisoires qui attendent une décision du professionnel. */
+  pending_appointments: number;
+  /** Appels terminés des 7 derniers jours dont rien n'est sorti (migration 0022). */
+  calls_no_followup: number;
+  /** Appels échoués ou manqués des 7 derniers jours. */
+  calls_failed: number;
 }
 
 /** Ligne renvoyée par public.search_crm(). */

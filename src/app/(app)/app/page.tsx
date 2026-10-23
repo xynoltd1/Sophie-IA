@@ -24,7 +24,13 @@ export default async function HomePage() {
   const { counts, error: countsError } = await getDashboardCounts(
     activeOrganization.organization_id,
   );
-  const aTraiter = counts.urgent_leads + counts.new_leads + counts.overdue_tasks;
+  const aTraiter =
+    counts.urgent_leads +
+    counts.pending_appointments +
+    counts.calls_no_followup +
+    counts.calls_failed +
+    counts.new_leads +
+    counts.overdue_tasks;
   const rendezVous = await getTodayAppointments(activeOrganization.organization_id);
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0];
 
@@ -99,6 +105,55 @@ export default async function HomePage() {
                     <span className="font-medium">
                       {counts.urgent_leads} urgence{counts.urgent_leads > 1 ? "s" : ""}
                     </span>
+                    <span aria-hidden className="text-ink-soft">→</span>
+                  </Sheet>
+                </Link>
+              </li>
+            ) : null}
+            {counts.pending_appointments > 0 ? (
+              <li>
+                <Link href="/app/agenda" className="block">
+                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                    <span className="font-medium">
+                      {counts.pending_appointments} rendez-vous à valider
+                    </span>
+                    <span aria-hidden className="text-ink-soft">→</span>
+                  </Sheet>
+                </Link>
+              </li>
+            ) : null}
+            {counts.calls_no_followup > 0 ? (
+              <li>
+                <Link href="/app/appels?filtre=sans-suite" className="block">
+                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">
+                        {counts.calls_no_followup} appel{counts.calls_no_followup > 1 ? "s" : ""} à
+                        rappeler
+                      </p>
+                      <p className="text-sm text-ink-soft">
+                        {counts.calls_no_followup > 1 ? "Ces clients ont appelé" : "Ce client a appelé"}
+                        {" "}sans laisser de demande ni prendre de rendez-vous.
+                      </p>
+                    </div>
+                    <span aria-hidden className="text-ink-soft">→</span>
+                  </Sheet>
+                </Link>
+              </li>
+            ) : null}
+            {counts.calls_failed > 0 ? (
+              <li>
+                <Link href="/app/appels?filtre=echoues" className="block">
+                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">
+                        {counts.calls_failed} appel{counts.calls_failed > 1 ? "s" : ""} que Sophie n’a
+                        pas pu prendre
+                      </p>
+                      <p className="text-sm text-ink-soft">
+                        Le client a entendu sonner sans réponse.
+                      </p>
+                    </div>
                     <span aria-hidden className="text-ink-soft">→</span>
                   </Sheet>
                 </Link>

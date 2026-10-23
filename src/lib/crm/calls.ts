@@ -75,3 +75,71 @@ export function formatCallMoment(iso: string, timezone = "Europe/Brussels"): str
     timeZone: timezone,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Appels sans suite
+// ---------------------------------------------------------------------------
+
+/**
+ * Seuils de la notion « appel sans suite ».
+ *
+ * Ces deux nombres sont aussi écrits dans `dashboard_counts()` (migration
+ * 0022), parce que le compteur de l'accueil est calculé en base et la liste
+ * filtrée ici. Deux endroits pour une même règle, c'est une divergence qui
+ * attend son heure : `tests/call-followup.test.ts` échoue si les valeurs ne
+ * sont plus les mêmes des deux côtés.
+ */
+export const SANS_SUITE = {
+  /** En dessous, c'est un faux numéro ou un raccrochage, pas un client. */
+  DUREE_MINIMUM_SECONDES: 15,
+  /** Au-delà, rappeler ne sert plus à rien, et une liste qui ne se vide jamais finit ignorée. */
+  FENETRE_JOURS: 7,
+} as const;
+
+/** Ce qu'un appel a produit. Les trois compteurs viennent de la base. */
+export interface SuitesDAppel {
+  leads: number;
+  appointments: number;
+  tasks: number;
+}
+
+export interface AppelPourSuite {
+  status: CallStatus;
+  is_test: boolean;
+  duration_seconds: number | null;
+  started_at: string;
+}
+
+/**
+ * Un appel resté sans suite : la conversation a eu lieu, et rien n'en est
+ * sorti — ni demande, ni rendez-vous, ni rappel à passer.
+ *
+ * C'est le seul endroit du produit où un client peut disparaître sans que
+ * personne ne s'en aperçoive : il a appelé, il a parlé, et son appel ne figure
+ * que dans une liste que l'artisan n'ouvre pas. D'où sa place sur l'accueil.
+ *
+ * Une durée inconnue n'est pas traitée comme une durée courte : un appel
+ * terminé dont le fournisseur n'a pas rendu la durée est une anomalie, et la
+ * masquer reviendrait à perdre le client en silence.
+ */
+export function sansSuite(
+  appel: AppelPourSuite,
+  suites: SuitesDAppel,
+  maintenant: Date = new Date(),
+): boolean {
+  if (appel.status !== "COMPLETED") return false;
+  if (appel.is_test) return false;
+  if (suites.leads > 0 || suites.appointments > 0 || suites.tasks > 0) return false;
+
+  if (appel.duration_seconds !== null && appel.duration_seconds < SANS_SUITE.DUREE_MINIMUM_SECONDES) {
+    return false;
+  }
+
+  const limite = maintenant.getTime() - SANS_SUITE.FENETRE_JOURS * 24 * 60 * 60 * 1000;
+  return new Date(appel.started_at).getTime() > limite;
+}
+
+/** Les appels que Sophie n'a pas pu prendre. Un client a entendu sonner dans le vide. */
+export function appelEchoue(appel: Pick<AppelPourSuite, "status" | "is_test">): boolean {
+  return !appel.is_test && needsAttention(appel.status);
+}

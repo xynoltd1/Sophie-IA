@@ -94,3 +94,24 @@ supprimé conformément à la durée de conservation, et non qu'il a été perdu
 Si l'enregistrement est désactivé pour une organisation, Sophie fonctionne normalement :
 la transcription temps réel, le résumé et l'extraction ne dépendent pas de la conservation
 du fichier audio.
+
+## Appel sans suite
+
+Un appel est **sans suite** lorsque la conversation a eu lieu et que rien n'en est sorti :
+ni demande, ni rendez-vous, ni rappel à passer.
+
+| Condition | Valeur | Pourquoi |
+|---|---|---|
+| Statut | `COMPLETED` | un appel en cours n'a pas encore eu le temps de produire quoi que ce soit |
+| Appel d'essai | exclu | un essai ne réclame rien (section 45) |
+| Durée | ≥ 15 secondes, ou inconnue | en dessous, c'est un faux numéro ; une durée **inconnue** est une anomalie du fournisseur et reste visible |
+| Ancienneté | moins de 7 jours | une liste qui ne se vide jamais finit par être ignorée |
+| Produit | aucun `lead`, aucun `appointment`, aucune `task` portant ce `call_id` | le lien est une colonne, pas une déduction (ADR-030) |
+
+Ces appels remontent dans « Ce qui presse » sur l'accueil et sous le filtre *Sans suite* de
+la liste des appels. C'est le seul cas où un client peut disparaître sans que personne ne
+s'en aperçoive : il a appelé, il a parlé, et son appel ne figure que dans une liste que
+l'artisan n'ouvre pas.
+
+Les appels `FAILED` et `MISSED` sont comptés séparément : le client a entendu sonner sans
+réponse, ce qui appelle une réaction différente.

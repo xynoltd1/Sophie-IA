@@ -3,6 +3,45 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.10.0] — 2026-10-22 — Un client qui appelle et repart sans rien ne disparaît plus
+
+### Le trou
+Un client appelle, parle, raccroche sans expliquer son problème ni prendre de rendez-vous.
+Jusqu'ici, cet appel n'apparaissait nulle part ailleurs que dans l'onglet Appels. Personne
+ne le rappelait. C'était la seule perte totalement invisible du produit.
+
+### Ajouté
+- **Lien direct appel → demande, rendez-vous, rappel.** Migration 0022 : `call_id` sur
+  `leads`, `appointments` et `tasks`. L'ancienne déduction par contact et fenêtre de temps
+  se trompait dès que le même client rappelait dans la journée, et surtout elle ne savait
+  pas conclure à l'absence (ADR-030).
+- **Trois nouvelles lignes sur l'accueil** : rendez-vous à valider, appels à rappeler,
+  appels que Sophie n'a pas pu prendre. Les rendez-vous à valider manquaient : un créneau
+  provisoire pour la semaine suivante n'apparaissait que dans l'agenda, alors que c'est la
+  décision la plus urgente que Sophie produise.
+- **Filtres sur la liste des appels** : Tous, Sans suite, Échoués. Un appel sans suite
+  porte la mention « Rien n'a été noté pendant cet appel ».
+- **Fiche appel complète** (section 31) : la demande enregistrée et les rappels créés
+  pendant l'appel s'affichent, ou un bloc qui dit franchement que rien n'en est sorti.
+
+### Corrigé
+- **Une tâche « rappelez-moi demain à 8 h » était créée à 9 ou 10 heures** selon la saison.
+  Même faute que le décalage des rendez-vous corrigé en 0.9.0, au même endroit du code,
+  restée dans l'ombre parce qu'une heure d'écart sur un rappel ne se remarque pas. La règle
+  est désormais écrite une fois (ADR-029) et un test interdit de la contourner.
+
+### Les garde-fous de cette version
+La règle « appel sans suite » vit à deux endroits : en base pour le compteur de l'accueil,
+dans l'application pour le filtre de la liste. Deux tests relient les deux — l'un sur les
+seuils (15 secondes, 7 jours), l'autre qui vérifie que les colonnes renvoyées par
+`dashboard_counts()` correspondent exactement au type TypeScript. Sans ce second test, une
+colonne ajoutée d'un côté et pas de l'autre donnerait un compteur silencieusement à zéro.
+
+### Reprise de l'historique
+La migration rattache une dernière fois les lignes existantes par l'ancienne heuristique.
+Sans cela, tous les appels déjà passés seraient apparus comme « sans suite » au premier
+chargement, y compris celui qui a produit un rendez-vous.
+
 ## [0.9.1] — 2026-10-22 — Un numéro mal entendu est pire qu'un numéro absent
 
 ### Le problème

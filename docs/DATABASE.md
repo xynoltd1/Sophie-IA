@@ -20,6 +20,22 @@ doit pouvoir être reconstruite à partir de zéro.
 | `0010_business_configuration` | `business_profiles`, `services`, `business_hours`, `absences` |
 | `0011_sophie_configuration` | `sophie_configurations`, `business_knowledge`, `apply_profession_template()`, `set_onboarding_step()` |
 
+## Migrations des phases 1 à 4
+
+| Fichier | Contenu |
+|---|---|
+| `0012_table_grants` | privilèges de table : une policy RLS n'est jamais atteinte sans `GRANT` |
+| `0013_crm` | `contacts`, `leads`, `tasks` |
+| `0014_crm_search` | `search_crm()`, `dashboard_counts()`, `find_contact_by_phone()` |
+| `0015_appointments` | `appointments`, `holds`, contrainte d'exclusion GiST contre la double réservation, `book_appointment()` |
+| `0016_availability` | `calendar_connections`, `available_slots()` |
+| `0017_calendar_security_and_sync` | privilèges au niveau colonne sur les jetons d'agenda, `calendar_busy_blocks`, `calendar_sync_state()`, `available_slots()` tenant compte de l'agenda externe |
+| `0018_calendar_connection_upsert` | contrainte d'unicité sur colonnes nues pour l'upsert d'agenda (ADR-025) |
+| `0019_calls_and_numbers` | `phone_numbers`, `calls`, statuts de traitement indépendants, `organization_for_number()` |
+| `0020_server_context` | `is_server_context()` : le serveur n'est pas un utilisateur (ADR-027) |
+| `0021_phone_origin` | `contacts.phone_origin` : réseau, dicté ou saisi à la main |
+| `0022_call_links` | `call_id` sur `leads`, `appointments` et `tasks` ; `dashboard_counts()` compte les rendez-vous à valider, les appels sans suite et les appels échoués (ADR-030) |
+
 ## Vérifier ce qui est appliqué
 
 `supabase/checks/01_verify_schema.sql` liste les objets attendus et signale ceux qui
@@ -27,6 +43,12 @@ manquent, avec le numéro de la migration concernée. `02_verify_content.sql` v�
 catalogue de métiers et les garde-fous de conformité. Les deux sont en lecture seule.
 
 ## Tables
+
+> **Écart connu.** Le détail table par table ci-dessous couvre la Phase 0. Les tables des
+> phases 1 à 4 — `contacts`, `leads`, `tasks`, `appointments`, `holds`, `services`,
+> `business_hours`, `calls`, `phone_numbers` — sont documentées dans leurs migrations, qui
+> portent chacune un en-tête expliquant ce qu'elle rend possible et pourquoi. Le code et les
+> migrations font foi ; cette page n'a pas encore été remise à niveau.
 
 ### profiles
 Miroir applicatif de `auth.users` (on n'ajoute jamais de colonne à `auth.users`).
@@ -102,4 +124,3 @@ Une table sans policy est une fuite de données, pas un oubli mineur.
 - **Rétention audio (Phase 5)** : la politique de rétention est une colonne de
   configuration par organisation, jamais une constante dans le code.
 
-| `0017_calendar_security_and_sync` | privilèges au niveau colonne sur les jetons d'agenda, `calendar_busy_blocks`, `calendar_sync_state()`, `available_slots()` tenant compte de l'agenda externe |

@@ -1,9 +1,5 @@
 # Reprise du projet
 
-> **Avant tout : lire `docs/VERIFICATION_PHASE4.md`.** La version 0.7.0 contient du code
-> écrit mais jamais exercé contre un vrai appel. Ne pas construire par-dessus avant que ces
-> vérifications aient été faites.
->
 > Ce document est le point d'entrée d'une nouvelle session. Lisez-le en premier, puis
 > `PROJECT.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `LEGAL_COMPLIANCE.md`, `CHANGELOG.md`.
 > **Le code et les tests font foi.** Si ce document et le code divergent, vérifiez le code,
@@ -13,44 +9,52 @@
 
 ## Où en est le projet
 
-**Version** 0.7.0 · **Phase 4 : outils métier écrits, NON vérifiés par un appel réel** · **Vérifié le 2026-10-22**
+**Version** 0.10.0 · **Phase 4 vérifiée par un appel réel ; Phase 5 non commencée** · **Vérifié le 2026-10-22**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
-`docs/LEGAL_COMPLIANCE.md` n'est pas validée. Aucun client réel, aucun appel réel, aucun
-enregistrement réel tant qu'elle ne l'est pas. Le développement technique continue
-normalement.
+`docs/LEGAL_COMPLIANCE.md` n'est pas validée. Aucun client réel tant qu'elle ne l'est pas.
+Le développement technique continue normalement.
 
-**Sophie répond.** Premier essai vocal réel le 2026-10-22 (Vapi, région US, essai navigateur) : elle a parlé français, appelé `check_availability`, et utilisé la réponse du serveur pendant la conversation. Reste à faire : l'appel sur un vrai numéro, l'audio dans notre espace européen, et le post-appel.
+### Le scénario du cahier des charges, section 63 : où il en est
 
-**Ancienne note, conservée pour mémoire :** C'est la Phase 4. Le fournisseur de voix est
-choisi (Vapi EU, ADR-020) ; il manque un compte et un numéro de téléphone, et le modèle
-d'acquisition des numéros reste une décision ouverte (ADR-022).
+| Étape | État |
+|---|---|
+| L'artisan configure entreprise, métier, services, horaires | ✅ vérifié |
+| Il connecte son agenda Google | ✅ vérifié par un événement réel le 2026-10-15 |
+| Un client appelle, Sophie répond en français | ✅ vérifié le 2026-10-22 |
+| Elle comprend, identifie ou crée le contact | ✅ vérifié |
+| Elle vérifie les **vraies** disponibilités et propose un créneau | ✅ vérifié |
+| Le créneau est bloqué, le rendez-vous apparaît « À valider » | ✅ vérifié |
+| L'artisan est alerté sur l'accueil | ✅ depuis 0.10.0 |
+| L'audio est conservé dans notre espace européen | ❌ Phase 5 |
+| Transcription, résumé, extraction | ❌ Phase 5 |
+| Il accepte, l'agenda Google est mis à jour | ⚠️ code en place, **non vérifié avec un vrai rendez-vous** |
+| Le client reçoit un SMS | ❌ Phase 6 |
 
-**Google Calendar est vérifié de bout en bout depuis le 2026-10-15** : un événement réel
-placé dans l'agenda retire bien les créneaux correspondants des disponibilités proposées.
+Le point le plus trompeur de ce tableau est l'avant-dernier : `pushAppointment()` dans
+`src/app/(app)/app/agenda/actions.ts` est écrit et appelé à l'acceptation d'un rendez-vous,
+mais aucun rendez-vous réel n'est passé par ce chemin. Il doit être vérifié avant d'être
+compté comme acquis.
 
-### Vérifications passées, exécutées le 2026-10-14
+### Vérifications passées, exécutées le 2026-10-22
 
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  121 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  183 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
 
 **Ces quatre contrôles ne suffisent pas.** La version 0.5.1 les passait tous et son
 déploiement a pourtant été refusé par Vercel : la tâche planifiée était trop fréquente pour
-un compte Hobby, ce qui est une règle de la plateforme, appliquée avant la compilation
-(ADR-024). `tests/vercel-config.test.ts` couvre désormais ce cas. Avant d'annoncer une
-version livrable, **vérifier qu'un déploiement réel est passé**, pas seulement que le build
-est vert en local.
+un compte Hobby, règle appliquée avant la compilation (ADR-024). `tests/vercel-config.test.ts`
+couvre ce cas. Avant d'annoncer une version livrable, **vérifier qu'un déploiement réel est
+passé**, pas seulement que le build est vert en local.
 
 Les 17 tests ignorés sont la suite d'isolation multi-tenant et un contrôle de
 configuration. Ils **ont tourné avec succès contre la vraie base le 2026-09-08** ; ils
 s'ignorent seulement quand les variables `SUPABASE_TEST_*` sont absentes de `.env.local`.
-
----
 
 ## Ce qui fonctionne réellement
 
@@ -91,6 +95,18 @@ s'ignorent seulement quand les variables `SUPABASE_TEST_*` sont absentes de `.en
 - Écran Agenda : réservation par choix de créneau réel, regroupement par jour, actions
   selon l'état. Bloc « Aujourd'hui » de l'accueil alimenté.
 
+**Téléphonie et Sophie Voice (Phase 4)**
+- `phone_numbers` fait le lien numéro appelé → organisation. L'artisan garde son numéro et
+  le renvoie vers le nôtre (ADR-022).
+- `calls` avec six états et trois statuts de traitement indépendants.
+- Huit outils métier servis par `/api/voice/tools`, signature vérifiée avant lecture du
+  corps ; une erreur métier revient en HTTP 200 avec une phrase que Sophie peut prononcer.
+- `npm run vapi:tools` synchronise les outils et les rattache à l'assistant.
+- Vérifié par un appel réel le 2026-10-22 : contact créé, demande urgente enregistrée,
+  rendez-vous « À valider » dans l'agenda.
+- Accueil : rendez-vous à valider, appels à rappeler et appels échoués (0.10.0). Un appel
+  dont rien n'est sorti est la seule perte qui était invisible ; elle ne l'est plus.
+
 ## Ce qui est écrit mais jamais exercé
 
 Le registre `src/lib/providers/status.ts` fait foi. Un test interdit d'y déclarer une
@@ -98,25 +114,29 @@ intégration externe `PRODUCTION_READY`.
 
 | Élément | État | Ce qui manque |
 |---|---|---|
-| Google Calendar | `BLOCKED_EXTERNAL_CONFIG` | projet Google Cloud et identifiants OAuth. Tout le code existe : OAuth, chiffrement des jetons, synchronisation incrémentale, webhook, job de rattrapage, écriture des rendez-vous. **Aucune requête n'est jamais partie vers Google.** |
-| Sophie Voice | `BLOCKED_EXTERNAL_CONFIG` | compte Vapi en région européenne. La partie testable sans compte l'est : signature HMAC, décodage, endpoint d'outils, deux outils métier. |
+| Écriture d'un rendez-vous confirmé dans Google Calendar | code en place, jamais exercé | accepter un vrai rendez-vous « À valider » et vérifier l'événement dans l'agenda |
+| Audio, transcription, résumé | non commencé | `VOICE_API_KEY` sur Vercel, puis Phase 5 |
+| Provisionnement automatique de l'assistant Vapi | script écrit (`npm run vapi:tools`) | exercé en local uniquement ; dépend de `VOICE_API_KEY` |
+
+**Vérifié depuis, et acquis :** OAuth Google et disponibilités réelles (2026-10-15),
+Sophie Voice sur un vrai numéro avec outils métier (2026-10-22).
 
 ## Ce qui est partiel
 
 | Élément | État |
 |---|---|
-| Écran Appels | état vide honnête ; la téléphonie est en Phase 4 |
-| Écran Sophie | état vide ; l'écran *Sophie → Connaissances* reste à faire (la table `business_knowledge` existe) |
+| Transcription en français | qualité insuffisante avec Soniox : « Tongeren » → « Tangerine », numéro tronqué. Deepgram et Google restent à comparer. Aucun classement public francophone n'existe (`docs/VOICE_PROVIDERS.md`) |
+| Sophie coupe la parole | réglages du *Start/Stop Speaking Plan* identifiés, à appliquer et retester |
+| Écran Sophie | l'écran *Sophie → Connaissances* reste à faire (la table `business_knowledge` existe) |
 | Paramètres | pas d'édition des services et horaires après l'onboarding ; pas de gestion des absences |
 | `src/types/database.ts` | écrit à la main (ADR-012), à régénérer depuis le schéma réel |
+| Application Google | en mode **Test** : les autorisations sont révoquées au bout de 7 jours (ADR-028). Prérequis de mise en production |
 
 ## Ce qui n'est pas commencé
 
-Téléphonie, `SophieEngine`, `VoiceAIProvider`, outils métier de Sophie, transfert et
-repli, enregistrement audio, lecteur, transcription, résumé, extraction, jobs asynchrones,
-SMS, notifications, console plateforme, abonnements et usage, observabilité.
-
----
+Enregistrement audio dans le bucket privé, lecteur alimenté par un vrai fichier,
+transcription, résumé, extraction structurée, jobs asynchrones et reprises, SMS,
+notifications, console plateforme, abonnements et usage, observabilité.
 
 ## Architecture en trois phrases
 
@@ -126,7 +146,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — seize, toutes appliquées et vérifiées
+## Migrations — vingt-deux
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -151,6 +171,17 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  book_appointment(), set_appointment_status()
 0016_availability                available_slots(), appointments_for_day(),
                                  calendar_connections, vue calendar_status
+0017_calendar_security_and_sync  privileges colonne sur les jetons, calendar_busy_blocks,
+                                 calendar_sync_state(), available_slots() avec agenda externe
+0018_calendar_connection_upsert  unicite sur colonnes nues pour l'upsert d'agenda (ADR-025)
+0019_calls_and_numbers           phone_numbers, calls, statuts de traitement independants,
+                                 organization_for_number(), disclose_ai verrouille a true
+0020_server_context              is_server_context() : le serveur n'est pas un utilisateur
+                                 (ADR-027)
+0021_phone_origin                contacts.phone_origin : reseau, dicte ou saisi
+0022_call_links                  call_id sur leads, appointments, tasks ;
+                                 dashboard_counts compte les rendez-vous a valider,
+                                 les appels sans suite et les appels echoues
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -248,46 +279,50 @@ toucher au code :
 
 ## Prochaines tâches recommandées
 
-**Immédiat — appliquer la migration 0017.** Elle corrige la faille des jetons d'agenda.
-Puis relancer `supabase/checks/01_verify_schema.sql`.
+**1. Appliquer la migration 0022**, puis déployer. Elle ajoute `call_id` sur `leads`,
+`appointments` et `tasks`, reprend l'historique, et étend `dashboard_counts()`. Sans elle,
+l'accueil et la liste des appels échouent : le type TypeScript attend deux colonnes que la
+fonction ne renvoie pas encore.
 
-**Ensuite — créer le projet Google Cloud** (`docs/DEPLOYMENT.md`, section 2). Gratuit.
-Tant qu'il n'existe pas, Google Calendar reste `BLOCKED_EXTERNAL_CONFIG` et Sophie
-proposera des créneaux déjà pris dans l'agenda personnel de l'artisan.
+**2. Comparer les transcripteurs.** Soniox, puis Deepgram, puis Google, en dictant à chaque
+fois le même nom, la même ville et le même numéro. C'est la tâche la plus rentable du
+moment : tant que la transcription se trompe, tout ce qui est en aval travaille sur des
+données fausses. Aucun classement public francophone ne permet de trancher sur dossier.
 
-**Puis — le spike Vapi.** Critère de réussite, à ne pas assouplir :
-appel entrant réel → Sophie répond → conversation dans les deux sens → Sophie appelle
-`check_availability` sur notre backend → le backend répond → Sophie utilise la réponse
-pendant l'appel.
+**3. Appliquer les réglages de prise de parole** (`On Number Seconds` 2.5, `Smart
+Endpointing` `vapi`, `On No Punctuation Seconds` 2.0, `Number of Words` 2, `Voice Seconds`
+0.3) et retester un numéro dicté.
 
-L'endpoint `/api/voice/tools` et l'outil `check_availability` sont écrits et testés pour
-la partie qui ne demande pas de compte. Ce qui manque est le compte Vapi et un numéro.
+**4. Vérifier l'acceptation d'un rendez-vous** de bout en bout : accepter un « À valider »
+et contrôler que l'événement apparaît dans Google Calendar.
 
-**Ne pas écrire le reste de la Phase 4 avant que le spike soit validé.** Un adaptateur
-écrit contre une API devinée produit du code qui a l'air fini et ne marche pas.
+**5. Phase 5 — l'audio.** Bloquée par `VOICE_API_KEY` sur Vercel. Récupérer
+l'enregistrement chez le fournisseur, le déposer dans le bucket privé européen, servir une
+URL signée après contrôle de l'organisation, puis transcription, résumé et extraction, avec
+des étapes indépendantes et reprenables (sections 13 à 16).
+
+**6. Lancer la validation de l'application Google** (ADR-028). Le délai ne se rattrape pas,
+et sans elle chaque client perdra son agenda une semaine après l'avoir connecté.
 
 **Dettes utiles à tout moment** : écran *Sophie → Connaissances*, édition des services et
-horaires depuis les paramètres, gestion des absences, tests de bout en bout.
-
----
+horaires, gestion des absences, régénération de `src/types/database.ts`.
 
 ## Ce qui attend une décision
 
 **Tranché** : pays (France et Belgique), rétention audio (30 jours), design et palette,
-domaine de production (**zelicall.com**, ADR-023).
+domaine de production (**zelicall.com**, ADR-023), modèle de numéro — l'artisan garde son
+numéro et le renvoie (ADR-022), fournisseur de voix — Vapi, région US faute d'accès
+libre-service à la région européenne (ADR-026).
 
 **Ouvert** : nom commercial du produit — le domaine est zelicall.com, le code dit
-« Sophie IA » partout (ADR-023) ; modèle de numéro de téléphone (fourni, renvoi ou
-portage) ; fournisseur de téléphonie et de voix ; fournisseur IA post-appel ; durées de conservation autres que
-l'audio (ADR-018) ; région d'hébergement des fournisseurs (ADR-017) ; région du middleware.
+« Sophie IA » partout (ADR-023) ; transcripteur ; fournisseur IA post-appel ; fournisseur
+SMS ; durées de conservation autres que l'audio (ADR-018).
 
 **Chantiers non techniques** : `docs/LEGAL_COMPLIANCE.md`, points L1 à L12, avec pour
 chacun ce qu'il bloque. Ils peuvent avancer en parallèle du développement.
 
 Si une session future a besoin d'une de ces valeurs, la réponse correcte est de la
 demander, pas de la choisir.
-
----
 
 ## Procédure de fin de phase
 
