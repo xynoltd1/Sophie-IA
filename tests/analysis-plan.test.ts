@@ -38,10 +38,12 @@ describe("plan d analyse pousse au fournisseur", () => {
     }
   });
 
-  it("n exige aucun champ", () => {
-    // Un schema qui exige une valeur pousse le modele a en fabriquer une.
-    // C est la regle la plus importante de ce fichier (section 15).
-    expect(plan.structuredDataPlan.schema.required).toEqual([]);
+  it("n exige aucun champ, et ne le dit pas avec un tableau vide", () => {
+    // Un schema qui exige une valeur pousse le modele a en fabriquer une
+    // (section 15). Mais `required: []` est INVALIDE en OpenAPI 3.0 : le
+    // fournisseur rejette alors tout le plan, sans message, et le rapport
+    // revient sans analyse. L absence de la cle dit la meme chose.
+    expect("required" in plan.structuredDataPlan.schema).toBe(false);
   });
 
   it("decrit chaque champ", () => {

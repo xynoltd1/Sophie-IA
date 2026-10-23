@@ -95,7 +95,11 @@ const SCHEMA_DONNEES = {
       description: "Vrai si l'appelant a demandé à être rappelé.",
     },
   },
-  required: [],
+  // Pas de `required: []`. Un tableau `required` vide est invalide en
+  // OpenAPI 3.0, et le fournisseur valide les schemas contre cette
+  // specification : il rejette alors le plan d'extraction en silence, sans
+  // message d'erreur, et le rapport revient sans analyse. L'absence de la cle
+  // dit la meme chose — aucun champ obligatoire — et reste valide.
 } as const;
 
 /**

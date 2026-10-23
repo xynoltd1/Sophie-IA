@@ -213,26 +213,52 @@ async function main() {
       // Le plan d'analyse part dans la même requête. Sans lui, le fournisseur
       // renvoie un rapport dont le champ `summary` est vide : c'est ce qui a
       // été constaté sur le premier appel réel, et rien ne le signalait.
-      const corpsAssistant = { model: { ...modele, toolIds: ids } };
-      if (analysisPlan) corpsAssistant.analysisPlan = analysisPlan;
-
+      // Deux écritures séparées, et ce n'est pas du zèle.
+      //
+      // Le 23 octobre, une écriture unique a produit un assistant portant mes
+      // instructions de résumé avec `enabled: false`, et sans plan
+      // d'extraction. Le fournisseur avait donc accepté une partie de l'envoi
+      // et nettoyé le reste, sans rien signaler. Séparer les deux écritures
+      // permet de savoir laquelle est refusée.
       await vapi(`/assistant/${ASSISTANT}`, {
         method: "PATCH",
-        body: JSON.stringify(corpsAssistant),
+        body: JSON.stringify({ model: { ...modele, toolIds: ids } }),
       });
+
+      if (analysisPlan) {
+        await vapi(`/assistant/${ASSISTANT}`, {
+          method: "PATCH",
+          body: JSON.stringify({ analysisPlan }),
+        });
+      }
 
       // On relit pour constater, au lieu d'annoncer un succès sur la foi d'un
       // code HTTP. Un PATCH accepté qui n'a rien changé est déjà arrivé.
       const apres = await vapi(`/assistant/${ASSISTANT}`);
-      const resumeActif = apres?.analysisPlan?.summaryPlan?.enabled === true;
+      const plan = apres?.analysisPlan ?? {};
+      const resumeActif = plan?.summaryPlan?.enabled === true;
+      const extractionActive = plan?.structuredDataPlan?.enabled === true;
       const outilsRattaches = apres?.model?.toolIds?.length ?? 0;
 
-      console.log(`Assistant ${ASSISTANT} : ${outilsRattaches} outils rattachés.`);
+      console.log(`\nAssistant ${ASSISTANT} : ${outilsRattaches} outils rattachés.`);
       console.log(
-        resumeActif
-          ? "Résumé et extraction : activés et vérifiés sur l'assistant."
-          : "ATTENTION : le plan d'analyse n'est pas actif après écriture. Le résumé restera vide.",
+        `Après écriture : résumé ${resumeActif ? "ACTIF" : "INACTIF"}, extraction ${
+          extractionActive ? "ACTIVE" : "INACTIVE"
+        }.`,
       );
+
+      // Ce que le fournisseur a RÉELLEMENT gardé. Un booléen ne suffit pas :
+      // il ne dit pas qu'un bloc entier a disparu de l'envoi.
+      console.log("\nPlan d'analyse tel que le fournisseur le conserve :");
+      console.log(JSON.stringify(plan, null, 2));
+
+      if (!resumeActif || !extractionActive) {
+        console.log(
+          "\nATTENTION : le fournisseur n'a pas gardé ce qui lui a été envoyé.\n" +
+            "Comparez le bloc ci-dessus avec src/lib/sophie/analysis.ts avant de\n" +
+            "refaire un appel : le résumé restera vide tant qu'il est INACTIF.",
+        );
+      }
     } else {
       console.log(`Assistant ${ASSISTANT} : ${ids.length} outils seraient rattachés.`);
       console.log("Plan d'analyse : serait écrit sur l'assistant.");

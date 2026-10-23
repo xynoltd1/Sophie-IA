@@ -3,6 +3,35 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.12.3] — 2026-10-23 — Un tableau vide invalide, et un fournisseur silencieux
+
+### Ce que le rapport a montré
+L'assistant utilisé pendant l'appel (version 28) portait **mes instructions de résumé**,
+mot pour mot — et `enabled: false`. Le plan d'extraction, lui, avait entièrement disparu.
+
+Le fournisseur a donc accepté une partie de l'envoi et nettoyé le reste, sans un mot. Le
+script avait pourtant relu l'assistant juste après et lu `enabled: true`.
+
+### La cause probable
+Le schéma d'extraction contenait `"required": []`. Un tableau `required` vide est
+**invalide en OpenAPI 3.0**, la spécification contre laquelle le fournisseur valide les
+schémas. L'absence de la clé dit exactement la même chose — aucun champ obligatoire — et
+reste valide. Elle a été retirée.
+
+### Deux écritures au lieu d'une
+Le plan d'analyse part maintenant dans une requête séparée de celle des outils. Une
+écriture unique ne permet pas de savoir laquelle des deux parties a été refusée.
+
+### Le script montre ce qui est gardé
+Après écriture, il affiche le plan d'analyse **tel que le fournisseur le conserve**, en
+entier. Un booléen « actif / inactif » ne dit pas qu'un bloc complet a disparu de l'envoi.
+S'il manque quelque chose, le script le dit au lieu d'annoncer un succès.
+
+### La leçon
+Trois fois aujourd'hui, un service externe a accepté une requête et fait autre chose que ce
+qui était demandé. Le seul remède qui a fonctionné à chaque fois : relire l'état réel après
+écriture, et afficher ce qu'on a lu — pas ce qu'on a envoyé.
+
 ## [0.12.2] — 2026-10-23 — Savoir ce que l'assistant porte avant d'écrire
 
 Le rapport d'un appel de 19 h 55 contenait la configuration réellement utilisée :
