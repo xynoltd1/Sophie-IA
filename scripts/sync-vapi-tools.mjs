@@ -175,12 +175,30 @@ async function main() {
   console.log(`\n${crees} à créer, ${majs} à mettre à jour.`);
 
   if (ASSISTANT) {
+    // Ce que l'assistant porte AVANT toute écriture. Sans cette lecture, on ne
+    // peut pas distinguer « mon réglage n'a jamais été écrit » de « mon réglage
+    // a été écrasé depuis ». Le 23 octobre, le rapport d'un appel a montré un
+    // plan d'analyse désactivé alors que ce script l'avait déclaré actif
+    // quelques minutes plus tôt : une sauvegarde faite dans le tableau de bord
+    // renvoie l'assistant entier, réglages compris, et efface ce qu'on a poussé.
+    const avant = await vapi(`/assistant/${ASSISTANT}`);
+    console.log(
+      `\nÉtat actuel de l'assistant : résumé ${
+        avant?.analysisPlan?.summaryPlan?.enabled === true ? "ACTIF" : "INACTIF"
+      }, extraction ${
+        avant?.analysisPlan?.structuredDataPlan?.enabled === true ? "ACTIVE" : "INACTIVE"
+      }, ${avant?.model?.toolIds?.length ?? 0} outils rattachés.`,
+    );
+    console.log(
+      "Toute sauvegarde faite dans le tableau de bord Vapi écrase ces réglages.\n" +
+        "Relancez ce script après chaque modification faite à la main.\n",
+    );
+
     if (APPLIQUER) {
       // Vapi REMPLACE l'objet `model` au lieu de le fusionner : envoyer
       // seulement `toolIds` efface le modèle et le provider, et la requête est
       // refusée. On relit donc l'assistant et on renvoie son modèle complet.
-      const assistant = await vapi(`/assistant/${ASSISTANT}`);
-      const modele = assistant?.model;
+      const modele = avant?.model;
 
       if (!modele?.provider) {
         throw new Error(

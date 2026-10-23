@@ -3,6 +3,24 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.12.2] — 2026-10-23 — Savoir ce que l'assistant porte avant d'écrire
+
+Le rapport d'un appel de 19 h 55 contenait la configuration réellement utilisée :
+`summaryPlan.enabled: false`, `messages: []`. Pas « absent » : **explicitement désactivé**.
+Or le script avait relu l'assistant une heure plus tôt et affiché « activés et vérifiés ».
+
+Entre les deux, une sauvegarde faite dans le tableau de bord du fournisseur. L'interface
+renvoie l'assistant **entier**, réglages compris, et écrase ce qu'un script a poussé.
+
+### Ajouté
+`npm run vapi:tools` affiche désormais l'état de l'assistant **avant** toute écriture :
+résumé actif ou non, extraction active ou non, nombre d'outils rattachés. Sans cette
+lecture, on ne peut pas distinguer « mon réglage n'a jamais été écrit » de « mon réglage a
+été écrasé depuis », et les deux appellent des corrections opposées.
+
+Le script rappelle aussi, à chaque exécution, qu'une modification faite à la main dans le
+tableau de bord annule ces réglages.
+
 ## [0.12.1] — 2026-10-23 — La bonne adresse du fichier audio
 
 ### Le symptôme
