@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.10.0 · **Phase 4 vérifiée par un appel réel ; Phase 5 non commencée** · **Vérifié le 2026-10-22**
+**Version** 0.10.1 · **Phase 4 vérifiée en essai navigateur ; aucun appel sur un vrai numéro** · **Vérifié le 2026-10-23**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -125,6 +125,7 @@ Sophie Voice sur un vrai numéro avec outils métier (2026-10-22).
 
 | Élément | État |
 |---|---|
+| Déclaration d'un numéro de téléphone | **aucun écran, aucun script** : `phone_numbers` s'écrit en SQL à la main. Tant que la table est vide, `openCall()` renvoie `null` et un appel réel ne crée aucune ligne. Tous les appels passent par le repli `openTestCall()` et sont marqués `is_test` |
 | Transcription en français | qualité insuffisante avec Soniox : « Tongeren » → « Tangerine », numéro tronqué. Deepgram et Google restent à comparer. Aucun classement public francophone n'existe (`docs/VOICE_PROVIDERS.md`) |
 | Sophie coupe la parole | réglages du *Start/Stop Speaking Plan* identifiés, à appliquer et retester |
 | Écran Sophie | l'écran *Sophie → Connaissances* reste à faire (la table `business_knowledge` existe) |
@@ -278,6 +279,12 @@ toucher au code :
 ---
 
 ## Prochaines tâches recommandées
+
+**0. Obtenir un numéro de téléphone.** C'est le blocage du moment. Aucun numéro n'existe
+côté Vapi ni en base, donc aucun appel réel n'est possible et tout est marqué essai. Court
+terme : un numéro américain gratuit chez Vapi, pour exercer la chaîne réelle. Avant le
+premier client : un numéro belge ou français, qui demande une preuve d'adresse et plusieurs
+jours de dossier.
 
 **1. Appliquer la migration 0022**, puis déployer. Elle ajoute `call_id` sur `leads`,
 `appointments` et `tasks`, reprend l'historique, et étend `dashboard_counts()`. Sans elle,

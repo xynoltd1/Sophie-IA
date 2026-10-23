@@ -1,6 +1,12 @@
 import "server-only";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import {
+  diagnostiquerLigne,
+  type ConfigurationSophie,
+  type EtatLigneSophie,
+  type NumeroRelie,
+} from "@/lib/sophie/ligne";
 import type {
   DashboardCounts,
   DayAppointmentRow,
@@ -162,4 +168,32 @@ export async function suitesDesAppels(
   compter(taches.data as { call_id: string | null }[] | null, "tasks");
 
   return resultat;
+}
+
+/**
+ * L'état réel de la ligne de Sophie, lu en base.
+ *
+ * Deux lectures, parce qu'il y a deux façons pour Sophie de rester muette : ne
+ * pas avoir de numéro, ou ne pas être activée. Le professionnel doit voir
+ * laquelle le concerne, pas un voyant gris sans explication.
+ */
+export async function etatLigneSophie(organizationId: string): Promise<EtatLigneSophie> {
+  const supabase = await createServerSupabase();
+
+  const [configuration, numeros] = await Promise.all([
+    supabase
+      .from("sophie_configurations")
+      .select("is_active, answer_mode")
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
+    supabase
+      .from("phone_numbers")
+      .select("e164, is_test, is_active")
+      .eq("organization_id", organizationId),
+  ]);
+
+  return diagnostiquerLigne(
+    (configuration.data ?? null) as ConfigurationSophie | null,
+    (numeros.data ?? []) as NumeroRelie[],
+  );
 }

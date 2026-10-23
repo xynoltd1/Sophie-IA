@@ -99,7 +99,7 @@ export default async function AgendaPage() {
           <div className="flex flex-col gap-4">
             {[...parJour.entries()].map(([jour, liste]) => (
               <div key={jour}>
-                <h3 className="mb-2 text-sm font-medium capitalize text-ink-soft">{jour}</h3>
+                <h3 className="mb-2 text-sm font-medium text-ink-soft first-letter:uppercase">{jour}</h3>
                 <ul className="flex flex-col gap-2">
                   {liste.map((rdv) => (
                     <li key={rdv.id}>

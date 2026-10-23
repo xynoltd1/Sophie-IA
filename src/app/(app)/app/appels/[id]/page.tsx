@@ -130,7 +130,7 @@ export default async function FicheAppelPage({
       <SectionTitle>{nom}</SectionTitle>
 
       <Sheet className="flex flex-col gap-1">
-        <p className="text-sm capitalize text-ink-soft">{formatCallMoment(appel.started_at)}</p>
+        <p className="text-sm text-ink-soft first-letter:uppercase">{formatCallMoment(appel.started_at)}</p>
         <p className="text-sm text-ink-soft">
           {formatPhone(appel.from_e164)} · {CALL_STATUS_LABELS[appel.status]} ·{" "}
           {formatDuration(appel.duration_seconds)}
@@ -205,7 +205,7 @@ export default async function FicheAppelPage({
           <SectionTitle>Rendez-vous issu de cet appel</SectionTitle>
           <Sheet tone={rdv.status === "PENDING_APPROVAL" ? "attention" : "neutral"}>
             <p className="font-medium">{rdv.title}</p>
-            <p className="text-sm capitalize text-ink-soft">
+            <p className="text-sm text-ink-soft first-letter:uppercase">
               {formatDay(rdv.starts_at)} · {formatTime(rdv.starts_at)} – {formatTime(rdv.ends_at)}
             </p>
             <p className="mt-1 text-sm text-ink-soft">
@@ -251,7 +251,7 @@ export default async function FicheAppelPage({
                 <Sheet tone="neutral">
                   <p className="font-medium">{tache.title}</p>
                   {tache.due_at ? (
-                    <p className="mt-1 text-sm capitalize text-ink-soft">
+                    <p className="mt-1 text-sm text-ink-soft first-letter:uppercase">
                       {formatDay(tache.due_at)} · {formatTime(tache.due_at)}
                     </p>
                   ) : null}

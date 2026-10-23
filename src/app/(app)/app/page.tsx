@@ -2,7 +2,8 @@ import { requireOrganization } from "@/lib/auth/session";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { onboardingProgress } from "@/lib/org/onboarding";
-import { getDashboardCounts, getTodayAppointments } from "@/lib/crm/queries";
+import { etatLigneSophie, getDashboardCounts, getTodayAppointments } from "@/lib/crm/queries";
+import { MESSAGE_SILENCE } from "@/lib/sophie/ligne";
 import { APPOINTMENT_STATUS_LABELS, formatTime, needsApproval } from "@/lib/crm/agenda";
 import Link from "next/link";
 import { STEP_ROUTES } from "@/app/onboarding/steps";
@@ -32,6 +33,7 @@ export default async function HomePage() {
     counts.new_leads +
     counts.overdue_tasks;
   const rendezVous = await getTodayAppointments(activeOrganization.organization_id);
+  const ligne = await etatLigneSophie(activeOrganization.organization_id);
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0];
 
   return (
@@ -71,6 +73,23 @@ export default async function HomePage() {
           Reprendre la configuration
         </Link>
       </Sheet>
+      ) : null}
+
+      {configured && ligne.raison ? (
+        <Sheet tone="attention">
+          <p className="font-display text-lg font-semibold">
+            {MESSAGE_SILENCE[ligne.raison].titre}
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">{MESSAGE_SILENCE[ligne.raison].detail}</p>
+          {ligne.raison === "CONFIG_INACTIVE" || ligne.raison === "MODE_OFF" ? (
+            <Link
+              href="/app/sophie"
+              className="mt-3 inline-block text-sm font-medium text-signal underline underline-offset-4"
+            >
+              Ouvrir les réglages de Sophie
+            </Link>
+          ) : null}
+        </Sheet>
       ) : null}
 
       <section>

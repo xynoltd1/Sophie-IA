@@ -1,6 +1,7 @@
 import { requireOrganization } from "@/lib/auth/session";
 import { AppHeader } from "@/components/nav/app-header";
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { etatLigneSophie } from "@/lib/crm/queries";
 
 /**
  * Rendu dynamique obligatoire : cette page dépend de la session de
@@ -12,9 +13,11 @@ export const dynamic = "force-dynamic";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { activeOrganization } = await requireOrganization();
 
-  // Sophie ne peut pas encore repondre : la telephonie arrive en Phase 4.
-  // Cette valeur viendra de sophie_configurations.is_active.
-  const sophieActive = false;
+  // Cette valeur etait ecrite en dur a false depuis la Phase 0. L en-tete
+  // annoncait donc « Sophie en pause » meme quand elle venait de repondre a un
+  // appel. Un voyant qui ne regarde rien est pire que pas de voyant.
+  const ligne = await etatLigneSophie(activeOrganization.organization_id);
+  const sophieActive = ligne.repond;
 
   return (
     <div className="min-h-dvh">

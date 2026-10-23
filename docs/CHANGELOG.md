@@ -3,6 +3,29 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.10.1] — 2026-10-23 — L'application dit pourquoi elle ne dit rien
+
+### Ce qui s'est passé
+Deux heures passées à chercher pourquoi l'accueil restait vide après un appel. La réponse
+était juste : aucun numéro de téléphone n'est relié à l'entreprise, donc tous les appels
+sont marqués « essai », et un essai ne déclenche jamais d'alerte. L'application le savait.
+Elle ne le disait pas.
+
+### Corrigé
+- **« Sophie en pause » était écrit en dur.** `const sophieActive = false` dans la mise en
+  page depuis la Phase 0. L'en-tête annonçait donc une Sophie en pause alors qu'elle venait
+  de tenir une conversation. L'état est maintenant calculé : numéro relié, numéro réel ou
+  d'essai, Sophie activée, mode de réponse. Un test interdit de réécrire cette constante.
+- **L'accueil explique son silence.** Un bandeau dit laquelle des quatre conditions manque,
+  dans l'ordre où il faut les traiter — sans numéro, activer Sophie ne sert à rien.
+- **Les dates n'ont plus de majuscules partout.** « Vendredi 23 Octobre À 11:21 » devient
+  « Vendredi 23 octobre à 11:21 » : `capitalize` met une majuscule à chaque mot.
+
+### Ce que cette version ne corrige pas
+Il n'existe toujours aucun écran pour déclarer un numéro de téléphone : la table
+`phone_numbers` s'écrit en SQL. Tant qu'elle est vide, aucun appel réel ne peut être reçu —
+le serveur ne sait pas à quelle entreprise il appartient et le laisse tomber.
+
 ## [0.10.0] — 2026-10-22 — Un client qui appelle et repart sans rien ne disparaît plus
 
 ### Le trou

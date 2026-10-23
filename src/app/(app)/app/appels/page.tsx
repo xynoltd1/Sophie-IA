@@ -141,7 +141,7 @@ export default async function AppelsPage({
                           </span>
                         ) : null}
                       </p>
-                      <p className="text-sm capitalize text-ink-soft">
+                      <p className="text-sm text-ink-soft first-letter:uppercase">
                         {formatCallMoment(appel.started_at)}
                       </p>
                       {rien ? (
