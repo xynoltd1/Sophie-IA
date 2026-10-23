@@ -57,5 +57,35 @@ export function typeAudioAccepte(contentType: string | null): boolean {
   return base in EXTENSIONS;
 }
 
+const TYPES_PAR_EXTENSION: Record<string, string> = {
+  mp3: "audio/mpeg",
+  m4a: "audio/mp4",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  webm: "audio/webm",
+};
+
+/**
+ * Le type d'un fichier d'après son adresse.
+ *
+ * Certains hébergeurs servent un enregistrement en `application/octet-stream`,
+ * c'est-à-dire « des octets, débrouillez-vous ». Refuser le fichier pour cette
+ * seule raison perdrait l'audio d'un appel réel. On regarde alors l'extension
+ * de l'adresse — en coupant la partie signature, qui contient souvent des
+ * points et tromperait une lecture naïve.
+ */
+export function typeDepuisUrl(url: string): string | null {
+  const chemin = url.split("?")[0] ?? "";
+  const extension = chemin.split(".").pop()?.toLowerCase() ?? "";
+  return TYPES_PAR_EXTENSION[extension] ?? null;
+}
+
+/** Les types trop vagues pour décider, mais trop courants pour refuser. */
+export function typeIndetermine(contentType: string | null): boolean {
+  if (!contentType) return true;
+  const base = contentType.split(";")[0]?.trim().toLowerCase() ?? "";
+  return base === "application/octet-stream" || base === "binary/octet-stream";
+}
+
 /** Au-delà, on refuse : une réponse inattendue ne doit pas remplir le stockage. */
 export const TAILLE_MAXIMUM_OCTETS = 100 * 1024 * 1024;

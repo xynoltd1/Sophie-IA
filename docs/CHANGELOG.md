@@ -3,6 +3,31 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.12.1] — 2026-10-23 — La bonne adresse du fichier audio
+
+### Le symptôme
+« L'enregistrement n'a pas pu être récupéré ». L'erreur conservée par l'application disait
+exactement ce qu'il fallait : **le fournisseur a répondu 400**.
+
+### La cause
+`message.recordingUrl` est l'adresse **brute** du fichier chez l'hébergeur du fournisseur.
+Elle n'est pas signée, et la demander renvoie une erreur. Les seules adresses
+téléchargeables sont les `presigned...`, qui figuraient dans le rapport sans que le code
+les regarde.
+
+L'ordre de recherche commence désormais par `presignedMonoUrl` — la conversation mixée sur
+une piste, deux fois plus légère que la stéréo, et c'est ce qu'un artisan veut écouter. Les
+adresses brutes restent en dernier recours.
+
+### Deuxième garde-fou, ajouté au passage
+Un hébergeur qui répond `application/octet-stream` — « des octets, débrouillez-vous » — ne
+fait plus perdre l'enregistrement : le type est alors déduit de l'extension de l'adresse,
+signature exclue.
+
+### Ce qui aurait manqué sans la version précédente
+L'erreur était conservée en base, en clair, lisible en une requête. Sans elle, la seule
+information disponible aurait été « ça ne marche pas ».
+
 ## [0.12.0] — 2026-10-23 — L'audio arrive chez vous
 
 Fin de la Phase 5. « Écouter l'appel » n'est plus un bouton décoratif.

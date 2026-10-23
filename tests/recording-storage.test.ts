@@ -73,3 +73,44 @@ describe("le chemin d ecoute existe vraiment", () => {
     expect(migrations).toMatch(/public\s*=\s*false/);
   });
 });
+
+describe("choix de l adresse de telechargement", () => {
+  it("prefere les adresses signees aux adresses brutes", async () => {
+    const { lireRapport } = await import("@/lib/calls/report");
+
+    // Le 23 octobre, le rapatriement a echoue avec « le fournisseur a repondu
+    // 400 » : `recordingUrl` est l adresse BRUTE du fichier chez l hebergeur,
+    // et elle n est pas telechargeable. Seules les `presigned...` le sont.
+    const rapport = lireRapport({
+      message: {
+        recordingUrl: "https://hebergeur.test/brut.wav",
+        artifact: {
+          recordingUrl: "https://hebergeur.test/brut.wav",
+          presignedMonoUrl: "https://hebergeur.test/mono.wav?signature=abc",
+          presignedStereoUrl: "https://hebergeur.test/stereo.wav?signature=abc",
+        },
+      },
+    });
+
+    expect(rapport.audioUrl).toBe("https://hebergeur.test/mono.wav?signature=abc");
+  });
+
+  it("se rabat sur l adresse brute quand aucune signee n existe", async () => {
+    // Certaines versions du fournisseur n en produisent pas. Mieux vaut
+    // essayer et echouer proprement que ne rien tenter.
+    const { lireRapport } = await import("@/lib/calls/report");
+    const rapport = lireRapport({ message: { recordingUrl: "https://hebergeur.test/brut.wav" } });
+    expect(rapport.audioUrl).toBe("https://hebergeur.test/brut.wav");
+  });
+});
+
+describe("type de fichier annonce par l hebergeur", () => {
+  it("devine d apres l adresse quand l hebergeur ne sait pas", async () => {
+    const { typeDepuisUrl, typeIndetermine } = await import("@/lib/calls/recording-path");
+    expect(typeIndetermine("application/octet-stream")).toBe(true);
+    expect(typeIndetermine("audio/mpeg")).toBe(false);
+    expect(typeDepuisUrl("https://h.test/appel.wav?signature=a.b.c")).toBe("audio/wav");
+    expect(typeDepuisUrl("https://h.test/appel.mp3")).toBe("audio/mpeg");
+    expect(typeDepuisUrl("https://h.test/appel")).toBeNull();
+  });
+});

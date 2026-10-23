@@ -161,12 +161,31 @@ const CHEMINS_RESUME = [
   "message.artifact.summary",
 ];
 
+/**
+ * L'ordre compte, et il a été payé.
+ *
+ * `message.recordingUrl` est l'adresse BRUTE du fichier chez l'hébergeur du
+ * fournisseur. Elle n'est pas signée : la demander renvoie une erreur 400.
+ * C'est exactement ce qui est arrivé le 23 octobre, et l'erreur ne disait rien
+ * d'autre que « le fournisseur a répondu 400 ».
+ *
+ * Les adresses `presigned...` sont les seules téléchargeables. Elles expirent
+ * (`presignedUrlsExpiresAt`), d'où le rapatriement immédiat.
+ *
+ * Mono d'abord : c'est la conversation mixée sur une seule piste, deux fois
+ * plus légère que la stéréo, et c'est ce qu'un artisan veut écouter. La stéréo
+ * sépare les deux interlocuteurs — utile un jour, inutile aujourd'hui.
+ */
 const CHEMINS_AUDIO = [
+  "message.artifact.presignedMonoUrl",
+  "message.artifact.presignedStereoUrl",
+  "message.artifact.recording.mono.combinedUrl",
+  "message.artifact.recording.stereoUrl",
+  "message.artifact.recording.url",
+  // Adresses non signées, gardées en dernier recours : certaines versions du
+  // fournisseur les rendent publiques, d'autres non.
   "message.artifact.recordingUrl",
   "message.recordingUrl",
-  "message.artifact.recording.url",
-  "message.artifact.recording.stereoUrl",
-  "message.artifact.recording.mono.combinedUrl",
   "message.artifact.stereoRecordingUrl",
   "artifact.recordingUrl",
 ];

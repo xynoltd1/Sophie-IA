@@ -7,6 +7,8 @@ import {
   TAILLE_MAXIMUM_OCTETS,
   cheminEnregistrement,
   typeAudioAccepte,
+  typeDepuisUrl,
+  typeIndetermine,
 } from "./recording-path";
 
 /**
@@ -65,13 +67,20 @@ export async function rapatrierEnregistrement(params: {
     return echec(
       reponse.status === 403 || reponse.status === 404
         ? "L'adresse du fichier a expiré chez le fournisseur."
-        : `Le fournisseur a répondu ${reponse.status}.`,
+        : reponse.status === 400
+          ? "Adresse refusée par l'hébergeur : elle n'est probablement pas signée."
+          : `Le fournisseur a répondu ${reponse.status}.`,
     );
   }
 
-  const contentType = reponse.headers.get("content-type");
+  // Un hébergeur qui répond « des octets, débrouillez-vous » ne doit pas faire
+  // perdre l'enregistrement d'un appel : on se rabat sur l'extension de
+  // l'adresse plutôt que de refuser le fichier.
+  const annonce = reponse.headers.get("content-type");
+  const contentType = typeIndetermine(annonce) ? typeDepuisUrl(params.sourceUrl) : annonce;
+
   if (!typeAudioAccepte(contentType)) {
-    return echec(`Type de fichier inattendu : ${contentType ?? "inconnu"}.`);
+    return echec(`Type de fichier inattendu : ${annonce ?? "inconnu"}.`);
   }
 
   const buffer = Buffer.from(await reponse.arrayBuffer());
