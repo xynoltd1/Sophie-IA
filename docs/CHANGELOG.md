@@ -3,6 +3,42 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.11.1] — 2026-10-23 — Le résumé, et la vérité sur l'enregistrement
+
+### Le résumé était vide, et rien ne le disait
+Le premier rapport réel contenait bien un champ `summary`. Vide. `analysis` existait, sans
+rien dedans : l'analyse n'était pas activée chez le fournisseur. Aucune erreur, aucun
+journal, juste une fiche d'appel avec « Résumé indisponible ».
+
+Le plan d'analyse vit maintenant dans le code (`src/lib/sophie/analysis.ts`) et part sur
+l'assistant avec les outils, par `npm run vapi:tools -- --apply`. Le script relit ensuite
+l'assistant pour **constater** que le résumé est actif, au lieu de l'annoncer sur la foi
+d'un code HTTP.
+
+Il emporte aussi l'extraction structurée de la section 15 — intention, service, urgence,
+nom, adresse, date et heure souhaitées, description du problème, rendez-vous demandé,
+rappel demandé. Aucun champ n'est obligatoire : un schéma qui exige une valeur pousse le
+modèle à en fabriquer une.
+
+### Corrigé : l'application mentait sur l'enregistrement
+La fiche affichait « Cet appel n'a pas été enregistré » alors que le fournisseur, lui,
+enregistre par défaut — le rapport contient `recordingUrl`, `stereoRecordingUrl` et des
+adresses signées. Le texte dit désormais ce qui est vrai : « Nous ne conservons pas
+l'enregistrement de cet appel. Le fournisseur de téléphonie peut en détenir une copie de
+son côté. »
+
+La nuance n'est pas de forme. L'une des deux phrases informe l'artisan, l'autre lui fait
+croire qu'aucun enregistrement n'existe.
+
+### Contrainte découverte dans le rapport réel
+`presignedUrlsExpiresAt` : les adresses du fichier audio expirent. Le rapatriement devra se
+faire dans les minutes qui suivent l'appel, pas dans une tâche de nuit. Cette contrainte
+aurait été découverte beaucoup plus tard sans la conservation du rapport brut.
+
+### Retiré
+Le bandeau de bas de fiche qui répétait « Résumé indisponible » alors que la section
+au-dessus le disait déjà.
+
 ## [0.11.0] — 2026-10-23 — Sophie raconte ce qui s'est dit
 
 Début de la Phase 5. La transcription et le résumé d'abord, l'audio ensuite.

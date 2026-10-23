@@ -10,7 +10,6 @@ import {
   formatDuration,
   formatInstant,
   formatPhone,
-  processingLabel,
   sansSuite,
 } from "@/lib/crm/calls";
 import { APPOINTMENT_STATUS_LABELS, formatDay, formatTime } from "@/lib/crm/agenda";
@@ -132,12 +131,6 @@ export default async function FicheAppelPage({
     appel.contacts?.company_name ??
     formatPhone(appel.from_e164);
 
-  const traitements = [
-    processingLabel(appel.transcription_status, "Transcription"),
-    processingLabel(appel.summary_status, "Résumé"),
-    processingLabel(appel.recording_status, "Enregistrement"),
-  ].filter((v): v is string => v !== null);
-
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -189,7 +182,8 @@ export default async function FicheAppelPage({
           <Sheet tone="neutral">
             <p className="text-sm text-ink-soft">
               {appel.recording_status === "NOT_APPLICABLE"
-                ? "Cet appel n’a pas été enregistré."
+                ? "Nous ne conservons pas l’enregistrement de cet appel. " +
+                  "Le fournisseur de téléphonie peut en détenir une copie de son côté."
                 : appel.recording_status === "FAILED"
                   ? "L’enregistrement n’a pas pu être récupéré."
                   : "L’enregistrement est en cours de récupération."}
@@ -322,11 +316,6 @@ export default async function FicheAppelPage({
         </section>
       ) : null}
 
-      {traitements.length > 0 ? (
-        <Sheet tone="neutral">
-          <p className="text-sm text-ink-soft">{traitements.join(" · ")}</p>
-        </Sheet>
-      ) : null}
     </div>
   );
 }

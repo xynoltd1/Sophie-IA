@@ -107,8 +107,8 @@ async function catalogue() {
     throw new Error(`Catalogue indisponible : ${reponse.status} ${await reponse.text()}`);
   }
 
-  const { tools } = await reponse.json();
-  return tools;
+  const { tools, analysisPlan } = await reponse.json();
+  return { tools, analysisPlan };
 }
 
 function corpsOutil(definition) {
@@ -132,8 +132,13 @@ async function main() {
   console.log(`Fournisseur de voix : ${API}`);
   console.log(`Serveur d'outils    : ${URL_OUTILS}\n`);
 
-  const attendus = await catalogue();
-  console.log(`${attendus.length} outils déclarés par le serveur.\n`);
+  const { tools: attendus, analysisPlan } = await catalogue();
+  console.log(`${attendus.length} outils déclarés par le serveur.`);
+  console.log(
+    analysisPlan
+      ? "Plan d'analyse (résumé + extraction) : fourni par le serveur.\n"
+      : "Plan d'analyse : ABSENT du manifeste. Le résumé restera vide.\n",
+  );
 
   const existants = await vapi("/tool");
   const parNom = new Map(
@@ -186,12 +191,34 @@ async function main() {
 
       // On remplace la liste entière : un outil retiré du code doit disparaître
       // de l'assistant, sinon le modèle continuera de l'appeler dans le vide.
+      //
+      // Le plan d'analyse part dans la même requête. Sans lui, le fournisseur
+      // renvoie un rapport dont le champ `summary` est vide : c'est ce qui a
+      // été constaté sur le premier appel réel, et rien ne le signalait.
+      const corpsAssistant = { model: { ...modele, toolIds: ids } };
+      if (analysisPlan) corpsAssistant.analysisPlan = analysisPlan;
+
       await vapi(`/assistant/${ASSISTANT}`, {
         method: "PATCH",
-        body: JSON.stringify({ model: { ...modele, toolIds: ids } }),
+        body: JSON.stringify(corpsAssistant),
       });
+
+      // On relit pour constater, au lieu d'annoncer un succès sur la foi d'un
+      // code HTTP. Un PATCH accepté qui n'a rien changé est déjà arrivé.
+      const apres = await vapi(`/assistant/${ASSISTANT}`);
+      const resumeActif = apres?.analysisPlan?.summaryPlan?.enabled === true;
+      const outilsRattaches = apres?.model?.toolIds?.length ?? 0;
+
+      console.log(`Assistant ${ASSISTANT} : ${outilsRattaches} outils rattachés.`);
+      console.log(
+        resumeActif
+          ? "Résumé et extraction : activés et vérifiés sur l'assistant."
+          : "ATTENTION : le plan d'analyse n'est pas actif après écriture. Le résumé restera vide.",
+      );
+    } else {
+      console.log(`Assistant ${ASSISTANT} : ${ids.length} outils seraient rattachés.`);
+      console.log("Plan d'analyse : serait écrit sur l'assistant.");
     }
-    console.log(`Assistant ${ASSISTANT} : ${ids.length} outils rattachés.`);
   } else {
     console.log(
       "VOICE_ASSISTANT_ID non renseignée : les outils ne sont rattachés à aucun assistant.\n" +

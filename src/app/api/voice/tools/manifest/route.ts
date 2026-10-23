@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { toolDefinitions } from "@/lib/sophie/tools";
+import { analysisPlan } from "@/lib/sophie/analysis";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,9 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     count: toolDefinitions().length,
     tools: toolDefinitions(),
+    // Le plan d'analyse voyage avec les outils : c'est le meme script qui les
+    // pousse, et les deux doivent rester en phase avec le code.
+    analysisPlan: analysisPlan(),
   });
 }
 

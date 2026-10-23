@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.11.0 · **Phase 5 commencée : transcription et résumé faits, audio non commencé** · **Vérifié le 2026-10-23**
+**Version** 0.11.1 · **Phase 5 : transcription, résumé et extraction faits ; audio non commencé** · **Vérifié le 2026-10-23**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -115,7 +115,9 @@ intégration externe `PRODUCTION_READY`.
 | Élément | État | Ce qui manque |
 |---|---|---|
 | Écriture d'un rendez-vous confirmé dans Google Calendar | code en place, jamais exercé | accepter un vrai rendez-vous « À valider » et vérifier l'événement dans l'agenda |
-| Transcription et résumé | écrits, jamais exercés contre un vrai rapport | un appel d'essai après déploiement de 0.11.0 ; le rapport brut sera conservé dans `call_events` et permettra de corriger la lecture si un champ diffère |
+| Résumé et extraction structurée | plan d'analyse écrit, poussé par `npm run vapi:tools -- --apply`, **jamais vérifié sur un appel** |
+| Transcription | vérifiée sur un appel réel le 2026-10-23 : conversation et horodatage corrects | — |
+| (ancienne ligne) | écrits, jamais exercés contre un vrai rapport | un appel d'essai après déploiement de 0.11.0 ; le rapport brut sera conservé dans `call_events` et permettra de corriger la lecture si un champ diffère |
 | Audio | non commencé | un écran pour activer l'enregistrement et accepter la politique : `recording_allowed()` renvoie faux partout aujourd'hui (section 42). Ensuite seulement, copie dans le bucket privé et URL signée |
 | Provisionnement automatique de l'assistant Vapi | script écrit (`npm run vapi:tools`) | exercé en local uniquement ; dépend de `VOICE_API_KEY` |
 
@@ -314,9 +316,17 @@ la copie du fichier vers un bucket privé ; la route `/api/calls/[id]/audio` qui
 signée après contrôle de l'organisation — **cette route est référencée par l'interface mais
 n'existe pas encore** ; la purge à échéance.
 
-Le rapport brut de chaque appel est désormais conservé dans `call_events` : avant d'écrire
-le téléchargement de l'audio, lire un rapport réel et y relever le vrai nom du champ, au
-lieu de se fier à la documentation.
+Le rapport brut de chaque appel est conservé dans `call_events`. Les noms de champs réels
+sont désormais connus, relevés sur un appel du 23 octobre : `message.recordingUrl`,
+`message.stereoRecordingUrl`, `message.artifact.presignedStereoUrl`,
+`message.artifact.presignedUrlsExpiresAt`.
+
+**Ces adresses expirent.** Le rapatriement doit donc avoir lieu dans le traitement du
+webhook de fin d'appel, ou dans les minutes qui suivent — jamais dans une tâche de nuit.
+
+Le fournisseur enregistre par défaut, indépendamment de `recording_allowed()`, qui ne
+gouverne que NOTRE conservation. Avant la mise en production, trancher : couper
+l'enregistrement côté fournisseur, ou rapatrier les fichiers dans le bucket européen.
 
 **6. Lancer la validation de l'application Google** (ADR-028). Le délai ne se rattrape pas,
 et sans elle chaque client perdra son agenda une semaine après l'avoir connecté.

@@ -44,7 +44,7 @@ describe("transcription issue du rapport", () => {
     // par un humain. Les appels d outils non plus.
     const segments = segmentsDepuisMessages(MESSAGES_REELS);
     expect(segments.map((s) => s.speaker)).toEqual(["SOPHIE", "CLIENT"]);
-    expect(segments[0].content).toContain("Bonjour, ici Sophie");
+    expect(segments[0]?.content).toContain("Bonjour, ici Sophie");
   });
 
   it("numerote les tours sans trou", () => {
@@ -56,8 +56,8 @@ describe("transcription issue du rapport", () => {
     // C est cette valeur qui permettra de cliquer sur une phrase et d y placer
     // le lecteur audio (section 14).
     const segments = segmentsDepuisMessages(MESSAGES_REELS);
-    expect(segments[0].startedMs).toBe(1880);
-    expect(segments[1].startedMs).toBe(6900);
+    expect(segments[0]?.startedMs).toBe(1880);
+    expect(segments[1]?.startedMs).toBe(6900);
   });
 
   it("calcule la fin a partir d instants de meme nature", () => {
@@ -65,8 +65,8 @@ describe("transcription issue du rapport", () => {
     // duree, et c est elle qu on ajoute au debut relatif. Additionner un
     // instant absolu a un debut relatif donnerait une valeur absurde.
     const segments = segmentsDepuisMessages(MESSAGES_REELS);
-    expect(segments[0].endedMs).toBe(1880 + 3500);
-    expect(segments[1].endedMs).toBeNull();
+    expect(segments[0]?.endedMs).toBe(1880 + 3500);
+    expect(segments[1]?.endedMs).toBeNull();
   });
 
   it("ne tombe jamais, quelle que soit la forme recue", () => {
