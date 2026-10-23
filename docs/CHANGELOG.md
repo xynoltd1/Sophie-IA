@@ -3,6 +3,42 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.11.0] — 2026-10-23 — Sophie raconte ce qui s'est dit
+
+Début de la Phase 5. La transcription et le résumé d'abord, l'audio ensuite.
+
+### Ajouté
+- **La fiche d'appel affiche la conversation**, tour par tour, avec le moment où chaque
+  phrase a été dite. Cet horodatage n'est pas décoratif : c'est lui qui permettra de
+  cliquer sur un passage et d'y placer le lecteur audio (section 14). L'enregistrer
+  maintenant évite d'avoir à retraiter tous les appels passés plus tard.
+- **Le résumé de Sophie s'affiche vraiment**, à la place du texte d'attente.
+- **Migration 0023** : `call_events` garde le rapport **brut** du fournisseur, avant toute
+  interprétation. Si notre lecture se trompe, la conversation n'est pas perdue et
+  l'extraction peut être rejouée. Le rapport se purge à trente jours comme l'audio : il
+  contient la transcription, donc des données personnelles.
+- `call_transcript_segments` et les colonnes `calls.summary` / `calls.structured_data`.
+
+### Pourquoi la lecture du rapport est si défensive
+La forme exacte du rapport varie selon la version du fournisseur et selon que l'appel vient
+d'un numéro ou du navigateur. `src/lib/calls/report.ts` cherche chaque valeur à tous les
+emplacements connus et renvoie `null` quand elle est introuvable. Un résumé absent
+s'affiche comme absent ; un résumé inventé mentirait.
+
+Les tests de ce fichier utilisent la forme **réellement observée** sur un appel du
+22 octobre, pas celle de la documentation.
+
+### Ce qu'un test a rattrapé avant le déploiement
+L'index unique de `call_events` était partiel. Un index partiel ne peut pas servir
+d'arbitre à un `ON CONFLICT` — c'est l'erreur exacte de l'ADR-025, qui avait fait échouer
+la connexion d'un agenda. `tests/upsert-constraints.test.ts`, écrit après cet incident, a
+fait échouer la suite immédiatement. Le garde-fou a payé.
+
+### Ce qui reste pour finir la Phase 5
+L'audio. Il demande d'abord un écran pour activer l'enregistrement et accepter la politique
+applicable : aujourd'hui, `recording_allowed()` renvoie faux pour toute organisation, et
+c'est volontaire (section 42).
+
 ## [0.10.1] — 2026-10-23 — L'application dit pourquoi elle ne dit rien
 
 ### Ce qui s'est passé

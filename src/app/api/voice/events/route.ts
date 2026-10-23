@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { VapiVoiceProvider } from "@/lib/providers/voice/vapi";
 import { closeCall, openCall, openTestCall, schedulePostCall } from "@/lib/calls/registry";
+import { etatsDepuisRapport, lireRapport } from "@/lib/calls/report";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -153,18 +154,21 @@ async function terminer(rawBody: string, providerCallId: string, occurredAt: Dat
 
   const { data: appel } = await admin
     .from("calls")
-    .select("id")
+    .select("id, organization_id, is_test")
     .eq("provider", "VAPI")
     .eq("provider_call_id", providerCallId)
     .maybeSingle();
 
   if (!appel) return;
 
+  const callId = appel.id as string;
+  const organizationId = appel.organization_id as string;
+
   const raison = payload.message?.endedReason ?? null;
 
   // La durée est arrondie par `closeCall`. Elle est transmise telle quelle ici
   // pour que l'arrondi reste à un seul endroit.
-  await closeCall(appel.id as string, {
+  await closeCall(callId, {
     // La distinction est celle que l'artisan lira sur sa fiche : un appel
     // qu'il a manqué et un appel qui a échoué techniquement n'appellent pas
     // la même réaction.
@@ -174,13 +178,92 @@ async function terminer(rawBody: string, providerCallId: string, occurredAt: Dat
     endedReason: raison,
   });
 
-  const audio = payload.message?.recordingUrl ?? payload.message?.artifact?.recordingUrl;
+  await exploiterRapport(callId, organizationId, Boolean(appel.is_test), payload);
+}
 
-  // L'audio est signalé « à traiter » : la copie vers notre propre espace
-  // européen viendra dans un second temps, et doit pouvoir être réessayée
-  // sans toucher au reste.
-  await schedulePostCall(appel.id as string, {
-    recording: audio ? "PENDING" : "NOT_APPLICABLE",
+/**
+ * Tire du rapport de fin d'appel tout ce qu'il contient : la trace brute, la
+ * transcription, le résumé, les données extraites.
+ *
+ * L'ordre n'est pas indifférent. La trace brute est écrite EN PREMIER, avant
+ * toute interprétation. Si notre lecture se trompe — un champ renommé par le
+ * fournisseur, une forme inattendue — le rapport reste en base et l'extraction
+ * peut être rejouée après correction. Sans lui, une erreur de lecture perdrait
+ * définitivement la conversation (section 16).
+ *
+ * Chaque étape est isolée : un résumé manquant n'empêche pas la transcription
+ * d'être écrite, et une transcription manquante n'empêche pas l'audio.
+ */
+async function exploiterRapport(
+  callId: string,
+  organizationId: string,
+  estEssai: boolean,
+  payload: unknown,
+) {
+  const admin = createAdminClient();
+
+  // 1. La source, avant toute interprétation.
+  const { error: traceEchouee } = await admin.from("call_events").upsert(
+    {
+      organization_id: organizationId,
+      call_id: callId,
+      provider: "VAPI",
+      type: "end-of-call-report",
+      payload: payload as Record<string, unknown>,
+    },
+    { onConflict: "call_id,type" },
+  );
+  if (traceEchouee) {
+    console.error("[voice/events] rapport brut non conservé", traceEchouee.message);
+  }
+
+  const rapport = lireRapport(payload);
+
+  // 2. L'enregistrement n'est autorisé que si l'organisation l'a activé et a
+  //    accepté la politique applicable (section 42). La question est tranchée
+  //    en base, jamais ici.
+  let enregistrementAutorise = false;
+  const { data: autorise, error: refus } = await admin.rpc("recording_allowed", {
+    org_id: organizationId,
+    is_test: estEssai,
+  });
+  if (refus) console.error("[voice/events] recording_allowed indisponible", refus.message);
+  else enregistrementAutorise = autorise === true;
+
+  // 3. La transcription. Réécrite entièrement : un rapport rejoué doit donner
+  //    la même conversation, pas une conversation doublée.
+  if (rapport.segments.length > 0) {
+    await admin.from("call_transcript_segments").delete().eq("call_id", callId);
+
+    const { error } = await admin.from("call_transcript_segments").insert(
+      rapport.segments.map((segment) => ({
+        organization_id: organizationId,
+        call_id: callId,
+        ordinal: segment.ordinal,
+        speaker: segment.speaker,
+        content: segment.content,
+        started_ms: segment.startedMs,
+        ended_ms: segment.endedMs,
+      })),
+    );
+    if (error) console.error("[voice/events] transcription non écrite", error.message);
+  }
+
+  // 4. Le résumé et les données extraites.
+  if (rapport.resume || rapport.donnees) {
+    const { error } = await admin
+      .from("calls")
+      .update({ summary: rapport.resume, structured_data: rapport.donnees })
+      .eq("id", callId);
+    if (error) console.error("[voice/events] résumé non écrit", error.message);
+  }
+
+  // 5. Les trois états, chacun indépendant.
+  const etats = etatsDepuisRapport(rapport, { enregistrementAutorise });
+  await schedulePostCall(callId, {
+    transcription: etats.transcription,
+    summary: etats.resume,
+    recording: etats.enregistrement,
   });
 }
 

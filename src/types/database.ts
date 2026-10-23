@@ -431,8 +431,25 @@ export interface CallRow {
   ended_reason: string | null;
   is_test: boolean;
   correlation_id: string;
+  /** Résumé lisible produit après l'appel. Null tant qu'il n'existe pas. */
+  summary: string | null;
+  /** Champs extraits de la conversation (section 15). */
+  structured_data: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Un tour de parole dans la transcription d'un appel (migration 0023). */
+export interface TranscriptSegmentRow {
+  id: string;
+  organization_id: string;
+  call_id: string;
+  ordinal: number;
+  speaker: "SOPHIE" | "CLIENT" | "SYSTEME";
+  content: string;
+  started_ms: number | null;
+  ended_ms: number | null;
+  created_at: string;
 }
 
 /** Résultat de `organization_for_number()`. */

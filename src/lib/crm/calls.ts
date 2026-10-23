@@ -143,3 +143,12 @@ export function sansSuite(
 export function appelEchoue(appel: Pick<AppelPourSuite, "status" | "is_test">): boolean {
   return !appel.is_test && needsAttention(appel.status);
 }
+
+/** Un instant dans l'appel : « 1:07 ». Sert à situer un passage de la transcription. */
+export function formatInstant(ms: number | null): string | null {
+  if (ms === null || !Number.isFinite(ms) || ms < 0) return null;
+  const total = Math.floor(ms / 1000);
+  const minutes = Math.floor(total / 60);
+  const secondes = total % 60;
+  return `${minutes}:${String(secondes).padStart(2, "0")}`;
+}

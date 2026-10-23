@@ -34,6 +34,7 @@ doit pouvoir être reconstruite à partir de zéro.
 | `0019_calls_and_numbers` | `phone_numbers`, `calls`, statuts de traitement indépendants, `organization_for_number()` |
 | `0020_server_context` | `is_server_context()` : le serveur n'est pas un utilisateur (ADR-027) |
 | `0021_phone_origin` | `contacts.phone_origin` : réseau, dicté ou saisi à la main |
+| `0023_call_intelligence` | `call_events` (rapports bruts, purge à 30 jours), `call_transcript_segments`, `calls.summary`, `calls.structured_data`, `purge_expired_call_events()` |
 | `0022_call_links` | `call_id` sur `leads`, `appointments` et `tasks` ; `dashboard_counts()` compte les rendez-vous à valider, les appels sans suite et les appels échoués (ADR-030) |
 
 ## Vérifier ce qui est appliqué

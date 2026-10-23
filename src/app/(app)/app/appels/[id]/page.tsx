@@ -8,13 +8,20 @@ import {
   CALL_STATUS_LABELS,
   formatCallMoment,
   formatDuration,
+  formatInstant,
   formatPhone,
   processingLabel,
   sansSuite,
 } from "@/lib/crm/calls";
 import { APPOINTMENT_STATUS_LABELS, formatDay, formatTime } from "@/lib/crm/agenda";
 import { LEAD_STATUS_LABELS } from "@/lib/crm/pipeline";
-import type { AppointmentRow, CallRow, LeadRow, TaskRow } from "@/types/database";
+import type {
+  AppointmentRow,
+  CallRow,
+  LeadRow,
+  TaskRow,
+  TranscriptSegmentRow,
+} from "@/types/database";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Appel — Sophie IA" };
@@ -66,7 +73,7 @@ export default async function FicheAppelPage({
   // même client rappelait dans la journée, et elle ne permettait pas de
   // répondre à la question « cet appel a-t-il donné quelque chose ? ».
   const orgId = activeOrganization.organization_id;
-  const [rdvs, demandes, rappels] = await Promise.all([
+  const [rdvs, demandes, rappels, transcription] = await Promise.all([
     supabase
       .from("appointments")
       .select("id, title, starts_at, ends_at, status")
@@ -86,6 +93,13 @@ export default async function FicheAppelPage({
       .eq("organization_id", orgId)
       .eq("call_id", id)
       .limit(5),
+    supabase
+      .from("call_transcript_segments")
+      .select("id, speaker, content, started_ms")
+      .eq("organization_id", orgId)
+      .eq("call_id", id)
+      .order("ordinal")
+      .limit(400),
   ]);
 
   const rdv = (rdvs.data?.[0] ?? null) as Pick<
@@ -99,6 +113,11 @@ export default async function FicheAppelPage({
   >[];
 
   const taches = (rappels.data ?? []) as Pick<TaskRow, "id" | "title" | "due_at" | "status">[];
+
+  const tours = (transcription.data ?? []) as Pick<
+    TranscriptSegmentRow,
+    "id" | "speaker" | "content" | "started_ms"
+  >[];
 
   // Un appel terminé dont rien n'est sorti : c'est un client qui attend
   // peut-être un rappel, et personne ne le saurait sans le dire ici.
@@ -191,13 +210,54 @@ export default async function FicheAppelPage({
 
       <section>
         <SectionTitle>Résumé de Sophie</SectionTitle>
-        <Sheet tone={appel.summary_status === "FAILED" ? "attention" : "neutral"}>
-          <p className="text-sm text-ink-soft">
-            {appel.summary_status === "FAILED"
-              ? "Résumé indisponible. La transcription et l’enregistrement, eux, restent accessibles."
-              : "Le résumé automatique arrive avec le traitement après appel."}
-          </p>
+        <Sheet tone={!appel.summary && appel.summary_status === "FAILED" ? "attention" : "neutral"}>
+          {appel.summary ? (
+            <p className="whitespace-pre-line text-sm">{appel.summary}</p>
+          ) : (
+            <p className="text-sm text-ink-soft">
+              {appel.summary_status === "FAILED"
+                ? "Résumé indisponible. La transcription et l’enregistrement, eux, restent accessibles."
+                : "Le résumé automatique arrive avec le traitement après appel."}
+            </p>
+          )}
         </Sheet>
+      </section>
+
+      <section>
+        <SectionTitle>Transcription</SectionTitle>
+        {tours.length > 0 ? (
+          <Sheet className="flex flex-col gap-4">
+            {tours.map((tour) => {
+              const instant = formatInstant(tour.started_ms);
+              const qui =
+                tour.speaker === "SOPHIE"
+                  ? "Sophie"
+                  : tour.speaker === "CLIENT"
+                    ? (appel.contacts?.full_name ?? "Client")
+                    : "Système";
+
+              return (
+                <div key={tour.id}>
+                  <p className="text-sm font-medium">
+                    {qui}
+                    {instant ? (
+                      <span className="ml-2 font-normal text-ink-faint">{instant}</span>
+                    ) : null}
+                  </p>
+                  <p className="mt-0.5 whitespace-pre-line text-sm text-ink-soft">{tour.content}</p>
+                </div>
+              );
+            })}
+          </Sheet>
+        ) : (
+          <Sheet tone={appel.transcription_status === "FAILED" ? "attention" : "neutral"}>
+            <p className="text-sm text-ink-soft">
+              {appel.transcription_status === "FAILED"
+                ? "Transcription indisponible pour cet appel."
+                : "La transcription arrive avec le traitement après appel."}
+            </p>
+          </Sheet>
+        )}
       </section>
 
       {rdv ? (

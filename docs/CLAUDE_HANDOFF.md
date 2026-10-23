@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.10.1 · **Phase 4 vérifiée en essai navigateur ; aucun appel sur un vrai numéro** · **Vérifié le 2026-10-23**
+**Version** 0.11.0 · **Phase 5 commencée : transcription et résumé faits, audio non commencé** · **Vérifié le 2026-10-23**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
@@ -115,7 +115,8 @@ intégration externe `PRODUCTION_READY`.
 | Élément | État | Ce qui manque |
 |---|---|---|
 | Écriture d'un rendez-vous confirmé dans Google Calendar | code en place, jamais exercé | accepter un vrai rendez-vous « À valider » et vérifier l'événement dans l'agenda |
-| Audio, transcription, résumé | non commencé | `VOICE_API_KEY` sur Vercel, puis Phase 5 |
+| Transcription et résumé | écrits, jamais exercés contre un vrai rapport | un appel d'essai après déploiement de 0.11.0 ; le rapport brut sera conservé dans `call_events` et permettra de corriger la lecture si un champ diffère |
+| Audio | non commencé | un écran pour activer l'enregistrement et accepter la politique : `recording_allowed()` renvoie faux partout aujourd'hui (section 42). Ensuite seulement, copie dans le bucket privé et URL signée |
 | Provisionnement automatique de l'assistant Vapi | script écrit (`npm run vapi:tools`) | exercé en local uniquement ; dépend de `VOICE_API_KEY` |
 
 **Vérifié depuis, et acquis :** OAuth Google et disponibilités réelles (2026-10-15),
@@ -180,6 +181,9 @@ projet, et le premier critère de choix du fournisseur de voix.
 0020_server_context              is_server_context() : le serveur n'est pas un utilisateur
                                  (ADR-027)
 0021_phone_origin                contacts.phone_origin : reseau, dicte ou saisi
+0023_call_intelligence           call_events (rapport brut, purge 30 jours),
+                                 call_transcript_segments, calls.summary,
+                                 calls.structured_data, purge_expired_call_events()
 0022_call_links                  call_id sur leads, appointments, tasks ;
                                  dashboard_counts compte les rendez-vous a valider,
                                  les appels sans suite et les appels echoues
@@ -303,10 +307,16 @@ Endpointing` `vapi`, `On No Punctuation Seconds` 2.0, `Number of Words` 2, `Voic
 **4. Vérifier l'acceptation d'un rendez-vous** de bout en bout : accepter un « À valider »
 et contrôler que l'événement apparaît dans Google Calendar.
 
-**5. Phase 5 — l'audio.** Bloquée par `VOICE_API_KEY` sur Vercel. Récupérer
-l'enregistrement chez le fournisseur, le déposer dans le bucket privé européen, servir une
-URL signée après contrôle de l'organisation, puis transcription, résumé et extraction, avec
-des étapes indépendantes et reprenables (sections 13 à 16).
+**5. Finir la Phase 5 — l'audio.** La transcription et le résumé sont faits depuis 0.11.0.
+Il reste, dans cet ordre : un écran d'activation de l'enregistrement avec acceptation de la
+politique (sans lui, `recording_allowed()` renvoie faux et rien ne sera jamais enregistré) ;
+la copie du fichier vers un bucket privé ; la route `/api/calls/[id]/audio` qui sert une URL
+signée après contrôle de l'organisation — **cette route est référencée par l'interface mais
+n'existe pas encore** ; la purge à échéance.
+
+Le rapport brut de chaque appel est désormais conservé dans `call_events` : avant d'écrire
+le téléchargement de l'audio, lire un rapport réel et y relever le vrai nom du champ, au
+lieu de se fier à la documentation.
 
 **6. Lancer la validation de l'application Google** (ADR-028). Le délai ne se rattrape pas,
 et sans elle chaque client perdra son agenda une semaine après l'avoir connecté.
