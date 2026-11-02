@@ -38,7 +38,7 @@ export interface IntegrationEntry {
 }
 
 /**
- * Registre des intégrations, au 2026-09-24.
+ * Registre des intégrations, au 2026-11-02.
  *
  * Mettre à jour la ligne d'une intégration au moment où son état change
  * réellement — pas au moment où on espère qu'il changera.
@@ -54,7 +54,9 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
       "SUPABASE_SERVICE_ROLE_KEY",
     ],
     notes:
-      "Seize migrations appliquées ; isolation multi-tenant vérifiée contre la base réelle le 2026-09-08.",
+      "Trente migrations écrites ; isolation multi-tenant vérifiée contre la base réelle le " +
+      "2026-09-08. Les migrations 0025 à 0030 ne sont pas encore appliquées sur la base de " +
+      "production (voir docs/OWNER_ACTION_PLAN.md, étape A2).",
   },
   {
     key: "google-calendar",

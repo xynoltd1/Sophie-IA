@@ -9,8 +9,13 @@
 
 ## Où en est le projet
 
-**Version** 0.15.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.15.1 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
+> **Pour tout ce qui dépend de Zehra et non du code — comptes, clés, numéro, juridique —
+> lire `docs/OWNER_ACTION_PLAN.md`.** C'est la liste ordonnée de ses actions, avec les
+> dépendances et les preuves de réussite. Ne lui redemandez pas une étape qu'elle y a
+> cochée.
+>
 > **Lire aussi `docs/FUNCTIONAL_AUDIT.md`** : l'état réel de chaque fonctionnalité, vérifié
 > dans le code. Les sept problèmes qui y étaient listés en 0.14.0 ont été repris en
 > 0.15.0 : six sont traités, le septième — l'usage réel des connaissances pendant un appel —

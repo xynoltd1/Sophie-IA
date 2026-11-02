@@ -3,6 +3,37 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.15.1] — 2026-11-02 — Le plan d'action du propriétaire
+
+Aucun changement de comportement. Documentation, et trois corrections de documentation
+trouvées en auditant la 0.15.0 pour écrire ce plan.
+
+### Nouveau : `docs/OWNER_ACTION_PLAN.md`
+La liste exhaustive de ce que la propriétaire doit faire elle-même pour mettre Sophie en
+service, en trois temps — déployer, tester avec de vrais appels, vendre — avec pour chaque
+action : ce qu'il faut faire, pourquoi, le site, les menus, les valeurs, le nom exact des
+variables, où les placer, le coût, le résultat attendu, comment le vérifier et quoi faire si
+ça échoue. Trente-trois cases à cocher, un tableau récapitulatif, le scénario de validation
+de bout en bout et un rapport d'état.
+
+### Corrigé : trois divergences entre la documentation et le code
+
+**`DEPLOYMENT.md` annonçait un webhook de téléphonie sur `/api/webhooks/telephony`.** Cette
+route n'existe pas et n'a jamais existé. Déclarer cette URL chez un fournisseur donne des
+webhooks qui tombent dans le vide, sans erreur visible. Le tableau des URL liste maintenant
+les six vraies : outils et événements de voix, SMS entrant, accusé de réception, et les deux
+tâches planifiées. La raison de l'absence d'adaptateur opérateur est expliquée sur place
+(ADR-002 : le son ne passe jamais par Vercel, donc un numéro se rattache à l'assistant
+vocal, pas à une route de l'application).
+
+**`DEPLOYMENT.md` annonçait une tâche planifiée.** `vercel.json` en déclare deux depuis la
+0.13.0, et la seconde porte les six purges de conservation. Le tableau dit maintenant ce que
+chacune fait.
+
+**`providers/status.ts` annonçait « seize migrations appliquées ».** Il y en a trente
+écrites, et six ne sont pas encore appliquées sur la base de production. Le registre le dit
+et renvoie à l'étape A2 du plan.
+
 ## [0.15.0] — 2026-11-02 — La ligne, la conservation, et six pannes qui se voient
 
 Les sept problèmes listés comme « non corrigés » dans l'audit fonctionnel ont été repris

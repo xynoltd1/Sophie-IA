@@ -285,9 +285,15 @@ encore tranché.
 
 # Traitements planifiés
 
-`vercel.json` déclare **une tâche quotidienne** (`0 4 * * *`) sur
-`/api/jobs/calendar-sync`. Elle rattrape les agendas dont la synchronisation a échoué ou
-dont l'abonnement aux notifications a expiré, et que personne n'a consultés entre-temps.
+`vercel.json` déclare **deux tâches quotidiennes** :
+
+| Chemin | Heure | Ce qu'elle fait |
+|---|---|---|
+| `/api/jobs/calendar-sync` | `0 4 * * *` | rattrape les agendas dont la synchronisation a échoué ou dont l'abonnement aux notifications a expiré, et que personne n'a consultés entre-temps |
+| `/api/jobs/post-call` | `40 4 * * *` | libère les créneaux bloqués expirés, vide la file des messages, reprend les résumés manquants, et lance les **six purges de conservation** (migration 0030) |
+
+Deux tâches, pas plus : le plan Hobby n'en autorise pas davantage avec un intervalle
+quotidien, et quarante minutes d'écart évitent qu'elles se gênent.
 
 ### La limite du plan est une contrainte de déploiement, pas de code
 
@@ -330,12 +336,24 @@ doit apparaître et afficher des exécutions réussies.
 | Google OAuth | `https://zelicall.com/api/integrations/google/callback` | 3 |
 | Google notifications | `https://zelicall.com/api/integrations/google/notify` | 3 |
 | Vercel Cron | `https://zelicall.com/api/jobs/calendar-sync` | 3 |
-| Vapi outils | `https://zelicall.com/api/voice/tools` | 4 |
-| Téléphonie | `https://zelicall.com/api/webhooks/telephony` | 4 |
+| Vercel Cron | `https://zelicall.com/api/jobs/post-call` | 5 |
+| Vapi outils (pendant l'appel) | `https://zelicall.com/api/voice/tools` | 4 |
+| Vapi événements (après l'appel) | `https://zelicall.com/api/voice/events` | 4 |
+| SMS entrant | `https://zelicall.com/api/messaging/inbound` | 6 |
+| SMS, accusé de réception | `https://zelicall.com/api/messaging/status` | 6 |
 
-**Rappel** : la protection de déploiement Vercel bloque les webhooks. Avant la Phase 4, il
-faudra exempter `/api/voice/*` et `/api/webhooks/*`, sinon les appels des fournisseurs
-recevront une page de connexion au lieu de notre endpoint.
+**Rappel** : la protection de déploiement Vercel bloque les webhooks. Il faut exempter
+`/api/voice/*`, `/api/messaging/*` et `/api/integrations/google/*`, sinon les appels des
+fournisseurs reçoivent une page de connexion HTML au lieu de notre endpoint — et rien dans
+nos journaux ne le montre, puisque la requête n'arrive jamais.
+
+**Correction du 2026-11-02** : ce tableau annonçait un webhook de téléphonie sur
+`/api/webhooks/telephony`. **Cette route n'existe pas et n'a jamais existé.** Aucun
+adaptateur d'opérateur n'est écrit côté application (`src/lib/providers/telephony/` ne
+contient qu'un fichier de types), et c'est voulu : le son ne passe jamais par Vercel
+(ADR-002). C'est le fournisseur de voix qui reçoit l'appel et nous envoie des événements sur
+`/api/voice/events`. Un numéro se rattache donc à l'assistant Vapi, pas à une route de notre
+application.
 
 ## 5. Variables ajoutées en 0.13.0
 
