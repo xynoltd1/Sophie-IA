@@ -103,6 +103,7 @@ export default async function PlusPage({
         <ul className="flex flex-col gap-2">
           {[
             { href: "/app/reglages", titre: "Tous les réglages", detail: "Services, horaires, absences, intégrations." },
+            { href: "/app/taches", titre: "Tâches", detail: "Les rappels à faire, en retard ou à venir." },
             { href: "/app/notifications", titre: "Alertes", detail: "Ce que Sophie a signalé." },
             { href: "/app/sophie", titre: "Sophie", detail: "Son état, ses connaissances, l’enregistrement." },
           ].map((entree) => (

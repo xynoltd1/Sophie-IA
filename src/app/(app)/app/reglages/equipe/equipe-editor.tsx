@@ -77,7 +77,7 @@ export function EquipeEditor({
                           router.refresh();
                         })
                       }
-                      className="min-h-10 rounded-control border border-line bg-surface px-2 text-sm"
+                      className="min-h-11 rounded-control border border-line bg-surface px-2 text-sm"
                     >
                       <option value="ADMIN">Administrateur</option>
                       <option value="MEMBER">Membre</option>

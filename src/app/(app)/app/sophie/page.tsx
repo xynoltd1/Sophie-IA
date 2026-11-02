@@ -38,13 +38,30 @@ export default async function SophiePage() {
           {silence ? silence.titre : "Sophie répond à vos appels"}
         </p>
         <p className="mt-1 text-sm text-ink-soft">
-          {silence ? silence.detail : `Les appels arrivent sur le ${ligne.numero}.`}
+          {silence
+            ? silence.detail
+            : `Les appels arrivent sur le ${ligne.numero ?? "numéro relié"}.`}
         </p>
       </Sheet>
 
       <section>
         <SectionTitle>Réglages</SectionTitle>
         <ul className="flex flex-col gap-2">
+          <li>
+            <Link href="/app/sophie/ligne" className="block">
+              <Sheet interactive className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium">Ligne téléphonique</p>
+                  <p className="text-sm text-ink-soft">
+                    {ligne.numero
+                      ? `Les appels arrivent sur le ${ligne.numero}.`
+                      : "Aucun numéro déclaré : tout appel est un essai."}
+                  </p>
+                </div>
+                <span aria-hidden className="shrink-0 text-ink-soft">→</span>
+              </Sheet>
+            </Link>
+          </li>
           <li>
             <Link href="/app/sophie/enregistrement" className="block">
               <Sheet interactive className="flex items-center justify-between gap-3">
@@ -65,8 +82,12 @@ export default async function SophiePage() {
 
       <Sheet tone="neutral">
         <p className="text-sm text-ink-soft">
-          Sa voix, son vocabulaire et ses connaissances se règleront ici. Ces écrans
-          arrivent après l’audio.
+          Sa voix et son vocabulaire se règlent chez le fournisseur vocal pour
+          l’instant. Ce qu’elle a le droit de répondre se règle dans{" "}
+          <Link href="/app/sophie/connaissances" className="underline">
+            ses connaissances
+          </Link>
+          .
         </p>
       </Sheet>
     </div>

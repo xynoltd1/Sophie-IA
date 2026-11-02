@@ -33,6 +33,12 @@ const ENTREES = [
     permission: "organization:update" as const,
   },
   {
+    href: "/app/sophie/ligne",
+    titre: "Ligne téléphonique",
+    detail: "Le numéro sur lequel Sophie répond, et comment y renvoyer vos appels.",
+    permission: "organization:update" as const,
+  },
+  {
     href: "/app/sophie/connaissances",
     titre: "Connaissances de Sophie",
     detail: "Ce qu'elle a le droit de répondre : questions fréquentes et consignes.",
@@ -42,6 +48,12 @@ const ENTREES = [
     href: "/app/sophie/enregistrement",
     titre: "Enregistrement des appels",
     detail: "Conserver ou non une copie des appels, et combien de temps.",
+    permission: "organization:update" as const,
+  },
+  {
+    href: "/app/reglages/conservation",
+    titre: "Conservation des données",
+    detail: "Combien de temps garder transcriptions, résumés et messages.",
     permission: "organization:update" as const,
   },
   {

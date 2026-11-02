@@ -85,8 +85,8 @@ export function RecordingForm({
             <span className="text-sm text-ink-soft">jours (30 au maximum)</span>
           </div>
           <p className="mt-1 text-sm text-ink-soft">
-            Passé ce délai, l’enregistrement est supprimé. La transcription et le résumé,
-            eux, restent sur la fiche d’appel.
+            Passé ce délai, l’enregistrement est supprimé. La transcription et le résumé
+            ont leur propre durée, réglable dans « Conservation des données ».
           </p>
         </div>
       </Sheet>

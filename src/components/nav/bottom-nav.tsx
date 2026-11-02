@@ -45,22 +45,33 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-paper-deep/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="mx-auto flex max-w-2xl">
         {ITEMS.map((item) => {
           const active =
-            item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
+            item.href === "/app"
+              ? pathname === "/app"
+              : pathname.startsWith(item.href);
           return (
             <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-16 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium",
-                  active ? "text-signal" : "text-ink-soft",
+                  "relative flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium",
+                  active ? "text-signal-deep" : "text-ink-soft",
                 )}
               >
+                {/* Une barre en haut de l'onglet actif. L'icône coloree seule
+                    demande de comparer cinq icones pour savoir ou l'on est ;
+                    la barre se voit sans comparer. */}
+                {active ? (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-5 top-0 h-[3px] rounded-b-pill bg-signal"
+                  />
+                ) : null}
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden

@@ -43,7 +43,9 @@ export interface ResultatFile {
  * L'envoi immédiat est voulu : un client qui reçoit sa confirmation deux
  * heures plus tard a déjà rappelé. Si l'envoi échoue, la file prend le relais.
  */
-export async function envoyerMessage(demande: DemandeMessage): Promise<ResultatFile> {
+export async function envoyerMessage(
+  demande: DemandeMessage,
+): Promise<ResultatFile> {
   const admin = createAdminClient();
 
   // `upsert` sur la clé d'idempotence : deux clics sur le même bouton ne
@@ -106,7 +108,12 @@ export async function expedier(messageId: string): Promise<ResultatFile> {
     .maybeSingle();
 
   if (!message) {
-    return { messageId, envoye: false, erreur: "Message introuvable.", simule: false };
+    return {
+      messageId,
+      envoye: false,
+      erreur: "Message introuvable.",
+      simule: false,
+    };
   }
 
   if (["SENT", "DELIVERED"].includes(message.status as string)) {
@@ -115,7 +122,10 @@ export async function expedier(messageId: string): Promise<ResultatFile> {
 
   const fournisseur = messagingProvider();
 
-  await admin.from("outbound_messages").update({ status: "SENDING" }).eq("id", messageId);
+  await admin
+    .from("outbound_messages")
+    .update({ status: "SENDING" })
+    .eq("id", messageId);
 
   const resultat = await fournisseur.send({
     to: message.to_e164 as string,
@@ -161,10 +171,22 @@ export async function expedier(messageId: string): Promise<ResultatFile> {
 
   if (!reussi && resultat.error) {
     const { signalerErreurFournisseur } = await import("@/lib/platform/errors");
+
+    // Sans l'organisation, le journal dit « des SMS échouent » sans dire chez
+    // qui. On relit la ligne plutôt que de la deviner : un message peut avoir
+    // été créé par un autre chemin que celui-ci.
+    const { data: ligne } = await admin
+      .from("outbound_messages")
+      .select("organization_id")
+      .eq("id", messageId)
+      .maybeSingle();
+
     await signalerErreurFournisseur({
       provider: fournisseur.name,
       operation: "send_sms",
       message: resultat.error,
+      organizationId: (ligne?.organization_id as string | undefined) ?? null,
+      correlationId: messageId,
     });
   }
 
@@ -177,7 +199,9 @@ export async function expedier(messageId: string): Promise<ResultatFile> {
 }
 
 /** Reprise des messages en attente, appelée par le travail planifié. */
-export async function viderLaFile(limite = 25): Promise<{ envoyes: number; echoues: number }> {
+export async function viderLaFile(
+  limite = 25,
+): Promise<{ envoyes: number; echoues: number }> {
   const admin = createAdminClient();
   const compte = { envoyes: 0, echoues: 0 };
 
@@ -217,7 +241,10 @@ async function refleterDansLeFil(messageId: string): Promise<void> {
 
     if (!message?.contact_id) return;
 
-    const canal = (message.channel as string) === "SMS" ? "SMS" : (message.channel as string);
+    const canal =
+      (message.channel as string) === "SMS"
+        ? "SMS"
+        : (message.channel as string);
 
     const { data: fil } = await admin
       .from("conversations")

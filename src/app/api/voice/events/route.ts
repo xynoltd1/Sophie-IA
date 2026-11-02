@@ -1,11 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { VapiVoiceProvider } from "@/lib/providers/voice/vapi";
-import { closeCall, openCall, openTestCall, schedulePostCall } from "@/lib/calls/registry";
+import {
+  closeCall,
+  openCall,
+  openTestCall,
+  schedulePostCall,
+} from "@/lib/calls/registry";
 import { etatsDepuisRapport, lireRapport } from "@/lib/calls/report";
 import { rapatrierEnregistrement } from "@/lib/calls/recording-storage";
 import { genererIntelligenceAppel } from "@/lib/calls/intelligence";
 import { enregistrerUsage } from "@/lib/platform/usage";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { signalerErreurFournisseur } from "@/lib/platform/errors";
 
 export const dynamic = "force-dynamic";
 // 60 secondes, et non 30 : ce webhook rapatrie maintenant le fichier audio,
@@ -87,6 +93,14 @@ export async function POST(request: NextRequest) {
     // On consigne et on acquitte quand même. Faire réessayer le fournisseur
     // sur une erreur de notre côté ne répare rien et multiplie les livraisons.
     console.error("[voice/events] traitement échoué", evenement.type, cause);
+
+    // Les journaux de Vercel expirent ; ce journal-ci reste et se compte.
+    await signalerErreurFournisseur({
+      provider: "VOICE",
+      operation: `events:${evenement.type}`,
+      message: cause instanceof Error ? cause.message : "traitement échoué",
+      correlationId: evenement.providerCallId,
+    });
   }
 
   return NextResponse.json({ received: true });
@@ -94,7 +108,11 @@ export async function POST(request: NextRequest) {
 
 interface EventPayload {
   message?: {
-    call?: { id?: string; phoneNumber?: { number?: string }; customer?: { number?: string } };
+    call?: {
+      id?: string;
+      phoneNumber?: { number?: string };
+      customer?: { number?: string };
+    };
     phoneNumber?: { number?: string };
     customer?: { number?: string };
     durationSeconds?: number;
@@ -123,9 +141,12 @@ async function demarrer(
   const payload = lire(rawBody);
 
   const numeroAppele =
-    payload.message?.phoneNumber?.number ?? payload.message?.call?.phoneNumber?.number;
+    payload.message?.phoneNumber?.number ??
+    payload.message?.call?.phoneNumber?.number;
 
-  const appelant = payload.message?.customer?.number ?? payload.message?.call?.customer?.number;
+  const appelant =
+    payload.message?.customer?.number ??
+    payload.message?.call?.customer?.number;
 
   if (numeroAppele) {
     // Chemin normal : le numéro appelé désigne l'organisation, et la table
@@ -155,7 +176,11 @@ async function demarrer(
   });
 }
 
-async function terminer(rawBody: string, providerCallId: string, occurredAt: Date) {
+async function terminer(
+  rawBody: string,
+  providerCallId: string,
+  occurredAt: Date,
+) {
   const payload = lire(rawBody);
   const admin = createAdminClient();
 
@@ -199,7 +224,12 @@ async function terminer(rawBody: string, providerCallId: string, occurredAt: Dat
     });
   }
 
-  await exploiterRapport(callId, organizationId, Boolean(appel.is_test), payload);
+  await exploiterRapport(
+    callId,
+    organizationId,
+    Boolean(appel.is_test),
+    payload,
+  );
 }
 
 /**
@@ -235,7 +265,10 @@ async function exploiterRapport(
     { onConflict: "call_id,type" },
   );
   if (traceEchouee) {
-    console.error("[voice/events] rapport brut non conservé", traceEchouee.message);
+    console.error(
+      "[voice/events] rapport brut non conservé",
+      traceEchouee.message,
+    );
   }
 
   const rapport = lireRapport(payload);
@@ -254,11 +287,18 @@ async function exploiterRapport(
     requested_test: estEssai,
   });
 
-  const { data: autorise, error: refus } = await admin.rpc("recording_allowed", {
-    org_id: organizationId,
-    is_test: essaiEffectif === true,
-  });
-  if (refus) console.error("[voice/events] recording_allowed indisponible", refus.message);
+  const { data: autorise, error: refus } = await admin.rpc(
+    "recording_allowed",
+    {
+      org_id: organizationId,
+      is_test: essaiEffectif === true,
+    },
+  );
+  if (refus)
+    console.error(
+      "[voice/events] recording_allowed indisponible",
+      refus.message,
+    );
   else enregistrementAutorise = autorise === true;
 
   // 3. La transcription. Réécrite entièrement : un rapport rejoué doit donner
@@ -277,7 +317,8 @@ async function exploiterRapport(
         ended_ms: segment.endedMs,
       })),
     );
-    if (error) console.error("[voice/events] transcription non écrite", error.message);
+    if (error)
+      console.error("[voice/events] transcription non écrite", error.message);
   }
 
   // 4. Le résumé et les données extraites, quand le fournisseur les donne.

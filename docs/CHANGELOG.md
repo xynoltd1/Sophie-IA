@@ -3,6 +3,113 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.15.0] — 2026-11-02 — La ligne, la conservation, et six pannes qui se voient
+
+Les sept problèmes listés comme « non corrigés » dans l'audit fonctionnel ont été repris
+par ordre de criticité. Six sont traités ; le septième demande un appel réel.
+
+### Un écran pour la ligne téléphonique
+`/app/sophie/ligne`. Jusqu'ici `phone_numbers` s'écrivait en SQL à la main, et comme la
+table était vide, **tous les appels tombaient dans le repli « essai »** — ce qui expliquait
+pourquoi aucun appel réel n'apparaissait nulle part.
+
+L'écran déclare un numéro, son fournisseur, son état, et son mode de raccordement. Trois
+modes existent dans le modèle (`line_connection_mode`) :
+
+- **renvoi** depuis la ligne que le professionnel possède déjà, avec les codes GSM à
+  composer (`**61*…*11*20#` pour « après 20 secondes sans réponse ») ;
+- **numéro dédié** fourni par l'opérateur programmable ;
+- **portabilité** du numéro existant.
+
+Ce que l'écran ne fait pas : fabriquer un numéro. Sans fournisseur configuré, il le dit.
+La date de premier appel reçu (`verified_at`) est posée par le webhook et non par le
+formulaire : c'est la seule preuve qu'un renvoi fonctionne vraiment.
+
+### Conservation et purge des données d'appel
+Migration 0030. L'audio avait sa politique depuis 0.11.0 — 30 jours au plus, ADR-013. La
+transcription, le résumé et les messages, eux, restaient indéfiniment. Garder indéfiniment
+n'est pas une décision neutre : c'est une décision par omission, et c'est celle qu'un
+contrôle reproche.
+
+- Trois durées réglables par entreprise, entre 30 jours et 5 ans, dans
+  `/app/reglages/conservation`.
+- Trois fonctions de purge qui lisent la durée **de chaque** organisation : une entreprise
+  qui a choisi 90 jours ne subit pas le défaut d'une autre.
+- Un journal d'exécution, `retention_runs`, lisible du seul super administrateur. Une purge
+  sans trace ne peut ni se prouver à un client qui demande l'effacement de ses données, ni
+  se diagnostiquer quand elle échoue depuis trois semaines.
+- Six purges indépendantes dans la tâche planifiée. Une purge bloquée retarde les autres
+  d'une journée au lieu de les empêcher toutes.
+- Les fichiers partent **avant** les lignes qui les désignent. L'ordre inverse laisserait
+  des objets que plus rien ne référence, donc que plus rien ne supprimerait jamais.
+
+Les durées par défaut — un an — sont un choix technique, pas un avis juridique. L'écran le
+dit au professionnel.
+
+### Un écran de tâches
+`/app/taches`, quatre vues : en retard, aujourd'hui, à faire, terminées.
+
+L'accueil annonçait « 3 tâches en retard » et renvoyait vers un filtre de prospects qui ne
+connaissait pas ce mot. Le compte était juste ; le lien ne menait nulle part.
+
+Une tâche datée du jour était aussi déclarée « en retard » à une heure du matin : l'échéance
+était posée à minuit UTC. Elle est désormais posée en fin de journée dans le fuseau de
+l'entreprise (ADR-029).
+
+### Six pannes qui se voient enfin
+`provider_errors` n'était alimentée que par les échecs SMS. Elle l'est maintenant par six
+chemins : SMS refusé, rendez-vous non poussé dans Google, synchronisation ratée, résumé
+impossible, événement vocal rejeté, audio perdu.
+
+Un `console.error` ne se mesure pas, et les journaux de l'hébergeur expirent. Une panne de
+trois jours y ressemblait à trois accidents isolés. Le journal des purges apparaît sur le
+même écran de santé.
+
+### Deuxième passe de design
+Pas un changement de couleurs : un changement de hiérarchie.
+
+- **L'accueil empilait six cartes ambre identiques** — une urgence, un rendez-vous à
+  valider, des appels sans suite, des prospects, des tâches. Six signaux de même poids ne
+  font pas six priorités, ils font un mur. L'urgence garde seule sa carte colorée ; le reste
+  tient dans une surface unique, une ligne par sujet, le nombre en tête et aligné.
+- **L'heure mène la journée.** Sur l'accueil comme sur l'agenda, l'heure est la première
+  colonne, en chasse tabulaire. Un artisan lit son agenda par heures, pas par intitulés.
+- **La liste des appels** empilait recherche, filtres, périodes et un lien de corbeille :
+  quatre rangées avant le premier appel, donc aucun appel visible sur un téléphone. La
+  période est devenue une liste déroulante — native sur mobile — et partage le bouton.
+- **Les étiquettes qui ne distinguaient rien ont disparu.** « Enregistrement » figurait sur
+  presque chaque appel ; un chevron ▶ devant la durée dit la même chose sans occuper de
+  place. « Terminé » n'apparaît plus : seul un statut anormal s'affiche.
+- **L'en-tête ne porte plus qu'un seul objet d'état.** Les alertes étaient un nombre encadré
+  à côté du badge de Sophie ; deux cadres de même taille se lisent comme deux états. Les
+  alertes sont redevenues une cloche avec une pastille.
+- **Nouveau relevé sur l'accueil** : « Sophie, ces sept jours » — appels pris, prospects,
+  rendez-vous. Trois nombres, pas une courbe.
+- Les barres fixes sont posées sur `paper-deep`, le ton prévu pour elles depuis la Phase 0
+  et jamais employé. Un jeton déclaré et jamais utilisé est une intention, pas une décision :
+  un test l'interdit désormais.
+- Trois cibles tactiles de 40 px passées à 44 px.
+
+### Tests
+338 tests, 17 ignorés faute de `SUPABASE_TEST_*`. Les nouveaux :
+
+- `tests/retention.test.ts` — bornes en base, durée propre à chaque entreprise, journal
+  réservé à la plateforme, ordre fichiers-avant-lignes, et **un filet qui vérifie que chaque
+  `rpc()` du code correspond à une fonction existante dans une migration**. Un nom de
+  fonction erroné échouait jusqu'ici en production et nulle part ailleurs.
+- `tests/observability.test.ts` — les six chemins d'échec consignent, et le journal reste
+  invisible du client.
+- `tests/design-system.test.ts` — **aucun composant client n'importe un module
+  `server-only`** (cette erreur casse le build et seul le build la voit), aucun jeton de
+  couleur mort, une seule définition des puces de filtre, cible tactile minimale de 44 px.
+
+### Ce qui reste hors de portée d'ici
+- Les connaissances de Sophie sont lues par l'outil et testées ; **leur usage réel pendant
+  un appel n'est pas vérifié** — le fournisseur vocal ne peut pas être appelé depuis cet
+  environnement.
+- Les durées de conservation attendent une validation juridique.
+- Voix et style de Sophie se règlent toujours chez le fournisseur vocal.
+
 ## [0.14.0] — 2026-11-02 — La liste des appels, et un bug vieux de deux mois
 
 ### Corrigé : la liste de l'équipe ne s'était jamais chargée

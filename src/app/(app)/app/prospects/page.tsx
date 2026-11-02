@@ -6,7 +6,8 @@ import { Suspense } from "react";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { LEAD_STATUS_LABELS, contactLabel, isOpen } from "@/lib/crm/pipeline";
-import { cn } from "@/lib/utils/cn";
+import { Badge } from "@/components/ui/badge";
+import { Chip } from "@/components/ui/chip";
 import type { LeadStatus } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -69,7 +70,11 @@ export default async function ProspectsPage({
               {resultats.map((item) => (
                 <li key={`${item.kind}-${item.id}`}>
                   <Link
-                    href={item.kind === "contact" ? `/app/contacts/${item.id}` : `/app/prospects/${item.id}`}
+                    href={
+                      item.kind === "contact"
+                        ? `/app/contacts/${item.id}`
+                        : `/app/prospects/${item.id}`
+                    }
                     className="block"
                   >
                     <Sheet className="flex flex-col gap-0.5">
@@ -86,70 +91,69 @@ export default async function ProspectsPage({
           )}
         </section>
       ) : (
-      <>
-      <nav aria-label="Filtrer les prospects" className="-mx-4 overflow-x-auto px-4">
-        <ul className="flex gap-2">
-          {FILTRES.map((item) => {
-            const actif = filtre === item.cle;
-            return (
-              <li key={item.cle}>
-                <Link
-                  href={`/app/prospects?filtre=${item.cle}`}
-                  aria-current={actif ? "true" : undefined}
-                  className={cn(
-                    "flex min-h-10 items-center whitespace-nowrap rounded-control border px-3 text-sm",
-                    actif
-                      ? "border-signal bg-signal-soft font-medium text-signal-deep"
-                      : "border-line bg-surface text-ink-soft",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+        <>
+          <nav
+            aria-label="Filtrer les prospects"
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+          >
+            {FILTRES.map((item) => (
+              <Chip
+                key={item.cle}
+                href={`/app/prospects?filtre=${item.cle}`}
+                actif={filtre === item.cle}
+              >
+                {item.label}
+              </Chip>
+            ))}
+          </nav>
 
-      {error ? (
-        <ErrorState description="La liste n’a pas pu être chargée. Rechargez la page." />
-      ) : visibles.length === 0 ? (
-        <EmptyState
-          title="Aucun prospect ici"
-          description="Ajoutez une demande à la main, ou attendez que Sophie prenne ses premiers appels."
-        />
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {visibles.map((lead) => (
-            <li key={lead.id}>
-              <Link href={`/app/prospects/${lead.id}`} className="block">
-                <Sheet interactive
-                  tone={
-                    lead.priority === "URGENT" && isOpen(lead.status)
-                      ? "urgent"
-                      : lead.status === "NEW"
-                        ? "attention"
-                        : "neutral"
-                  }
-                  className="flex flex-col gap-1"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium">{lead.title}</p>
-                    <span className="shrink-0 text-sm text-ink-soft">
-                      {LEAD_STATUS_LABELS[lead.status as LeadStatus]}
-                    </span>
-                  </div>
-                  <p className="text-sm text-ink-soft">
-                    {lead.contacts ? contactLabel(lead.contacts) : "Sans contact"}
-                    {lead.city ? ` · ${lead.city}` : ""}
-                  </p>
-                </Sheet>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      </>
+          {error ? (
+            <ErrorState description="La liste n’a pas pu être chargée. Rechargez la page." />
+          ) : visibles.length === 0 ? (
+            <EmptyState
+              title="Aucun prospect ici"
+              description="Ajoutez une demande à la main, ou attendez que Sophie prenne ses premiers appels."
+            />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {visibles.map((lead) => (
+                <li key={lead.id}>
+                  <Link href={`/app/prospects/${lead.id}`} className="block">
+                    <Sheet
+                      interactive
+                      tone={
+                        lead.priority === "URGENT" && isOpen(lead.status)
+                          ? "urgent"
+                          : lead.status === "NEW"
+                            ? "attention"
+                            : "neutral"
+                      }
+                      className="flex flex-col gap-1"
+                    >
+                      <p className="font-medium">{lead.title}</p>
+                      <p className="text-sm text-ink-soft">
+                        {lead.contacts
+                          ? contactLabel(lead.contacts)
+                          : "Sans contact"}
+                        {lead.city ? ` · ${lead.city}` : ""}
+                      </p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                        {lead.priority === "URGENT" && isOpen(lead.status) ? (
+                          <Badge ton="urgent">Urgent</Badge>
+                        ) : null}
+                        <Badge
+                          ton={lead.status === "NEW" ? "attention" : "neutre"}
+                        >
+                          {LEAD_STATUS_LABELS[lead.status as LeadStatus]}
+                        </Badge>
+                      </p>
+                    </Sheet>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );

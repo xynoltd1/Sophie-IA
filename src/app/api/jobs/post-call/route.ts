@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { jobAutorise } from "@/lib/jobs/auth";
 import { PLAFOND_TENTATIVES, genererIntelligenceAppel } from "@/lib/calls/intelligence";
-import { BUCKET_ENREGISTREMENTS } from "@/lib/calls/recording-path";
 import { viderLaFile } from "@/lib/messaging/outbox";
+import { executerPurges } from "@/lib/jobs/retention";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -29,13 +29,11 @@ export async function GET(request: NextRequest) {
   const compte = {
     resumes: 0,
     resumesEchoues: 0,
-    audiosPurges: 0,
-    rapportsPurges: 0,
     smsEnvoyes: 0,
     smsEchoues: 0,
     holdsLiberes: 0,
-    appelsPurges: 0,
   };
+  const purges: Record<string, number> = {};
   const erreurs: string[] = [];
 
   // 1. Les résumés manquants.
@@ -56,52 +54,21 @@ export async function GET(request: NextRequest) {
     erreurs.push(`résumés : ${cause instanceof Error ? cause.message : "échec"}`);
   }
 
-  // 2. Les enregistrements arrivés à échéance (section 42).
+  // 2. Toutes les purges de conservation, journalisées une par une.
   //
-  //    Le fichier est supprimé du stockage AVANT que l'appel oublie son
-  //    chemin : dans l'ordre inverse, un échec laisserait un fichier que plus
-  //    rien ne référence, donc que plus rien ne supprimera jamais.
+  //    Déplacées dans `src/lib/jobs/retention.ts` : elles sont devenues six
+  //    traitements avec leur journal, et un fichier de travail planifié qui
+  //    fait six choses différentes finit par n'en faire aucune correctement.
   try {
-    const { data } = await admin.rpc("expired_recordings", { limite: 100 });
-    const lignes = (data ?? []) as { call_id: string; recording_path: string }[];
-
-    if (lignes.length > 0) {
-      const { error } = await admin.storage
-        .from(BUCKET_ENREGISTREMENTS)
-        .remove(lignes.map((l) => l.recording_path));
-
-      if (error) {
-        erreurs.push(`purge audio : ${error.message}`);
-      } else {
-        await admin
-          .from("calls")
-          .update({
-            recording_path: null,
-            recording_bytes: null,
-            recording_expires_at: null,
-            recording_status: "NOT_APPLICABLE",
-          })
-          .in(
-            "id",
-            lignes.map((l) => l.call_id),
-          );
-        compte.audiosPurges = lignes.length;
-      }
+    for (const rapport of await executerPurges()) {
+      purges[rapport.genre] = rapport.traites;
+      if (rapport.erreur) erreurs.push(`purge ${rapport.genre} : ${rapport.erreur}`);
     }
   } catch (cause) {
-    erreurs.push(`purge audio : ${cause instanceof Error ? cause.message : "échec"}`);
+    erreurs.push(`purges : ${cause instanceof Error ? cause.message : "échec"}`);
   }
 
-  // 3. Les rapports bruts arrivés à échéance : ils contiennent la
-  //    transcription, donc des données personnelles.
-  try {
-    const { data } = await admin.rpc("purge_expired_call_events");
-    compte.rapportsPurges = typeof data === "number" ? data : 0;
-  } catch (cause) {
-    erreurs.push(`purge rapports : ${cause instanceof Error ? cause.message : "échec"}`);
-  }
-
-  // 4. Les messages restés en file (section 26).
+  // 3. Les messages restés en file (section 26).
   try {
     const { envoyes, echoues } = await viderLaFile(25);
     compte.smsEnvoyes = envoyes;
@@ -110,7 +77,7 @@ export async function GET(request: NextRequest) {
     erreurs.push(`messages : ${cause instanceof Error ? cause.message : "échec"}`);
   }
 
-  // 5. Les créneaux bloqués par un appel interrompu (section 20).
+  // 4. Les créneaux bloqués par un appel interrompu (section 20).
   //
   //    Sans cette libération, un appel coupé au milieu d'une réservation
   //    retiendrait un créneau pour toujours, et l'artisan perdrait des
@@ -122,38 +89,5 @@ export async function GET(request: NextRequest) {
     erreurs.push(`holds : ${cause instanceof Error ? cause.message : "échec"}`);
   }
 
-  // 6. La corbeille des appels, passé trente jours.
-  //
-  //    Le fichier audio part AVANT la ligne : dans l'ordre inverse, un échec
-  //    laisserait un fichier que plus rien ne référence, donc que plus rien ne
-  //    supprimera jamais.
-  try {
-    const { data } = await admin.rpc("calls_to_purge", { limite: 100 });
-    const lignes = (data ?? []) as { call_id: string; recording_path: string | null }[];
-
-    const fichiers = lignes
-      .map((l) => l.recording_path)
-      .filter((chemin): chemin is string => Boolean(chemin));
-
-    if (fichiers.length > 0) {
-      const { error } = await admin.storage.from(BUCKET_ENREGISTREMENTS).remove(fichiers);
-      if (error) throw new Error(error.message);
-    }
-
-    if (lignes.length > 0) {
-      const { error } = await admin
-        .from("calls")
-        .delete()
-        .in(
-          "id",
-          lignes.map((l) => l.call_id),
-        );
-      if (error) throw new Error(error.message);
-      compte.appelsPurges = lignes.length;
-    }
-  } catch (cause) {
-    erreurs.push(`purge corbeille : ${cause instanceof Error ? cause.message : "échec"}`);
-  }
-
-  return NextResponse.json({ ...compte, erreurs });
+  return NextResponse.json({ ...compte, purges, erreurs });
 }

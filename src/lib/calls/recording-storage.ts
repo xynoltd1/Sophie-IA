@@ -10,6 +10,7 @@ import {
   typeDepuisUrl,
   typeIndetermine,
 } from "./recording-path";
+import { signalerErreurFournisseur } from "@/lib/platform/errors";
 
 /**
  * Rapatriement de l'enregistrement chez nous.
@@ -45,6 +46,18 @@ export async function rapatrierEnregistrement(params: {
       })
       .eq("id", params.callId);
     console.error("[audio] rapatriement échoué", params.callId, erreur);
+
+    // L'adresse signée du fournisseur expire en quelques minutes : un audio
+    // raté est un audio perdu. C'est l'échec le moins réversible du produit,
+    // donc celui qui doit être visible sans attendre une plainte.
+    await signalerErreurFournisseur({
+      provider: "RECORDING",
+      operation: "rapatrierEnregistrement",
+      message: erreur,
+      organizationId: params.organizationId,
+      correlationId: params.callId,
+    });
+
     return { ok: false, erreur };
   };
 
@@ -77,7 +90,9 @@ export async function rapatrierEnregistrement(params: {
   // perdre l'enregistrement d'un appel : on se rabat sur l'extension de
   // l'adresse plutôt que de refuser le fichier.
   const annonce = reponse.headers.get("content-type");
-  const contentType = typeIndetermine(annonce) ? typeDepuisUrl(params.sourceUrl) : annonce;
+  const contentType = typeIndetermine(annonce)
+    ? typeDepuisUrl(params.sourceUrl)
+    : annonce;
 
   if (!typeAudioAccepte(contentType)) {
     return echec(`Type de fichier inattendu : ${annonce ?? "inconnu"}.`);
@@ -86,12 +101,18 @@ export async function rapatrierEnregistrement(params: {
   const buffer = Buffer.from(await reponse.arrayBuffer());
   if (buffer.byteLength === 0) return echec("Le fichier reçu est vide.");
   if (buffer.byteLength > TAILLE_MAXIMUM_OCTETS) {
-    return echec(`Fichier trop volumineux : ${Math.round(buffer.byteLength / 1_048_576)} Mo.`);
+    return echec(
+      `Fichier trop volumineux : ${Math.round(buffer.byteLength / 1_048_576)} Mo.`,
+    );
   }
 
   let chemin: string;
   try {
-    chemin = cheminEnregistrement(params.organizationId, params.callId, contentType);
+    chemin = cheminEnregistrement(
+      params.organizationId,
+      params.callId,
+      contentType,
+    );
   } catch (cause) {
     return echec(cause instanceof Error ? cause.message : "Chemin refusé.");
   }
@@ -146,7 +167,11 @@ export async function adresseEcoute(
   const admin = createAdminClient();
   const { data, error } = await admin.storage
     .from(BUCKET_ENREGISTREMENTS)
-    .createSignedUrl(chemin, secondes, telecharger ? { download: true } : undefined);
+    .createSignedUrl(
+      chemin,
+      secondes,
+      telecharger ? { download: true } : undefined,
+    );
 
   if (error) {
     console.error("[audio] adresse signée indisponible", error.message);

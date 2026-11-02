@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { CALL_STATUS_LABELS, formatCallMoment, formatDuration, formatPhone } from "@/lib/crm/calls";
+import {
+  CALL_STATUS_LABELS,
+  formatDuration,
+  formatPhone,
+  momentCourt,
+} from "@/lib/crm/calls";
 import type { LigneAppel } from "@/lib/crm/calls-query";
 import type { CallStatus } from "@/types/database";
 import { mettreALaCorbeille, restaurerAppels } from "./actions";
@@ -38,7 +43,9 @@ export function ListeAppels({
 
   function basculer(id: string) {
     setSelection((actuelle) =>
-      actuelle.includes(id) ? actuelle.filter((x) => x !== id) : [...actuelle, id],
+      actuelle.includes(id)
+        ? actuelle.filter((x) => x !== id)
+        : [...actuelle, id],
     );
   }
 
@@ -70,9 +77,13 @@ export function ListeAppels({
       ) : null}
 
       {selection.length > 0 ? (
-        <Sheet tone="attention" className="sticky top-16 z-10 flex flex-col gap-2">
+        <Sheet
+          tone="attention"
+          className="sticky top-16 z-10 flex flex-col gap-2"
+        >
           <p className="font-medium">
-            {selection.length} appel{selection.length > 1 ? "s" : ""} sélectionné
+            {selection.length} appel{selection.length > 1 ? "s" : ""}{" "}
+            sélectionné
             {selection.length > 1 ? "s" : ""}
           </p>
 
@@ -149,14 +160,29 @@ export function ListeAppels({
                 />
               </label>
 
-              <Link href={`/app/appels/${appel.id}`} className="block min-w-0 flex-1">
+              <Link
+                href={`/app/appels/${appel.id}`}
+                className="block min-w-0 flex-1"
+              >
                 <Sheet
                   interactive
-                  tone={appel.is_urgent ? "urgent" : appel.without_followup ? "attention" : "neutral"}
-                  className={cn("flex items-start justify-between gap-3", choisi && "ring-2 ring-signal")}
+                  tone={
+                    appel.is_urgent
+                      ? "urgent"
+                      : appel.without_followup
+                        ? "attention"
+                        : "neutral"
+                  }
+                  className={cn(
+                    "flex flex-col gap-1",
+                    choisi && "ring-2 ring-signal",
+                  )}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">
+                  {/* Le nom à gauche, l'heure à droite. Une liste d'appels se
+                      parcourt par date : l'heure mérite sa colonne, pas une
+                      place en fin de troisième ligne. */}
+                  <div className="flex items-baseline gap-3">
+                    <p className="min-w-0 flex-1 truncate font-medium">
                       {nom}
                       {appel.is_test ? (
                         <Badge ton="discret" className="ml-2">
@@ -164,31 +190,48 @@ export function ListeAppels({
                         </Badge>
                       ) : null}
                     </p>
-
-                    {appel.summary ? (
-                      <p className="mt-0.5 line-clamp-2 text-sm text-ink-soft">{appel.summary}</p>
-                    ) : appel.without_followup ? (
-                      <p className="mt-0.5 text-sm text-attention">
-                        Rien n’a été noté pendant cet appel.
-                      </p>
-                    ) : null}
-
-                    <p className="mt-1 text-sm text-ink-faint first-letter:uppercase">
-                      {formatCallMoment(appel.started_at)} · {formatDuration(appel.duration_seconds)}
-                    </p>
-
-                    {appel.is_urgent || appel.has_appointment || appel.has_recording ? (
-                      <p className="mt-2 flex flex-wrap gap-1.5">
-                        {appel.is_urgent ? <Badge ton="urgent">Urgent</Badge> : null}
-                        {appel.has_appointment ? <Badge ton="signal">Rendez-vous</Badge> : null}
-                        {appel.has_recording ? <Badge ton="neutre">Enregistrement</Badge> : null}
-                      </p>
-                    ) : null}
+                    <span className="tabular shrink-0 text-sm text-ink-soft">
+                      {momentCourt(appel.started_at)}
+                    </span>
                   </div>
 
-                  <span className="shrink-0 text-sm text-ink-soft">
-                    {CALL_STATUS_LABELS[appel.status as CallStatus] ?? appel.status}
-                  </span>
+                  {appel.summary ? (
+                    <p className="line-clamp-2 text-sm text-ink-soft">
+                      {appel.summary}
+                    </p>
+                  ) : appel.without_followup ? (
+                    <p className="text-sm text-attention">
+                      Rien n’a été noté pendant cet appel.
+                    </p>
+                  ) : null}
+
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-ink-faint">
+                    {/* L'enregistrement était un badge « Enregistrement » sur
+                        presque chaque ligne : une étiquette que porte tout le
+                        monde n'informe personne. Un chevron de lecture devant
+                        la durée dit la même chose sans occuper de place. */}
+                    <span className="tabular inline-flex items-center gap-1">
+                      {appel.has_recording ? <span aria-hidden>▶</span> : null}
+                      {formatDuration(appel.duration_seconds)}
+                    </span>
+
+                    {appel.is_urgent ? (
+                      <Badge ton="urgent">Urgent</Badge>
+                    ) : null}
+                    {appel.has_appointment ? (
+                      <Badge ton="signal">Rendez-vous</Badge>
+                    ) : null}
+
+                    {/* Le statut n'apparaît que lorsqu'il n'est pas celui qu'on
+                        attend. « Terminé » répété dix fois ne distingue rien ;
+                        « Manqué » doit sauter aux yeux. */}
+                    {appel.status !== "COMPLETED" ? (
+                      <Badge ton="attention">
+                        {CALL_STATUS_LABELS[appel.status as CallStatus] ??
+                          appel.status}
+                      </Badge>
+                    ) : null}
+                  </div>
                 </Sheet>
               </Link>
             </li>

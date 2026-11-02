@@ -118,9 +118,9 @@ describe("suppression d un appel", () => {
   it("supprime le fichier audio avant la ligne", () => {
     // Dans l ordre inverse, le fichier deviendrait orphelin : plus rien ne le
     // reference, donc plus rien ne le supprimera jamais.
-    const job = readFileSync(resolve(RACINE, "src/app/api/jobs/post-call/route.ts"), "utf-8");
-    const bloc = job.slice(job.indexOf("calls_to_purge"));
-    expect(bloc.indexOf(".remove(fichiers)")).toBeLessThan(bloc.indexOf('.from("calls")\n        .delete()'));
+    const retention = readFileSync(resolve(RACINE, "src/lib/jobs/retention.ts"), "utf-8");
+    const bloc = retention.slice(retention.indexOf("calls_to_purge"));
+    expect(bloc.indexOf(".remove(")).toBeLessThan(bloc.indexOf(".delete()"));
   });
 
   it("l action verifie aussi le role avant d appeler la base", () => {

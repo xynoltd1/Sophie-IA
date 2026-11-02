@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { pushAppointment, removeAppointment } from "@/lib/providers/calendar/service";
+import {
+  pushAppointment,
+  removeAppointment,
+} from "@/lib/providers/calendar/service";
+import { signalerErreurFournisseur } from "@/lib/platform/errors";
 import { instantDepuisHeureLocale } from "@/lib/crm/timezone";
 import type { AppointmentStatus } from "@/types/database";
 
@@ -105,7 +109,9 @@ export async function changeAppointmentStatus(
 
   if (error) {
     if (error.code === "23505" || error.message.includes("deja occupe")) {
-      return { error: "Ce créneau est déjà occupé. Proposez un autre horaire." };
+      return {
+        error: "Ce créneau est déjà occupé. Proposez un autre horaire.",
+      };
     }
     return { error: "Le rendez-vous n'a pas pu être mis à jour." };
   }
@@ -114,11 +120,17 @@ export async function changeAppointmentStatus(
 
   try {
     if (status === "CONFIRMED") {
-      const pousse = await pushAppointment({ organizationId: orgId, appointmentId });
+      const pousse = await pushAppointment({
+        organizationId: orgId,
+        appointmentId,
+      });
       if (pousse) {
         await supabase
           .from("appointments")
-          .update({ external_synced_at: new Date().toISOString(), external_sync_error: null })
+          .update({
+            external_synced_at: new Date().toISOString(),
+            external_sync_error: null,
+          })
           .eq("id", appointmentId)
           .eq("organization_id", orgId);
       }
@@ -127,13 +139,27 @@ export async function changeAppointmentStatus(
     }
   } catch (cause) {
     const message =
-      cause instanceof Error ? cause.message : "L'agenda externe n'a pas pu être mis à jour.";
+      cause instanceof Error
+        ? cause.message
+        : "L'agenda externe n'a pas pu être mis à jour.";
 
     await supabase
       .from("appointments")
       .update({ external_sync_error: message })
       .eq("id", appointmentId)
       .eq("organization_id", orgId);
+
+    // Le professionnel voit un avertissement sur sa fiche ; l'exploitation a
+    // besoin de voir la panne elle-même, agrégée sur toutes les entreprises.
+    // Sans ce second journal, dix échecs Google ressemblent à dix accidents.
+    await signalerErreurFournisseur({
+      provider: "GOOGLE_CALENDAR",
+      operation:
+        status === "CONFIRMED" ? "pushAppointment" : "removeAppointment",
+      message,
+      organizationId: orgId,
+      correlationId: appointmentId,
+    });
 
     warning =
       "Le rendez-vous est enregistré, mais il n'a pas pu être écrit dans votre agenda Google. Ajoutez-le à la main ou réessayez.";
@@ -156,17 +182,30 @@ export async function retryCalendarSync(
     await pushAppointment({ organizationId: orgId, appointmentId });
     await supabase
       .from("appointments")
-      .update({ external_synced_at: new Date().toISOString(), external_sync_error: null })
+      .update({
+        external_synced_at: new Date().toISOString(),
+        external_sync_error: null,
+      })
       .eq("id", appointmentId)
       .eq("organization_id", orgId);
 
     revalidatePath("/app/agenda");
     return { ok: true };
   } catch (cause) {
-    return {
-      ok: false,
-      error: cause instanceof Error ? cause.message : "L'agenda externe reste injoignable.",
-    };
+    const message =
+      cause instanceof Error
+        ? cause.message
+        : "L'agenda externe reste injoignable.";
+
+    await signalerErreurFournisseur({
+      provider: "GOOGLE_CALENDAR",
+      operation: "retryCalendarSync",
+      message,
+      organizationId: orgId,
+      correlationId: appointmentId,
+    });
+
+    return { ok: false, error: message };
   }
 }
 
@@ -194,7 +233,9 @@ async function contexteRendezVous(appointmentId: string, orgId: string) {
 
   if (!data) return null;
 
-  const contact = (data as unknown as { contacts: { phone_e164: string | null } | null }).contacts;
+  const contact = (
+    data as unknown as { contacts: { phone_e164: string | null } | null }
+  ).contacts;
 
   return {
     id: data.id as string,
@@ -207,7 +248,9 @@ async function contexteRendezVous(appointmentId: string, orgId: string) {
   };
 }
 
-async function nomEtFuseau(orgId: string): Promise<{ nom: string; timezone: string }> {
+async function nomEtFuseau(
+  orgId: string,
+): Promise<{ nom: string; timezone: string }> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("organizations")
@@ -279,7 +322,10 @@ async function deciderEtPrevenir(
   appointmentId: string,
   params: {
     statut: AppointmentStatus;
-    modele: "APPOINTMENT_CONFIRMED" | "APPOINTMENT_REJECTED" | "APPOINTMENT_CANCELLED";
+    modele:
+      | "APPOINTMENT_CONFIRMED"
+      | "APPOINTMENT_REJECTED"
+      | "APPOINTMENT_CANCELLED";
     motif?: string;
     prevenir: boolean;
     succes: string;
@@ -291,7 +337,10 @@ async function deciderEtPrevenir(
   const rdv = await contexteRendezVous(appointmentId, orgId);
   if (!rdv) return { error: "Rendez-vous introuvable." };
 
-  const changement = await changeAppointmentStatus(appointmentId, params.statut);
+  const changement = await changeAppointmentStatus(
+    appointmentId,
+    params.statut,
+  );
   if (changement.error) return { error: changement.error };
 
   if (params.motif?.trim()) {
@@ -307,7 +356,8 @@ async function deciderEtPrevenir(
 
   if (params.prevenir && rdv.telephone) {
     const { nom, timezone } = await nomEtFuseau(orgId);
-    const { construireMessage, quandLisible } = await import("@/lib/messaging/templates");
+    const { construireMessage, quandLisible } =
+      await import("@/lib/messaging/templates");
     const { envoyerMessage } = await import("@/lib/messaging/outbox");
 
     const envoi = await envoyerMessage({
@@ -372,16 +422,21 @@ export async function proposerAutreHoraire(
   const fuseau = entreprise.timezone;
   const [jour, heure] = nouveauDebut.split("T");
   const debut =
-    jour && heure ? instantDepuisHeureLocale(jour, heure.slice(0, 5), fuseau) : null;
+    jour && heure
+      ? instantDepuisHeureLocale(jour, heure.slice(0, 5), fuseau)
+      : null;
 
   if (!debut) return { error: "Horaire invalide." };
-  if (debut.getTime() < Date.now()) return { error: "Cet horaire est déjà passé." };
+  if (debut.getTime() < Date.now())
+    return { error: "Cet horaire est déjà passé." };
 
   const duree = Math.min(Math.max(Math.round(dureeMinutes), 5), 1440);
   const fin = new Date(debut.getTime() + duree * 60_000);
 
   // Jeton imprévisible : c'est la seule chose qui protège la page de réponse.
-  const jeton = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  const jeton =
+    crypto.randomUUID().replace(/-/g, "") +
+    crypto.randomUUID().replace(/-/g, "");
 
   const { error } = await supabase
     .from("appointments")
@@ -392,7 +447,9 @@ export async function proposerAutreHoraire(
       proposal_token: jeton,
       // Sept jours : au-delà, un lien qui traîne dans un historique de SMS ne
       // doit plus pouvoir déplacer un rendez-vous.
-      proposal_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      proposal_expires_at: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     })
     .eq("id", appointmentId)
     .eq("organization_id", orgId);
@@ -404,7 +461,8 @@ export async function proposerAutreHoraire(
   if (options.prevenirClient !== false && rdv.telephone) {
     const nom = entreprise.nom;
     const timezone = fuseau;
-    const { construireMessage, quandLisible } = await import("@/lib/messaging/templates");
+    const { construireMessage, quandLisible } =
+      await import("@/lib/messaging/templates");
     const { envoyerMessage } = await import("@/lib/messaging/outbox");
 
     const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
@@ -435,7 +493,9 @@ export async function proposerAutreHoraire(
 }
 
 /** Nouvelle tentative d'envoi d'un message resté en file (section 26). */
-export async function reessayerMessage(messageId: string): Promise<{ ok: boolean; erreur?: string }> {
+export async function reessayerMessage(
+  messageId: string,
+): Promise<{ ok: boolean; erreur?: string }> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 

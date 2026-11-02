@@ -73,7 +73,9 @@ Vercel, redéployer, puis consulter `audit_logs` sur la période concernée. La 
   son texte est personnalisable.
 - Chaque purge laisse une trace dans `audio_retention_events` : on peut prouver la
   suppression sans conserver ce qui a été supprimé.
-- La transcription et le résumé survivent à la purge de l'audio.
+- La transcription et le résumé survivent à la purge de l'audio : ils ont leur propre durée,
+  réglable par l'entreprise (ADR-036). Un échec de transcription ne supprime jamais l'audio,
+  et une purge d'audio ne supprime jamais la transcription.
 
 ### Ce qui reste à faire
 
@@ -165,11 +167,18 @@ aux entreprises.
 
 | Donnée | Où | Rétention |
 |---|---|---|
-| Transcription | `call_transcript_segments` | pas de purge automatique à ce jour |
+| Transcription | `call_transcript_segments` | `transcript_retention_days`, réglable 30 j – 5 ans, défaut 1 an |
+| Résumé et données extraites | `calls.summary`, `calls.structured_data` | `summary_retention_days`, mêmes bornes |
 | Rapport brut du fournisseur | `call_events` | 30 jours, purge par travail planifié |
 | Enregistrement audio | bucket privé | selon le réglage de l'entreprise, 30 jours au plus |
-| Corps des SMS | `outbound_messages`, `conversation_messages` | pas de purge automatique à ce jour |
+| Corps des SMS | `outbound_messages`, `conversation_messages` | `message_retention_days`, mêmes bornes |
+| Appel mis à la corbeille | `calls.deleted_at` | 30 jours, puis suppression définitive avec l'audio |
 
-**Écart connu** : la transcription et les SMS n'ont pas encore de politique de purge. Ils
-contiennent nom, adresse et problème d'un client. À trancher avant la mise en production
-(voir `LEGAL_COMPLIANCE.md`, et ADR-018 sur les durées de conservation).
+Chaque passe écrit dans `retention_runs` — genre, nombre de lignes, issue, message d'erreur
+— et ce journal n'est lisible que du super administrateur. Une purge sans trace ne peut ni
+se prouver à un client qui demande l'effacement de ses données, ni se diagnostiquer quand
+elle échoue depuis trois semaines.
+
+**Écart restant, de nature juridique et non technique** : les durées par défaut sont un
+choix technique d'un an. Personne n'a validé qu'un an est correct pour une transcription
+d'appel en France ou en Belgique. Voir `LEGAL_COMPLIANCE.md`, point L5, et ADR-036.

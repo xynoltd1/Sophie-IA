@@ -45,7 +45,7 @@ date, jamais « probablement bon ».
 | L2 | Registre des sous-traitants ultérieurs vérifié et contractualisé | à faire | tout appel réel |
 | L3 | Politique de confidentialité de Sophie IA | à faire | toute inscription réelle |
 | L4 | CGU / CGV | à faire | toute inscription réelle |
-| L5 | Politique de conservation et de suppression (appels, audio, transcriptions) | à faire | tout appel réel |
+| L5 | Politique de conservation et de suppression (appels, audio, transcriptions) | mécanisme implémenté (0.15.0, ADR-036) ; **trois durées à valider** | tout appel réel |
 | L6 | Procédure de gestion des demandes d'accès, de suppression et d'export | à faire | tout client réel |
 | L7 | Qualification juridique du rôle de Sophie IA par traitement | à faire | L1 et L3 |
 | L8 | Règles d'enregistrement et d'information téléphonique, par pays de lancement | à faire | tout enregistrement réel |
@@ -210,14 +210,30 @@ conditionne L1 et L3.
 | Donnée | Durée | État |
 |---|---|---|
 | Enregistrement audio | 30 jours maximum, purge automatique | **décidé** (ADR-013), implémenté en base |
-| Transcription | non fixée | **décision ouverte** — à trancher avec le juriste |
-| Résumé et extraction structurée | non fixée | **décision ouverte** |
+| Transcription | réglable, 30 jours à 5 ans, défaut 1 an | **mécanisme décidé** (ADR-036), purge implémentée ; **valeur à valider** |
+| Résumé et extraction structurée | réglable, 30 jours à 5 ans, défaut 1 an | **mécanisme décidé** (ADR-036), purge implémentée ; **valeur à valider** |
+| Messages et SMS | réglable, 30 jours à 5 ans, défaut 1 an | **mécanisme décidé** (ADR-036), purge implémentée ; **valeur à valider** |
+| Rapports bruts du fournisseur de voix | suivent la durée des transcriptions | implémenté (purge `CALL_EVENT`) |
+| Appel mis à la corbeille | 30 jours, puis suppression définitive | **décidé** (ADR-035), implémenté |
 | Contact, lead, rendez-vous | durée de la relation commerciale, puis archivage | **décision ouverte** |
 | Journaux d'audit | non fixée | **décision ouverte** |
 | Compte utilisateur après résiliation | non fixée | **décision ouverte** |
 
+### Ce que la version 0.15.0 change, et ce qu'elle ne change pas
+
+**Elle change le mécanisme.** Il existe désormais une politique effective pour chaque donnée
+d'appel : trois durées réglables par entreprise, bornées en base entre 30 jours et 5 ans,
+appliquées par des purges quotidiennes qui laissent une trace vérifiable
+(`retention_runs`). Une demande d'effacement peut être satisfaite et prouvée.
+
+**Elle ne change pas la question juridique.** Les valeurs par défaut — un an — sont un choix
+technique. Personne n'a validé qu'un an est la durée correcte pour une transcription d'appel
+en France ou en Belgique, pour un métier donné. L'écran de réglage le dit au professionnel
+dans ces termes, plutôt que de laisser le défaut passer pour un avis.
+
 Une durée non fixée n'est pas une durée illimitée : c'est un point bloquant de la
-checklist. Tant qu'elle n'est pas décidée, aucun client réel.
+checklist. Le point L5 reste donc ouvert, mais il porte maintenant sur **trois valeurs à
+valider** et non sur l'absence de tout mécanisme.
 
 ---
 

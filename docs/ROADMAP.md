@@ -67,7 +67,7 @@ d'enregistrer un appel réel si le modèle applicable n'est pas marqué validé 
 ```
 
 
-## État au 2026-11-02 (version 0.13.0)
+## État au 2026-11-02 (version 0.15.0)
 
 ### Phases terminées, au sens du code
 
@@ -81,7 +81,7 @@ d'enregistrer un appel réel si le modèle applicable n'est pas marqué validé 
 | 5 — Intelligence post-appel | audio et transcription vérifiés ; résumé et extraction écrits, jamais exercés |
 | 6 — Workflow complet | écrit en entier ; SMS jamais envoyé pour de vrai |
 | 7 — Administration SaaS | écrit en entier, jamais exercé en conditions réelles |
-| 8 — Durcissement | partiel : tests et documentation à jour, préproduction documentée mais non montée |
+| 8 — Durcissement | partiel : tests et documentation à jour, conservation et observabilité faites en 0.15.0, préproduction documentée mais non montée |
 
 ### Ce qui n'avance plus sans vous
 
@@ -95,7 +95,6 @@ d'enregistrer un appel réel si le modèle applicable n'est pas marqué validé 
 
 ### Ce qui reste à construire, et qui ne dépend de personne
 
-- Purge des transcriptions et des SMS (voir SECURITY.md, écart connu).
 - Adaptateurs WhatsApp, e-mail, formulaire web.
 - Envoi des invitations par e-mail (aujourd'hui, le lien est affiché et transmis à la main).
 - Réglages de notification par utilisateur.

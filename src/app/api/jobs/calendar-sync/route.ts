@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { jobAutorise } from "@/lib/jobs/auth";
 import { syncCalendar } from "@/lib/providers/calendar/service";
+import { signalerErreurFournisseur } from "@/lib/platform/errors";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -45,7 +46,21 @@ export async function GET(request: NextRequest) {
   const resultats = [];
   for (const connexion of connexions ?? []) {
     const resultat = await syncCalendar(connexion.organization_id as string);
-    resultats.push({ organization: connexion.organization_id, ok: resultat.ok });
+    resultats.push({
+      organization: connexion.organization_id,
+      ok: resultat.ok,
+    });
+
+    // Un agenda qui ne se synchronise plus se voit d'abord ici : l'artisan,
+    // lui, ne constate rien tant qu'il ne propose pas de créneau.
+    if (!resultat.ok) {
+      await signalerErreurFournisseur({
+        provider: "GOOGLE_CALENDAR",
+        operation: "syncCalendar",
+        message: resultat.error ?? "synchronisation échouée",
+        organizationId: connexion.organization_id as string,
+      });
+    }
   }
 
   return NextResponse.json({

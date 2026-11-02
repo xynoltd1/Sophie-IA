@@ -78,7 +78,7 @@ export function InstallButton({ className }: { className?: string }) {
         type="button"
         onClick={install}
         className={cn(
-          "flex min-h-10 shrink-0 items-center gap-1.5 rounded-control border border-signal",
+          "flex min-h-11 shrink-0 items-center gap-1.5 rounded-control border border-signal",
           "px-3 text-sm font-medium text-signal-deep",
           className,
         )}

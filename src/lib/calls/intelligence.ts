@@ -2,7 +2,12 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { aiProvider } from "@/lib/providers/ai";
-import { PROMPT_DONNEES, PROMPT_RESUME, SCHEMA_DONNEES } from "@/lib/sophie/analysis";
+import {
+  PROMPT_DONNEES,
+  PROMPT_RESUME,
+  SCHEMA_DONNEES,
+} from "@/lib/sophie/analysis";
+import { signalerErreurFournisseur } from "@/lib/platform/errors";
 
 /**
  * Production du résumé et des champs structurés à partir de la transcription.
@@ -49,7 +54,12 @@ interface Tour {
 export function transcriptionEnTexte(tours: Tour[]): string {
   return tours
     .map((tour) => {
-      const qui = tour.speaker === "SOPHIE" ? "Sophie" : tour.speaker === "CLIENT" ? "Client" : "Système";
+      const qui =
+        tour.speaker === "SOPHIE"
+          ? "Sophie"
+          : tour.speaker === "CLIENT"
+            ? "Client"
+            : "Système";
       return `${qui} : ${tour.content}`;
     })
     .join("\n");
@@ -75,7 +85,13 @@ export async function genererIntelligenceAppel(
     .maybeSingle();
 
   if (lecture || !appel) {
-    return { ok: false, resume: null, donnees: null, erreur: "Appel introuvable.", simule: false };
+    return {
+      ok: false,
+      resume: null,
+      donnees: null,
+      erreur: "Appel introuvable.",
+      simule: false,
+    };
   }
 
   if (appel.summary_status === "DONE" && !options.force) {
@@ -92,7 +108,11 @@ export async function genererIntelligenceAppel(
   const tours = (segments ?? []) as Tour[];
 
   if (tours.length === 0) {
-    await echouer(callId, appel.summary_attempts as number, "Aucune transcription pour cet appel.");
+    await echouer(
+      callId,
+      appel.summary_attempts as number,
+      "Aucune transcription pour cet appel.",
+    );
     return {
       ok: false,
       resume: null,
@@ -124,7 +144,10 @@ export async function genererIntelligenceAppel(
       user:
         `Voici la transcription de l'appel :\n\n${conversation}\n\n` +
         "Extrais les champs demandés. Omets ceux dont tu n'as pas entendu la valeur.",
-      json: { name: "extraction_appel", schema: SCHEMA_DONNEES as Record<string, unknown> },
+      json: {
+        name: "extraction_appel",
+        schema: SCHEMA_DONNEES as Record<string, unknown>,
+      },
       maxOutputTokens: 500,
     }),
   ]);
@@ -133,9 +156,23 @@ export async function genererIntelligenceAppel(
   const donnees = nettoyerDonnees(donneesBrutes.json);
 
   if (!resume && !donnees) {
-    const erreur = resumeBrut.error ?? donneesBrutes.error ?? "Le fournisseur n'a rien renvoyé.";
-    await echouer(callId, appel.summary_attempts as number, erreur);
-    return { ok: false, resume: null, donnees: null, erreur, simule: fournisseur.isMock };
+    const erreur =
+      resumeBrut.error ??
+      donneesBrutes.error ??
+      "Le fournisseur n'a rien renvoyé.";
+    await echouer(
+      callId,
+      appel.summary_attempts as number,
+      erreur,
+      appel.organization_id as string | null,
+    );
+    return {
+      ok: false,
+      resume: null,
+      donnees: null,
+      erreur,
+      simule: fournisseur.isMock,
+    };
   }
 
   const { error: ecriture } = await admin
@@ -148,7 +185,9 @@ export async function genererIntelligenceAppel(
       summary_status: "DONE",
       summary_error: resume ? null : (donneesBrutes.error ?? null),
       summary_attempts: (appel.summary_attempts as number) + 1,
-      summary_source: fournisseur.isMock ? "MOCK" : `${fournisseur.name}:${fournisseur.model}`,
+      summary_source: fournisseur.isMock
+        ? "MOCK"
+        : `${fournisseur.name}:${fournisseur.model}`,
       summary_generated_at: new Date().toISOString(),
     })
     .eq("id", callId);
@@ -158,6 +197,7 @@ export async function genererIntelligenceAppel(
       callId,
       appel.summary_attempts as number,
       `Résumé produit mais non enregistré : ${ecriture.message}`,
+      appel.organization_id as string | null,
     );
     return {
       ok: false,
@@ -171,7 +211,12 @@ export async function genererIntelligenceAppel(
   return { ok: true, resume, donnees, simule: fournisseur.isMock };
 }
 
-async function echouer(callId: string, tentatives: number, erreur: string): Promise<void> {
+async function echouer(
+  callId: string,
+  tentatives: number,
+  erreur: string,
+  organizationId?: string | null,
+): Promise<void> {
   const admin = createAdminClient();
   await admin
     .from("calls")
@@ -182,6 +227,18 @@ async function echouer(callId: string, tentatives: number, erreur: string): Prom
     })
     .eq("id", callId);
   console.error("[intelligence] résumé échoué", callId, erreur);
+
+  // La fiche d'appel dit « Résumé indisponible » au professionnel. Ce journal
+  // dit à l'exploitation que c'est le fournisseur qui tombe, et depuis quand.
+  // Sans lui, un modèle en panne depuis trois jours ressemble à trois appels
+  // bizarres.
+  await signalerErreurFournisseur({
+    provider: "AI",
+    operation: "genererIntelligenceAppel",
+    message: erreur,
+    organizationId: organizationId ?? null,
+    correlationId: callId,
+  });
 }
 
 /**

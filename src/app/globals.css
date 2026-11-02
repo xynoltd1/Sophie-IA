@@ -57,6 +57,13 @@
   --text-hero--line-height: 1.15;
   --text-hero--letter-spacing: -0.022em;
 
+  /* Taille des releves. Un tableau de bord a besoin d'un cran entre le titre
+     de section et le chiffre : sans lui, « 12 appels » se lit comme une phrase
+     au lieu d'un nombre. */
+  --text-stat: 1.625rem;
+  --text-stat--line-height: 1;
+  --text-stat--letter-spacing: -0.02em;
+
   /* Formes -----------------------------------------------------------------
      Trois rayons, pas un seul : le rayon encode le role. Les surfaces
      d'action sont plus serrees que les blocs de contenu. */

@@ -84,6 +84,17 @@ export async function openCall(incoming: IncomingCall): Promise<CallRecord | nul
 
   if (existant) return { call: existant as CallRow, created: false };
 
+  // Premier appel reçu sur cette ligne : on le date. C'est la seule preuve
+  // qu'un renvoi fonctionne vraiment, et l'écran de la ligne a besoin de
+  // cette preuve pour dire autre chose que « on verra bien ».
+  if (proprietaire.phone_number_id) {
+    await admin
+      .from("phone_numbers")
+      .update({ verified_at: new Date().toISOString(), last_error: null })
+      .eq("id", proprietaire.phone_number_id)
+      .is("verified_at", null);
+  }
+
   const { data, error } = await admin
     .from("calls")
     .insert({

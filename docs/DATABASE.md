@@ -34,6 +34,7 @@ doit pouvoir être reconstruite à partir de zéro.
 | `0019_calls_and_numbers` | `phone_numbers`, `calls`, statuts de traitement indépendants, `organization_for_number()` |
 | `0020_server_context` | `is_server_context()` : le serveur n'est pas un utilisateur (ADR-027) |
 | `0021_phone_origin` | `contacts.phone_origin` : réseau, dicté ou saisi à la main |
+| `0030_retention_and_lines` | trois durées de conservation par organisation (bornées 30 j – 5 ans), `retention_runs`, `purge_expired_transcripts()`, `purge_expired_summaries()`, `purge_expired_messages()`, `record_retention_run()`, énumération `line_connection_mode`, colonnes et policies de `phone_numbers` |
 | `0029_calls_management` | clé étrangère membre → profil (corrige la liste d'équipe), corbeille des appels, `search_calls()`, `trash_calls()`, `restore_calls()`, `calls_to_purge()` |
 | `0028_conversations` | `conversations`, `conversation_messages`, `receive_inbound_message()` (tous canaux, SMS branché) |
 | `0027_platform_admin` | `plans`, `subscriptions`, `usage_records`, `provider_errors`, `platform_overview()`, `usage_summary()`, écriture des métiers par la plateforme |

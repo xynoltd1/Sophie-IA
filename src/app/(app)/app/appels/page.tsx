@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireOrganization } from "@/lib/auth/session";
-import { SectionTitle, Sheet } from "@/components/ui/sheet";
+import { SectionTitle } from "@/components/ui/sheet";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { can } from "@/lib/auth/permissions";
 import {
@@ -47,9 +47,13 @@ export default async function AppelsPage({
   const params = await searchParams;
   const { activeOrganization } = await requireOrganization();
 
-  const filtre = (FILTRES.find((f) => f.cle === params.filtre)?.cle ?? "TOUS") as FiltreAppels;
-  const periode = (PERIODES.find((p) => p.cle === params.periode)?.cle ?? "TOUT") as Periode;
-  const taille = TAILLES.includes(Number(params.taille)) ? Number(params.taille) : 10;
+  const filtre = (FILTRES.find((f) => f.cle === params.filtre)?.cle ??
+    "TOUS") as FiltreAppels;
+  const periode = (PERIODES.find((p) => p.cle === params.periode)?.cle ??
+    "TOUT") as Periode;
+  const taille = TAILLES.includes(Number(params.taille))
+    ? Number(params.taille)
+    : 10;
   const corbeille = params.corbeille === "1";
   const terme = (params.q ?? "").slice(0, 80);
 
@@ -87,52 +91,71 @@ export default async function AppelsPage({
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline justify-between gap-3">
         <SectionTitle>{corbeille ? "Corbeille" : "Appels"}</SectionTitle>
-        <Link href={lien({ corbeille: corbeille ? undefined : "1", page: 1 })} className="text-sm text-ink-soft underline underline-offset-4">
+        <Link
+          href={lien({ corbeille: corbeille ? undefined : "1", page: 1 })}
+          className="text-sm text-ink-soft underline underline-offset-4"
+        >
           {corbeille ? "Retour aux appels" : "Corbeille"}
         </Link>
       </div>
 
-      <form action="/app/appels" method="get" className="flex gap-2">
-        <input
-          type="search"
-          name="q"
-          defaultValue={terme}
-          placeholder="Nom, entreprise ou numéro"
-          aria-label="Rechercher un appel"
-          className="min-h-12 min-w-0 flex-1 rounded-control border border-line bg-surface px-3"
-        />
-        {filtre !== "TOUS" ? <input type="hidden" name="filtre" value={filtre} /> : null}
-        {periode !== "TOUT" ? <input type="hidden" name="periode" value={periode} /> : null}
-        {taille !== 10 ? <input type="hidden" name="taille" value={taille} /> : null}
-        {corbeille ? <input type="hidden" name="corbeille" value="1" /> : null}
-        <button
-          type="submit"
-          className="min-h-12 shrink-0 rounded-control bg-signal px-4 text-sm font-medium text-white"
+      {/* Un seul bloc de contrôles. L'écran empilait la recherche, les
+          filtres, les périodes et un lien de corbeille : quatre rangées avant
+          le premier appel, c'est-à-dire aucun appel visible sur un téléphone.
+          La période est devenue une liste déroulante — natale sur mobile, donc
+          plus confortable qu'une rangée de puces — et partage le bouton. */}
+      <form action="/app/appels" method="get" className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <input
+            type="search"
+            name="q"
+            defaultValue={terme}
+            placeholder="Nom, entreprise ou numéro"
+            aria-label="Rechercher un appel"
+            className="min-h-12 min-w-0 flex-1 rounded-control border border-line bg-surface px-3"
+          />
+          <button
+            type="submit"
+            className="min-h-12 shrink-0 rounded-control bg-signal px-4 text-sm font-medium text-white"
+          >
+            Chercher
+          </button>
+        </div>
+        <select
+          name="periode"
+          defaultValue={periode}
+          aria-label="Période"
+          className="min-h-12 w-full rounded-control border border-line bg-surface px-3 text-sm"
         >
-          Chercher
-        </button>
+          {PERIODES.map((p) => (
+            <option key={p.cle} value={p.cle}>
+              {p.libelle}
+            </option>
+          ))}
+        </select>
+        {filtre !== "TOUS" ? (
+          <input type="hidden" name="filtre" value={filtre} />
+        ) : null}
+        {taille !== 10 ? (
+          <input type="hidden" name="taille" value={taille} />
+        ) : null}
+        {corbeille ? <input type="hidden" name="corbeille" value="1" /> : null}
       </form>
 
-      <nav aria-label="Filtrer les appels" className="-mx-4 flex gap-2 overflow-x-auto px-4">
+      <nav
+        aria-label="Filtrer les appels"
+        className="-mx-4 flex gap-2 overflow-x-auto px-4"
+      >
         {FILTRES.map((f) => (
           <Chip
             key={f.cle}
-            href={lien({ filtre: f.cle === "TOUS" ? undefined : f.cle, page: 1 })}
+            href={lien({
+              filtre: f.cle === "TOUS" ? undefined : f.cle,
+              page: 1,
+            })}
             actif={filtre === f.cle}
           >
             {f.libelle}
-          </Chip>
-        ))}
-      </nav>
-
-      <nav aria-label="Période" className="-mx-4 flex gap-2 overflow-x-auto px-4">
-        {PERIODES.map((p) => (
-          <Chip
-            key={p.cle}
-            href={lien({ periode: p.cle === "TOUT" ? undefined : p.cle, page: 1 })}
-            actif={periode === p.cle}
-          >
-            {p.libelle}
           </Chip>
         ))}
       </nav>
@@ -159,7 +182,10 @@ export default async function AppelsPage({
           }
           action={
             terme || filtre !== "TOUS" || periode !== "TOUT" ? (
-              <Link href="/app/appels" className="font-medium text-signal underline underline-offset-4">
+              <Link
+                href="/app/appels"
+                className="font-medium text-signal underline underline-offset-4"
+              >
                 Voir tous les appels
               </Link>
             ) : undefined
@@ -179,7 +205,10 @@ export default async function AppelsPage({
           />
 
           {resultat.pages > 1 ? (
-            <nav aria-label="Pages" className="flex items-center justify-between gap-3">
+            <nav
+              aria-label="Pages"
+              className="flex items-center justify-between gap-3"
+            >
               {resultat.page > 1 ? (
                 <Link
                   href={lien({ page: resultat.page - 1 })}
@@ -208,16 +237,25 @@ export default async function AppelsPage({
             </nav>
           ) : null}
 
-          <Sheet tone="neutral" className="flex items-center justify-between gap-3">
-            <span className="text-sm text-ink-soft">Appels par page</span>
-            <span className="flex gap-2">
-              {TAILLES.map((valeur) => (
-                <Chip key={valeur} href={lien({ taille: valeur, page: 1 })} actif={taille === valeur}>
-                  {valeur}
-                </Chip>
-              ))}
-            </span>
-          </Sheet>
+          {/* Un réglage rare ne mérite pas une carte : trois liens discrets
+              suffisent, et la page se termine sur les appels. */}
+          <p className="flex items-center justify-center gap-3 text-sm text-ink-soft">
+            Par page
+            {TAILLES.map((valeur) => (
+              <Link
+                key={valeur}
+                href={lien({ taille: valeur, page: 1 })}
+                aria-current={taille === valeur ? "true" : undefined}
+                className={
+                  taille === valeur
+                    ? "tabular font-semibold text-ink underline underline-offset-4"
+                    : "tabular underline underline-offset-4"
+                }
+              >
+                {valeur}
+              </Link>
+            ))}
+          </p>
         </>
       )}
     </div>

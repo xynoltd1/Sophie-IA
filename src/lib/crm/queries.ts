@@ -214,3 +214,46 @@ export async function alertesNonLues(organizationId: string): Promise<number> {
 
   return count ?? 0;
 }
+
+export interface ActiviteSophie {
+  appels: number;
+  prospects: number;
+  rendezVous: number;
+}
+
+/**
+ * Ce que Sophie a fait cette semaine (section 30).
+ *
+ * Trois chiffres, sur sept jours glissants. Pas un graphique : l'artisan ne
+ * vient pas sur l'accueil pour analyser une tendance, il vient savoir si sa
+ * secrétaire travaille. Trois nombres répondent à cette question ; une courbe
+ * la noierait.
+ *
+ * Les comptes passent par RLS avec `head: true` : aucune ligne n'est
+ * rapatriée, seulement le total.
+ */
+export async function activiteSophie(organizationId: string): Promise<ActiviteSophie> {
+  const supabase = await createServerSupabase();
+  const depuis = new Date(Date.now() - 7 * 86_400_000).toISOString();
+
+  const compte = (table: "calls" | "leads" | "appointments", champ: string) =>
+    supabase
+      .from(table)
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .gte(champ, depuis);
+
+  const [appels, prospects, rendezVous] = await Promise.all([
+    // Les appels d'essai ne comptent pas : ils gonfleraient le chiffre sans
+    // qu'aucun client n'ait appelé.
+    compte("calls", "started_at").eq("is_test", false).is("deleted_at", null),
+    compte("leads", "created_at"),
+    compte("appointments", "created_at").neq("status", "REJECTED"),
+  ]);
+
+  return {
+    appels: appels.count ?? 0,
+    prospects: prospects.count ?? 0,
+    rendezVous: rendezVous.count ?? 0,
+  };
+}

@@ -76,6 +76,43 @@ export function formatCallMoment(iso: string, timezone = "Europe/Brussels"): str
   });
 }
 
+/**
+ * Le moment d'un appel, en court, pour une liste.
+ *
+ * « lundi 2 novembre 14:31 » est juste et illisible en liste : la date complète
+ * occupe la largeur d'une ligne et se répète dix fois de suite pour la même
+ * journée. Dans une liste triée par date, ce qu'on cherche est l'écart —
+ * aujourd'hui, hier, la semaine dernière — pas le libellé complet.
+ *
+ * La forme longue reste celle de la fiche d'appel, où elle est consultée une
+ * fois et doit être sans ambiguïté.
+ */
+export function momentCourt(iso: string, timezone = "Europe/Brussels"): string {
+  const date = new Date(iso);
+  const jour = (valeur: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(valeur);
+
+  const heure = new Intl.DateTimeFormat("fr-BE", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+
+  const aujourdhui = jour(new Date());
+  const hier = jour(new Date(Date.now() - 86_400_000));
+  const leJour = jour(date);
+
+  if (leJour === aujourdhui) return heure;
+  if (leJour === hier) return `Hier ${heure}`;
+
+  return new Intl.DateTimeFormat("fr-BE", {
+    timeZone: timezone,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
 // ---------------------------------------------------------------------------
 // Appels sans suite
 // ---------------------------------------------------------------------------

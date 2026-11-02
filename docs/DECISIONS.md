@@ -1089,3 +1089,122 @@ Chaque suppression et chaque restauration ecrit dans `audit_logs`.
 Le fichier audio part AVANT la ligne. Dans l ordre inverse, un echec de suppression du
 fichier laisserait un objet dans le stockage que plus rien ne reference — donc que plus
 rien ne supprimera jamais, et qui continuerait a contenir la voix d un client.
+
+---
+
+## ADR-036 — Chaque entreprise choisit ses durees de conservation, dans des bornes
+
+**2026-11-02** · Accepte
+
+### Le probleme
+
+L audio avait sa politique depuis la Phase 5 : trente jours au plus, purge prouvee
+(ADR-013). La transcription, le resume, les donnees extraites et les messages n en avaient
+aucune. Ils restaient.
+
+Garder indefiniment n est pas une absence de decision, c est une decision prise par
+omission. Et c est celle qu un controle reproche, parce qu une transcription contient le
+nom du client, son adresse et son probleme.
+
+### Trois durees, pas une
+
+Une duree unique aurait ete plus simple a ecrire et fausse a l usage. Les trois objets ne
+portent pas le meme risque ni la meme utilite :
+
+- la **transcription** est la plus sensible et la moins consultee ;
+- le **resume** est le plus utile longtemps apres, et le moins bavard ;
+- les **messages** suivent une logique commerciale, pas une logique d appel.
+
+Un artisan qui veut garder trace de ses echanges deux ans sans conserver la voix et le mot
+a mot de ses clients doit pouvoir le faire. Une duree unique le lui interdirait.
+
+### Par entreprise, jamais globalement
+
+Les fonctions de purge lisent la duree **de chaque organisation** :
+
+```sql
+where c.started_at < now() - make_interval(days => o.transcript_retention_days)
+```
+
+La tentation etait d ecrire une constante dans la fonction. Une entreprise qui a choisi
+quatre-vingt-dix jours subirait alors le defaut d une autre, et le reglage de l interface
+serait decoratif. Un test interdit cette constante.
+
+### Les bornes : trente jours a cinq ans
+
+Le plancher protege le professionnel : en dessous de trente jours, il perdrait l historique
+d un chantier avant la fin du chantier. Le plafond correspond a la prescription commerciale
+usuelle en France et en Belgique.
+
+Les bornes sont ecrites en base, pas seulement dans le formulaire : un appel direct a l API
+REST contourne le formulaire, jamais la contrainte.
+
+### Ce que cette decision ne tranche pas
+
+**La valeur correcte.** Le defaut est un an, choisi techniquement, et l ecran le dit au
+professionnel au lieu de laisser croire que quelqu un l a validee. La duree legalement juste
+depend du pays et du metier : voir `LEGAL_COMPLIANCE.md`, point L5.
+
+### Le journal
+
+Chaque passe ecrit dans `retention_runs` : genre, debut, fin, nombre de lignes, issue,
+message d erreur. Une purge sans trace ne peut ni se prouver a un client qui demande
+l effacement de ses donnees, ni se diagnostiquer quand elle echoue depuis trois semaines.
+
+Le journal est lisible du seul super administrateur. C est une information d exploitation.
+
+### Six purges independantes
+
+Chacune a son try/catch et son enregistrement. Une purge bloquee retarde les autres d une
+journee ; elle ne doit jamais les empecher. Les fichiers partent avant les lignes qui les
+designent, pour la raison deja donnee en ADR-035.
+
+---
+
+## ADR-037 — La ligne se declare dans l application, mais c est l appel qui la valide
+
+**2026-11-02** · Accepte
+
+### Le probleme
+
+`phone_numbers` s ecrivait en SQL a la main. La table etait donc vide, et comme
+`openCall()` ne trouvait aucun proprietaire pour le numero appele, **chaque appel tombait
+dans le repli « essai »**. Tous les appels reels etaient marques comme des tests, donc
+exclus des vrais prospects et des statistiques. Le symptome visible — « tous mes appels
+sont des essais » — avait pour cause une table vide, pas un bug de classification.
+
+### Ce que l ecran declare
+
+Un numero, son fournisseur, son etat, et son **mode de raccordement** :
+
+| Mode | Ce que c est |
+|---|---|
+| `FORWARD` | renvoi depuis la ligne que le professionnel possede deja (ADR-022) |
+| `DIRECT` | numero dedie fourni par l operateur programmable |
+| `PORTED` | portabilite du numero existant vers l operateur programmable |
+
+Les trois existent dans le modele des maintenant, parce que le choix depend du client et
+non du produit : un artisan qui tient a son numero imprime sur sa camionnette ne portera
+pas sa ligne, et un nouveau venu ne demandera pas de renvoi.
+
+Pour le mode renvoi, l ecran donne les codes GSM a composer — `**61*<numero>*11*20#` pour
+« apres vingt secondes sans reponse ». Ce sont des codes standards, pas une integration : ils
+se composent sur le telephone et ne passent par aucune API.
+
+### Ce que l ecran ne fait pas
+
+Il ne fabrique pas de numero. Sans fournisseur configure, il le dit. Declarer dans la base
+un numero que personne n a achete produirait exactement l inverse de ce qu on veut : des
+appels attendus qui n arrivent jamais, et un ecran qui affirme que tout va bien.
+
+### `verified_at` est ecrit par le webhook, pas par le formulaire
+
+Un formulaire enregistre une **intention**. Il ne prouve rien : ni que le numero est
+attribue, ni que le renvoi est actif, ni que l operateur route vers nous.
+
+La date de premier appel recu est donc posee par `openCall()`, au moment ou un appel arrive
+reellement sur cette ligne. C est la seule preuve disponible, et elle vaut tous les tests de
+configuration qu on pourrait ecrire.
+
+Tant qu elle est nulle, l ecran dit que la ligne n a jamais recu d appel. Il ne dit pas
+qu elle ne fonctionne pas : il dit qu on ne sait pas.

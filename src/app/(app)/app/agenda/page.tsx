@@ -15,6 +15,7 @@ import { getCalendarState, calendarMessage } from "@/lib/crm/calendar-state";
 import { ensureCalendarFresh } from "@/lib/providers/calendar/service";
 import Link from "next/link";
 import type { AppointmentRow } from "@/types/database";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Agenda — Sophie IA" };
@@ -31,7 +32,9 @@ export default async function AgendaPage() {
   const [rdvRes, agendaRes] = await Promise.all([
     supabase
       .from("appointments")
-      .select("id, title, starts_at, ends_at, status, city, contact_id, external_sync_error")
+      .select(
+        "id, title, starts_at, ends_at, status, city, contact_id, external_sync_error",
+      )
       .eq("organization_id", activeOrganization.organization_id)
       .in("status", ["PENDING_APPROVAL", "CONFIRMED", "CHANGE_PROPOSED"])
       .gte("starts_at", new Date().toISOString())
@@ -99,25 +102,42 @@ export default async function AgendaPage() {
           <div className="flex flex-col gap-4">
             {[...parJour.entries()].map(([jour, liste]) => (
               <div key={jour}>
-                <h3 className="mb-2 text-sm font-medium text-ink-soft first-letter:uppercase">{jour}</h3>
+                {/* Un en-tête de journée est un repère de structure, pas une
+                    légende : il se lit avant les rendez-vous qu'il annonce. */}
+                <h3 className="mb-2 flex items-center gap-3 font-display text-base font-semibold first-letter:uppercase">
+                  {jour}
+                  <span aria-hidden className="h-px flex-1 bg-line" />
+                </h3>
                 <ul className="flex flex-col gap-2">
                   {liste.map((rdv) => (
                     <li key={rdv.id}>
                       <Sheet
-                        tone={needsApproval(rdv.status) ? "attention" : "neutral"}
+                        tone={
+                          needsApproval(rdv.status) ? "attention" : "neutral"
+                        }
                         className="flex flex-col gap-2"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
+                        {/* L'heure mène la ligne. Un artisan lit sa journée
+                            par heures — « 8 h chez Dupont » — et non par
+                            intitulés d'intervention. */}
+                        <div className="flex items-start gap-3.5">
+                          <span className="tabular shrink-0 text-lg font-semibold leading-tight">
+                            {formatTime(rdv.starts_at)}
+                          </span>
+                          <div className="min-w-0 flex-1">
                             <p className="font-medium">{rdv.title}</p>
                             <p className="text-sm text-ink-soft">
-                              {formatTime(rdv.starts_at)} – {formatTime(rdv.ends_at)}
+                              jusqu’à {formatTime(rdv.ends_at)}
                               {rdv.city ? ` · ${rdv.city}` : ""}
                             </p>
                           </div>
-                          <span className="shrink-0 text-sm text-ink-soft">
+                          <Badge
+                            ton={
+                              needsApproval(rdv.status) ? "attention" : "neutre"
+                            }
+                          >
                             {APPOINTMENT_STATUS_LABELS[rdv.status]}
-                          </span>
+                          </Badge>
                         </div>
                         {rdv.external_sync_error ? (
                           <p className="text-sm text-attention">

@@ -9,10 +9,12 @@
 
 ## Où en est le projet
 
-**Version** 0.14.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.15.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
 > **Lire aussi `docs/FUNCTIONAL_AUDIT.md`** : l'état réel de chaque fonctionnalité, vérifié
-> dans le code, avec les sept problèmes connus non corrigés et leur priorité.
+> dans le code. Les sept problèmes qui y étaient listés en 0.14.0 ont été repris en
+> 0.15.0 : six sont traités, le septième — l'usage réel des connaissances pendant un appel —
+> demande un appel sur un vrai numéro.
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY`, et pas « candidate à la 1.0 » non plus. Trois fonctions centrales
@@ -44,7 +46,7 @@ Les trois dernières lignes sont les seules qui restent, et aucune ne dépend du
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  307 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  338 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
 
@@ -151,13 +153,14 @@ avec ses huit outils (22-23 octobre), audio rapatrié et écouté, transcription
 |---|---|
 | Transcription en français | qualité insuffisante : « Tongeren » → « Tangerine », numéros dictés tronqués. Deepgram et Google restent à comparer (`docs/VOICE_PROVIDERS.md`) |
 | Sophie coupe la parole | réglages identifiés, à appliquer et retester |
-| Purge des transcriptions et des SMS | **aucune** : seuls l'audio et les rapports bruts se purgent. Contiennent nom, adresse, problème. À trancher avant production |
+| Purge des transcriptions et des SMS | écrite en 0.15.0 (migration 0030) : trois durées par entreprise, journal `retention_runs`, six purges indépendantes. **Jamais exercée sur des données réellement arrivées à échéance**, et les durées attendent une validation juridique |
 | WhatsApp, e-mail, formulaire web | structure en base, aucun adaptateur, aucun point d'entrée |
 | Invitations d'équipe | le lien est affiché et transmis à la main : aucun service d'envoi d'e-mail |
 | Réglages de notification | déduplication en base, mais pas de préférence par utilisateur |
-| Connaissances de Sophie | l'écran existe, et Sophie les lit depuis 0.14.0 ; **jamais vérifié en appel réel** |
-| Écran de tâches | les tâches existent et sont comptées ; aucune liste, aucune clôture en un geste |
-| Configuration de Sophie après l'inscription | voix, style et message d'accueil se changent chez le fournisseur, pas dans l'application |
+| Connaissances de Sophie | l'écran existe, l'outil les lit et passe avant les autres sources ; **l'usage réel pendant un appel reste non vérifié** — le fournisseur vocal n'est pas appelable depuis cet environnement. C'est la dernière ligne ouverte de l'audit 0.14.0 |
+| Écran de tâches | écrit en 0.15.0 : `/app/taches`, quatre vues, clôture d'un pouce. Jamais exercé avec des tâches créées par Sophie en appel réel |
+| Configuration de Sophie après l'inscription | voix, style et message d'accueil se changent chez le fournisseur, pas dans l'application. `/app/sophie` dit l'état réel de la ligne et le reconnaît au lieu de promettre un écran absent |
+| Ligne téléphonique | écran écrit en 0.15.0 (`/app/sophie/ligne`), trois modes de raccordement. **Aucun numéro n'est encore déclaré** : tant que `phone_numbers` est vide, chaque appel tombe dans le repli « essai » |
 | `src/types/database.ts` | écrit à la main (ADR-012), à régénérer depuis le schéma réel |
 | Application Google | en mode Test : autorisations révoquées à 7 jours (ADR-028) |
 | Préproduction | documentée dans `DEPLOYMENT.md`, jamais montée |
@@ -176,7 +179,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — vingt-huit
+## Migrations — trente
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -227,6 +230,14 @@ projet, et le premier critère de choix du fournisseur de voix.
 0029_calls_management            cle etrangere membre -> profil (corrige la liste
                                  d equipe), corbeille des appels, search_calls(),
                                  trash_calls(), restore_calls(), calls_to_purge()
+0030_retention_and_lines         trois durees de conservation par organisation (30 j a
+                                 5 ans, bornees en base), retention_runs (journal des
+                                 purges, lisible du seul super admin),
+                                 purge_expired_transcripts(), purge_expired_summaries(),
+                                 purge_expired_messages(), record_retention_run(),
+                                 enum line_connection_mode, colonnes de phone_numbers
+                                 (connection_mode, public_number, last_error,
+                                 verified_at) et leurs policies OWNER/ADMIN
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -324,9 +335,9 @@ toucher au code :
 
 ## Prochaines tâches recommandées
 
-**1. Appliquer les migrations 0025 à 0029**, dans l'ordre, puis déployer. Sans elles,
+**1. Appliquer les migrations 0025 à 0030**, dans l'ordre, puis déployer. Sans elles,
 plusieurs écrans échouent : le code attend des colonnes et des tables qui n'existent pas
-encore.
+encore. La 0030 est indispensable à `/app/reglages/conservation` et à `/app/sophie/ligne`.
 
 **2. Créer le premier compte administrateur de plateforme.** L'espace `/admin` est écrit
 mais inaccessible : aucun profil n'a `is_platform_admin = true`. Une ligne de SQL.
@@ -344,8 +355,14 @@ client : un numéro belge ou français, qui demande une preuve d'adresse et plus
 
 **6. Lancer la validation de l'application Google** (ADR-028). Le délai ne se rattrape pas.
 
-**7. Trancher la purge des transcriptions et des SMS.** C'est le dernier écart de
-conservation connu, et il porte sur des données personnelles.
+**7. Déclarer un numéro dans `/app/sophie/ligne`** dès qu'un numéro existe, puis
+**appeler ce numéro une fois**. Ce seul appel vérifie d'un coup : le rattachement du numéro
+à l'organisation, `verified_at`, les connaissances de Sophie pendant la conversation, le
+résumé réel, et la fiche d'appel complète. C'est la vérification la plus rentable qui reste.
+
+**8. Valider juridiquement les trois durées de conservation.** Le réglage existe depuis la
+0.15.0 et les valeurs par défaut sont d'un an, choisies techniquement. La valeur correcte
+dépend du pays et du métier (`LEGAL_COMPLIANCE.md`, point L5).
 
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
@@ -360,8 +377,9 @@ séparation stricte de l'administration plateforme (ADR-033).
 
 **Ouvert** : nom commercial du produit — le domaine est zelicall.com, le code dit « Sophie
 IA » partout (ADR-023) ; transcripteur ; fournisseur d'IA post-appel (Mistral conseillé,
-non décidé) ; durées de conservation hors audio (ADR-018) ; prix des offres (volontairement
-non fixés, section 38).
+non décidé) ; **valeurs** des durées de conservation hors audio — le mécanisme est tranché
+(ADR-036), les durées correctes non ; prix des offres (volontairement non fixés,
+section 38) ; voix et style de Sophie dans l'application ou chez le fournisseur.
 
 **Chantiers non techniques** : `docs/LEGAL_COMPLIANCE.md`, points L1 à L12.
 
