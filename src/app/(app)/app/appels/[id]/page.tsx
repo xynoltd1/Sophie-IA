@@ -14,6 +14,8 @@ import {
 } from "@/lib/crm/calls";
 import { APPOINTMENT_STATUS_LABELS, formatDay, formatTime } from "@/lib/crm/agenda";
 import { LEAD_STATUS_LABELS } from "@/lib/crm/pipeline";
+import { champsExtraits } from "@/lib/crm/extraction";
+import { ResumeActions } from "./resume-actions";
 import type {
   AppointmentRow,
   CallRow,
@@ -113,6 +115,8 @@ export default async function FicheAppelPage({
 
   const taches = (rappels.data ?? []) as Pick<TaskRow, "id" | "title" | "due_at" | "status">[];
 
+  const extraits = champsExtraits(appel.structured_data);
+
   const tours = (transcription.data ?? []) as Pick<
     TranscriptSegmentRow,
     "id" | "speaker" | "content" | "started_ms"
@@ -206,16 +210,53 @@ export default async function FicheAppelPage({
         <SectionTitle>Résumé de Sophie</SectionTitle>
         <Sheet tone={!appel.summary && appel.summary_status === "FAILED" ? "attention" : "neutral"}>
           {appel.summary ? (
-            <p className="whitespace-pre-line text-sm">{appel.summary}</p>
+            <>
+              {appel.summary_source === "MOCK" ? (
+                <p className="mb-2 text-sm font-medium text-attention">
+                  Résumé simulé : aucun fournisseur d’intelligence artificielle n’est
+                  configuré. Ce texte ne décrit pas l’appel.
+                </p>
+              ) : null}
+              <p className="whitespace-pre-line text-sm">{appel.summary}</p>
+              <ResumeActions callId={appel.id} libelle="Refaire le résumé" />
+            </>
           ) : (
-            <p className="text-sm text-ink-soft">
-              {appel.summary_status === "FAILED"
-                ? "Résumé indisponible. La transcription et l’enregistrement, eux, restent accessibles."
-                : "Le résumé automatique arrive avec le traitement après appel."}
-            </p>
+            <>
+              <p className="text-sm text-ink-soft">
+                {appel.summary_status === "FAILED"
+                  ? "Résumé indisponible. La transcription et l’enregistrement, eux, restent accessibles."
+                  : appel.summary_status === "RUNNING"
+                    ? "Résumé en cours de production."
+                    : "Le résumé automatique arrive avec le traitement après appel."}
+              </p>
+              {appel.summary_error ? (
+                <p className="mt-1 text-sm text-ink-soft">Raison : {appel.summary_error}</p>
+              ) : null}
+              <ResumeActions callId={appel.id} libelle="Réessayer" />
+            </>
           )}
         </Sheet>
       </section>
+
+      {extraits.length > 0 ? (
+        <section>
+          <SectionTitle>Ce que Sophie a retenu</SectionTitle>
+          <Sheet>
+            <dl className="flex flex-col gap-2">
+              {extraits.map((champ) => (
+                <div key={champ.cle} className="flex gap-3">
+                  <dt className="w-40 shrink-0 text-sm text-ink-soft">{champ.libelle}</dt>
+                  <dd className="min-w-0 text-sm">{champ.valeur}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-sm text-ink-soft">
+              Seuls les champs réellement entendus sont affichés. Un champ absent n’a pas
+              été dit pendant l’appel.
+            </p>
+          </Sheet>
+        </section>
+      ) : null}
 
       <section>
         <SectionTitle>Transcription</SectionTitle>

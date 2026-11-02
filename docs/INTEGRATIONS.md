@@ -157,3 +157,42 @@ dans `src/lib/calls/report.ts`.
 Les emplacements du résumé et de l'URL d'enregistrement n'ont pas encore été observés sur
 un rapport réel. Le code les cherche à plusieurs endroits connus et conserve le rapport
 brut dans `call_events` pour pouvoir corriger sans rien redemander au fournisseur.
+
+## Mise à jour du 2026-11-02
+
+`src/lib/providers/status.ts` reste la source de vérité. Ce qui suit la recopie.
+
+| Intégration | État | Ce qui manque |
+|---|---|---|
+| Supabase | `TESTED` | — |
+| Google Calendar | `TESTED` | validation de l'application Google (mode Test = autorisations révoquées à 7 jours, ADR-028) |
+| Sophie Voice (Vapi) | `TESTED` | un numéro de téléphone ; la région européenne n'est pas en libre-service (ADR-026) |
+| Transcription | `TESTED` | qualité française perfectible : noms propres et numéros dictés |
+| Enregistrement conservé chez nous | `TESTED` | — |
+| Résumé et extraction | `BLOCKED_EXTERNAL_CONFIG` | `AI_API_KEY` |
+| SMS | `BLOCKED_EXTERNAL_CONFIG` | compte opérateur et numéro expéditeur |
+
+### Ce que « écrit mais jamais exercé » veut dire ici
+
+L'adaptateur SMS a été écrit contre la documentation de l'opérateur. Il gère la
+signature des webhooks, l'idempotence, les codes de retour et la distinction entre erreur
+reprenable et erreur définitive. **Aucun SMS n'est jamais parti.** Tant qu'un vrai message
+n'est pas arrivé sur un vrai téléphone, cette intégration n'est pas testée, et le registre
+le dit.
+
+La même règle vaut pour le résumé : le code est exercé par des tests avec un fournisseur
+simulé, jamais contre un vrai modèle.
+
+### Canaux de conversation
+
+| Canal | État |
+|---|---|
+| Téléphone | fonctionnel |
+| SMS sortant | écrit, en attente de compte |
+| SMS entrant | écrit, en attente de compte |
+| WhatsApp | structure en base, aucun adaptateur |
+| E-mail | structure en base, aucun adaptateur |
+| Formulaire web | structure en base, aucun point d'entrée public |
+
+Les trois derniers existent dans l'énumération des canaux et dans les tables. Il ne faut
+pas en conclure qu'ils fonctionnent : rien ne les alimente.

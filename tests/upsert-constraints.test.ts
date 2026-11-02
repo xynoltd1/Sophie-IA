@@ -72,6 +72,19 @@ function contrainteDeductible(colonnes: string[], schema: string): boolean {
     if (new RegExp(`\\b${colonne}\\s+\\w+\\s+primary\\s+key`, "i").test(schema)) return true;
   }
 
+  // Contrainte `unique` declaree sur la colonne elle-meme, dans le
+  // `create table` : « slug text not null unique ». Elle est parfaitement
+  // deductible par ON CONFLICT, et c est la forme la plus courante pour une
+  // colonne seule.
+  if (colonnes.length === 1 && colonnes[0]) {
+    const colonne = colonnes[0];
+    for (const ligne of schema.split("\n")) {
+      const propre = ligne.trim();
+      if (!propre.startsWith(`${colonne} `) && !propre.startsWith(`${colonne}\t`)) continue;
+      if (/\bunique\b/i.test(propre) && !/create\s+unique/i.test(propre)) return true;
+    }
+  }
+
   const listes: string[] = [];
   for (const m of schema.matchAll(/create\s+unique\s+index[^(]*\(([^;]*?)\)\s*(?:nulls[^;]*?)?;/gis)) {
     if (m[1]) listes.push(m[1]);

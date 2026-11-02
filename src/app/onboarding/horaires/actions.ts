@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -21,10 +22,22 @@ const payload = z.object({
 
 export interface HoursState {
   error?: string;
+  success?: string;
   dayErrors?: Record<number, string>;
 }
 
-export async function saveHours(input: unknown): Promise<HoursState> {
+/**
+ * Enregistre les horaires.
+ *
+ * Le meme formulaire sert pendant l'inscription et plus tard dans les
+ * reglages. Seule la suite change : pendant l'inscription on avance d'une
+ * etape, ensuite on reste sur place. Dupliquer l'action pour cette seule
+ * difference aurait garanti que les deux copies divergent.
+ */
+export async function saveHours(
+  input: unknown,
+  contexte: "ONBOARDING" | "REGLAGES" = "ONBOARDING",
+): Promise<HoursState> {
   const parsed = payload.safeParse(input);
   if (!parsed.success) {
     return { error: "Les horaires envoyés sont incomplets. Rechargez la page." };
@@ -77,6 +90,11 @@ export async function saveHours(input: unknown): Promise<HoursState> {
     return { error: "Les horaires sont enregistrés, mais pas les durées de rendez-vous." };
   }
 
-  await supabase.rpc("set_onboarding_step", { org_id: orgId, step: "CALENDAR" });
-  redirect("/onboarding/agenda");
+  if (contexte === "ONBOARDING") {
+    await supabase.rpc("set_onboarding_step", { org_id: orgId, step: "CALENDAR" });
+    redirect("/onboarding/agenda");
+  }
+
+  revalidatePath("/app/reglages/horaires");
+  return { success: "Horaires enregistrés." };
 }

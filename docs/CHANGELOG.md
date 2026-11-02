@@ -3,6 +3,67 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.13.0] — 2026-11-02 — Tout ce qui pouvait être construit sans comptes externes
+
+Développement autonome d'une traite : intelligence post-appel, workflow complet des
+rendez-vous, écrans de réglages, administration de la plateforme, conversations.
+
+### Résumé et extraction, produits par nous (ADR-031)
+Le fournisseur de voix accepte notre plan d'analyse, le stocke, le renvoie actif quand on
+l'interroge — et exécute les appels avec l'analyse désactivée. Trois corrections n'y ont
+rien changé.
+
+Le résumé et les dix champs structurés de la section 15 sont désormais produits à partir de
+la transcription conservée en base. Nouvelle abstraction `AIProvider`, compatible avec les
+interfaces de type OpenAI, donc avec Mistral, Groq ou un serveur local sans changer une
+ligne. Reprise automatique, bouton « Réessayer », et un résumé simulé qui **annonce qu'il
+est simulé** tant qu'aucune clé n'est configurée.
+
+### Workflow complet du rendez-vous (ADR-032, ADR-034)
+- **Refuser** avec un motif, qui part dans le message au client.
+- **Proposer un autre horaire** : le client répond par un lien, sans compte. Le rendez-vous
+  ne devient confirmé que s'il accepte, et le créneau d'origine reste bloqué d'ici là.
+- **Annuler**, avec synchronisation de l'agenda Google.
+- **File de messages sortants** : on met en file, puis on envoie. Un échec d'envoi n'annule
+  jamais le rendez-vous, et le message reste réessayable.
+- **Adaptateur SMS réel** écrit contre la documentation de l'opérateur, jamais exercé :
+  aucun compte n'existe. Il est marqué comme tel.
+- **Notifications** avec déduplication, pastille dans l'en-tête, écran dédié.
+- **Accusés de réception** et **SMS entrants** branchés sur des webhooks signés.
+
+### Écrans qui manquaient
+Services, horaires, absences et vacances, équipe avec invitations, connaissances de Sophie,
+intégrations, consommation du mois. Tous reliés à de vraies données, tous avec contrôle de
+rôle côté serveur — pas seulement un bouton caché.
+
+### Administration de la plateforme (ADR-033)
+Espace `/admin` séparé : entreprises, métiers modifiables **sans toucher au code**, offres,
+abonnements, consommation, erreurs des fournisseurs, santé des intégrations. Chaque écriture
+est journalisée.
+
+**Aucun accès aux enregistrements des clients**, par construction, et un test parcourt tout
+le code de cet espace pour le vérifier.
+
+### Conversations
+Entité `Conversation` avec les cinq canaux de la section 18. SMS entrant et sortant
+fonctionnels ; WhatsApp, e-mail et formulaire web structurés mais non branchés — dit
+franchement plutôt que suggéré.
+
+La fiche contact réunit maintenant appels, messages, rendez-vous et demandes dans un seul
+fil chronologique.
+
+### Ce qu'un test a rattrapé pendant ce développement
+Le formulaire de proposition d'horaire lisait `datetime-local` avec `new Date()`, donc dans
+le fuseau du serveur : exactement le décalage de l'ADR-029, à un endroit neuf. Le test
+écrit après ce bug-là a échoué avant le déploiement. Il couvre désormais tout `src`, pas
+seulement les outils de Sophie.
+
+### Pourquoi ce n'est pas une version 1.0 candidate
+Trois fonctions majeures n'ont jamais été exercées contre un service réel : le résumé (pas
+de clé d'IA), le SMS (pas de compte opérateur), l'appel sur un vrai numéro (pas de numéro).
+Et la liste juridique reste ouverte. Appeler cette version « candidate » serait exactement
+le genre d'annonce que ce projet s'interdit.
+
 ## [0.12.3] — 2026-10-23 — Un tableau vide invalide, et un fournisseur silencieux
 
 ### Ce que le rapport a montré

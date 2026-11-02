@@ -435,6 +435,13 @@ export interface CallRow {
   summary: string | null;
   /** Champs extraits de la conversation (section 15). */
   structured_data: Record<string, unknown> | null;
+  /** Nombre de tentatives de resume. */
+  summary_attempts: number;
+  /** Pourquoi la derniere tentative a echoue. */
+  summary_error: string | null;
+  /** Qui a produit le resume : nom du fournisseur, VAPI, ou MOCK. */
+  summary_source: string | null;
+  summary_generated_at: string | null;
   created_at: string;
   updated_at: string;
 }

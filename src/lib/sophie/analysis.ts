@@ -29,7 +29,7 @@ const INTERDICTION =
  * Il doit répondre à une seule question : est-ce que je dois rappeler, et quoi
  * dire ? D'où la contrainte de longueur, et l'interdiction des formules.
  */
-const RESUME_SYSTEME =
+export const PROMPT_RESUME =
   "Tu résumes un appel téléphonique reçu par la secrétaire virtuelle d'un artisan. " +
   "Le lecteur est l'artisan lui-même, souvent sur un chantier, avec peu de temps. " +
   "Écris en français, à la troisième personne, trois phrases au maximum. " +
@@ -38,7 +38,7 @@ const RESUME_SYSTEME =
   INTERDICTION +
   " Si l'appel n'a pas de contenu — un raccrochage, un faux numéro — dis-le en une phrase.";
 
-const DONNEES_SYSTEME =
+export const PROMPT_DONNEES =
   "Tu extrais des champs structurés d'un appel téléphonique reçu par la secrétaire " +
   "virtuelle d'un artisan. " +
   INTERDICTION +
@@ -49,7 +49,7 @@ const DONNEES_SYSTEME =
  * Les champs de la section 15. Aucun n'est obligatoire, et c'est le point
  * central : un schéma qui exige une valeur pousse le modèle à en fabriquer une.
  */
-const SCHEMA_DONNEES = {
+export const SCHEMA_DONNEES = {
   type: "object",
   properties: {
     intent: {
@@ -115,7 +115,7 @@ export function analysisPlan() {
       enabled: true,
       timeoutSeconds: 30,
       messages: [
-        { role: "system", content: RESUME_SYSTEME },
+        { role: "system", content: PROMPT_RESUME },
         {
           role: "user",
           content: "Voici la transcription de l'appel :\n\n{{transcript}}\n\nRésume-le.",
@@ -127,7 +127,7 @@ export function analysisPlan() {
       timeoutSeconds: 30,
       schema: SCHEMA_DONNEES,
       messages: [
-        { role: "system", content: DONNEES_SYSTEME },
+        { role: "system", content: PROMPT_DONNEES },
         {
           role: "user",
           content:

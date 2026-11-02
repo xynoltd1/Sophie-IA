@@ -8,7 +8,23 @@ import { updateSession } from "@/lib/supabase/middleware";
  * reelle est appliquee par RLS dans PostgreSQL. Meme si ce fichier etait
  * contourne, une organisation ne pourrait pas lire les donnees d'une autre.
  */
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/api/health"];
+// `/rdv` est public par necessite : le client qui repond a une proposition
+// d horaire n a pas de compte. La page ne montre presque rien et n est
+// atteignable qu avec un jeton imprevisible (migration 0026).
+// `/api/voice` et `/api/jobs` s authentifient par signature ou secret partage,
+// pas par session : les proteger ici renverrait une redirection HTML a un
+// webhook, qui la lirait comme un succes.
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/auth",
+  "/api/health",
+  "/rdv",
+  "/api/voice",
+  "/api/jobs",
+  "/api/messaging",
+  "/invitation",
+];
 
 export async function middleware(request: NextRequest) {
   // Sans configuration Supabase, chaque page leve une exception et l'utilisateur

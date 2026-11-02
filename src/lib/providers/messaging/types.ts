@@ -33,6 +33,8 @@ export interface SendResult {
 export interface MessagingProvider {
   readonly name: string;
   readonly supportedChannels: readonly MessageChannel[];
+  /** Vrai pour une simulation : l'information remonte jusqu'a l'ecran. */
+  readonly isMock: boolean;
 
   send(message: OutboundMessage): Promise<SendResult>;
 

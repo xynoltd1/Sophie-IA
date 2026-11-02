@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
+import { MessagesContact, type LigneMessage } from "./messages";
+import { FilContact } from "./timeline";
+import { construireFil } from "@/lib/crm/timeline";
 import { EmptyState } from "@/components/ui/states";
 import { ContactPanels } from "./contact-panels";
 import { LEAD_STATUS_LABELS, contactLabel, isOpen, isOverdue } from "@/lib/crm/pipeline";
@@ -23,7 +26,8 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
   const supabase = await createServerSupabase();
   const orgId = activeOrganization.organization_id;
 
-  const [contactRes, leadsRes, tasksRes] = await Promise.all([
+  const [contactRes, leadsRes, tasksRes, messagesRes, appelsRes, rdvRes, filRes] =
+    await Promise.all([
     supabase
       .from("contacts")
       .select("*")
@@ -42,7 +46,39 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
       .eq("contact_id", id)
       .eq("organization_id", orgId)
       .order("due_at", { ascending: true, nullsFirst: false }),
-  ]);
+    supabase
+      .from("outbound_messages")
+      .select("id, body, status, last_error, created_at, attempts")
+      .eq("contact_id", id)
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("calls")
+      .select("id, started_at, duration_seconds, status")
+      .eq("contact_id", id)
+      .eq("organization_id", orgId)
+      .order("started_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("appointments")
+      .select("id, title, starts_at, status")
+      .eq("contact_id", id)
+      .eq("organization_id", orgId)
+      .order("starts_at", { ascending: false })
+      .limit(20),
+    // Jointure stricte sur la conversation : sans elle, cette requete
+    // ramenerait les messages entrants de TOUS les contacts de l entreprise
+    // et les afficherait dans l historique de celui-ci.
+    supabase
+      .from("conversation_messages")
+      .select("id, body, direction, occurred_at, conversations!inner(contact_id)")
+      .eq("organization_id", orgId)
+      .eq("conversations.contact_id", id)
+      .eq("direction", "INBOUND")
+      .order("occurred_at", { ascending: false })
+      .limit(20),
+    ]);
 
   if (!contactRes.data) notFound();
 
@@ -55,6 +91,43 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
     TaskRow,
     "id" | "title" | "status" | "due_at" | "priority"
   >[];
+  const messages = (messagesRes.data ?? []) as LigneMessage[];
+
+  // Le fil réunit ce que quatre tables savent séparément (section 32).
+  const fil = construireFil({
+    appels: (appelsRes.data ?? []) as {
+      id: string;
+      started_at: string;
+      duration_seconds: number | null;
+      status: string;
+    }[],
+    messages: [
+      ...messages.map((m) => ({
+        id: m.id,
+        body: m.body,
+        created_at: m.created_at,
+        direction: "OUTBOUND" as const,
+      })),
+      ...((filRes.data ?? []) as { id: string; body: string; occurred_at: string }[]).map((m) => ({
+        id: m.id,
+        body: m.body,
+        created_at: m.occurred_at,
+        direction: "INBOUND" as const,
+      })),
+    ],
+    rendezVous: (rdvRes.data ?? []) as {
+      id: string;
+      title: string;
+      starts_at: string;
+      status: string;
+    }[],
+    demandes: leads.map((l) => ({
+      id: l.id,
+      title: l.title,
+      created_at: l.created_at,
+      status: l.status,
+    })),
+  });
 
   return (
     <div className="flex flex-col gap-5">
@@ -118,6 +191,10 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
           </ul>
         )}
       </section>
+
+      <MessagesContact messages={messages} />
+
+      <FilContact evenements={fil} />
 
       <ContactPanels
         contact={contact}

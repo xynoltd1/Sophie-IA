@@ -14,7 +14,14 @@ import {
   type ServicesState,
 } from "./actions";
 
-export function ServicesEditor({ services }: { services: ServiceRow[] }) {
+export function ServicesEditor({
+  services,
+  contexte = "ONBOARDING",
+}: {
+  services: ServiceRow[];
+  /** Hors inscription, il n'y a pas d'etape suivante : le bouton disparait. */
+  contexte?: "ONBOARDING" | "REGLAGES";
+}) {
   const [state, action, adding] = useActionState<ServicesState, FormData>(addService, {});
   const [showForm, setShowForm] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -163,19 +170,21 @@ export function ServicesEditor({ services }: { services: ServiceRow[] }) {
         <p className="text-sm text-ink-soft">
           {activeCount} service{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""}.
         </p>
-        <Button
-          type="button"
-          size="lg"
-          loading={pending}
-          onClick={() =>
-            startTransition(async () => {
-              const result = await continueToSchedule();
-              if (result?.error) setContinueError(result.error);
-            })
-          }
-        >
-          Continuer
-        </Button>
+        {contexte === "ONBOARDING" ? (
+          <Button
+            type="button"
+            size="lg"
+            loading={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const result = await continueToSchedule();
+                if (result?.error) setContinueError(result.error);
+              })
+            }
+          >
+            Continuer
+          </Button>
+        ) : null}
       </div>
     </div>
   );

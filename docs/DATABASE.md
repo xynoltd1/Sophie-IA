@@ -34,6 +34,10 @@ doit pouvoir être reconstruite à partir de zéro.
 | `0019_calls_and_numbers` | `phone_numbers`, `calls`, statuts de traitement indépendants, `organization_for_number()` |
 | `0020_server_context` | `is_server_context()` : le serveur n'est pas un utilisateur (ADR-027) |
 | `0021_phone_origin` | `contacts.phone_origin` : réseau, dicté ou saisi à la main |
+| `0028_conversations` | `conversations`, `conversation_messages`, `receive_inbound_message()` (tous canaux, SMS branché) |
+| `0027_platform_admin` | `plans`, `subscriptions`, `usage_records`, `provider_errors`, `platform_overview()`, `usage_summary()`, écriture des métiers par la plateforme |
+| `0026_appointment_workflow` | `outbound_messages`, `notifications`, proposition d'horaire avec jeton, `proposal_by_token()`, `respond_to_proposal()`, `messages_to_send()` |
+| `0025_summary_pipeline` | colonnes de reprise du résumé sur `calls`, `calls_awaiting_summary()` |
 | `0024_recording_storage` | bucket privé `call-recordings`, métadonnées audio sur `calls`, `expired_recordings()` |
 | `0023_call_intelligence` | `call_events` (rapports bruts, purge à 30 jours), `call_transcript_segments`, `calls.summary`, `calls.structured_data`, `purge_expired_call_events()` |
 | `0022_call_links` | `call_id` sur `leads`, `appointments` et `tasks` ; `dashboard_counts()` compte les rendez-vous à valider, les appels sans suite et les appels échoués (ADR-030) |

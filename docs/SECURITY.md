@@ -108,3 +108,68 @@ l'Autorité de protection des données. Les obligations pratiques sont donc trè
 celles applicables en France.
 
 Dans les deux cas : ne pas ouvrir un troisième pays sans refaire cette vérification.
+
+## Surfaces publiques ajoutées en 0.13.0
+
+Trois chemins sont accessibles sans session. Chacun existe pour une raison précise, et
+chacun est réduit au strict nécessaire.
+
+### `/rdv/<jeton>` — réponse du client à une proposition d'horaire
+
+Le client n'a pas de compte et n'en aura jamais. Le jeton fait 64 caractères aléatoires,
+expire en sept jours, et ne vaut que pour un rendez-vous.
+
+La page n'affiche que le nom de l'entreprise, l'objet, l'ancien et le nouvel horaire. La
+fonction SQL qui l'alimente ne renvoie **ni téléphone, ni adresse, ni notes** : un test
+échoue si l'un de ces mots apparaît dans son corps. Un lien reçu par SMS peut être
+transféré ou lu sur un écran verrouillé ; il ne doit jamais devenir une fiche client.
+
+La page porte `robots: index: false`.
+
+### `/invitation/<jeton>` — rejoindre une entreprise
+
+Rien n'est fait au chargement : l'adhésion passe par un bouton. Un aperçu de messagerie qui
+visite le lien ne doit faire entrer personne.
+
+Le contrôle qui compte est le dernier de la chaîne : **l'adresse du compte connecté doit
+être celle de l'invitation**. Sans lui, un lien transféré ferait entrer n'importe qui.
+
+### Webhooks (`/api/voice`, `/api/messaging`, `/api/jobs`)
+
+Ils s'authentifient par signature ou par secret partagé, jamais par session. Les exclure du
+contrôle de session est délibéré : une redirection HTML renvoyée à un webhook serait lue
+comme un succès par l'émetteur, qui n'essaierait plus.
+
+Les travaux planifiés acceptent deux secrets, comparés à temps constant : celui de
+l'hébergeur et un secret de déclenchement manuel.
+
+## Espace d'administration de la plateforme
+
+Deux chemins d'autorisation séparés de bout en bout : `is_platform_admin()` (colonne du
+profil) et `is_org_member()` (appartenance à une organisation). Aucune policy ne mélange les
+deux, pour qu'une faille dans l'un n'ouvre pas l'autre.
+
+Deux pages d'administration utilisent la clé de service, parce que le super administrateur
+n'est membre d'aucune organisation et que RLS les lui cacherait toutes. **La garde
+applicative est alors la seule protection** : elle est donc la première instruction de
+chaque page, et un test le vérifie.
+
+Aucun accès aux enregistrements ni aux transcriptions depuis cet espace (ADR-033). Un test
+parcourt tout le code de `/admin` et échoue s'il y trouve `recording_path` ou le nom du
+bucket audio.
+
+Toute écriture de la plateforme est journalisée dans `audit_logs`, qui n'est jamais exposé
+aux entreprises.
+
+## Données personnelles ajoutées en 0.13.0
+
+| Donnée | Où | Rétention |
+|---|---|---|
+| Transcription | `call_transcript_segments` | pas de purge automatique à ce jour |
+| Rapport brut du fournisseur | `call_events` | 30 jours, purge par travail planifié |
+| Enregistrement audio | bucket privé | selon le réglage de l'entreprise, 30 jours au plus |
+| Corps des SMS | `outbound_messages`, `conversation_messages` | pas de purge automatique à ce jour |
+
+**Écart connu** : la transcription et les SMS n'ont pas encore de politique de purge. Ils
+contiennent nom, adresse et problème d'un client. À trancher avant la mise en production
+(voir `LEGAL_COMPLIANCE.md`, et ADR-018 sur les durées de conservation).

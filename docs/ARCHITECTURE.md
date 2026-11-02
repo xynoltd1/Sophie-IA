@@ -129,3 +129,40 @@ Phase 5.
   appel Supabase direct depuis le navigateur sur une donnée sensible.
 - Toute nouvelle table portant un `organization_id` doit avoir RLS activé **et** une
   policy par opération, dans la même migration.
+
+## Ce que 0.13.0 ajoute à l'architecture
+
+### Un fournisseur d'IA pour l'après-appel, distinct du fournisseur de voix
+
+`VoiceAIProvider` tient la conversation en direct. `AIProvider` lit une transcription déjà
+enregistrée et en tire un résumé et des champs structurés. Les deux ne partagent rien, et
+c'est voulu : le premier est dans le chemin critique de l'appel, le second non.
+
+Le second existe parce que le premier s'est révélé incapable de tenir son propre réglage
+d'analyse (ADR-031).
+
+### Une file pour les messages sortants
+
+Un SMS n'est pas un effet de bord d'une action : c'est une ligne dans `outbound_messages`,
+avec ses tentatives, ses erreurs et son accusé de réception. L'action métier écrit la
+décision, met le message en file, puis tente l'envoi. Les trois sont séparables, et c'est ce
+qui permet de réessayer sans refaire la décision (ADR-032).
+
+### Deux espaces, deux autorisations
+
+```
+/app     →  requireOrganization()   →  is_org_member()      →  RLS par organisation
+/admin   →  requirePlatformAdmin()  →  is_platform_admin()   →  RLS par plateforme
+/rdv     →  jeton                   →  fonction SQL a portee minimale
+```
+
+Les trois chemins ne se croisent jamais. Une faille dans l'un n'ouvre pas les autres.
+
+### Les travaux planifiés, et pourquoi il n'y en a que deux
+
+Un compte Hobby autorise deux tâches quotidiennes (ADR-024). `post-call` en regroupe donc
+cinq : résumés manqués, purge audio, purge des rapports bruts, file des messages, libération
+des créneaux bloqués. Chacune est isolée dans son `try` : l'échec de l'une n'empêche pas les
+autres, et le compte rendu dit laquelle a échoué.
+
+Le chemin normal reste le webhook de fin d'appel. Le travail planifié n'est qu'un filet.

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
@@ -88,10 +89,36 @@ export default async function PlusPage({
           </Sheet>
         )}
         {can(activeOrganization.role, "members:invite") ? (
-          <p className="mt-2 text-sm text-ink-soft">
-            L’invitation de collaborateurs sera disponible en Phase 1.
-          </p>
+          <Link
+            href="/app/reglages/equipe"
+            className="mt-2 inline-block text-sm font-medium text-signal underline underline-offset-4"
+          >
+            Gérer l’équipe et les invitations
+          </Link>
         ) : null}
+      </section>
+
+      <section>
+        <SectionTitle>Réglages</SectionTitle>
+        <ul className="flex flex-col gap-2">
+          {[
+            { href: "/app/reglages", titre: "Tous les réglages", detail: "Services, horaires, absences, intégrations." },
+            { href: "/app/notifications", titre: "Alertes", detail: "Ce que Sophie a signalé." },
+            { href: "/app/sophie", titre: "Sophie", detail: "Son état, ses connaissances, l’enregistrement." },
+          ].map((entree) => (
+            <li key={entree.href}>
+              <Link href={entree.href} className="block">
+                <Sheet className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium">{entree.titre}</p>
+                    <p className="text-sm text-ink-soft">{entree.detail}</p>
+                  </div>
+                  <span aria-hidden className="shrink-0 text-ink-soft">→</span>
+                </Sheet>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <form action={signOut}>

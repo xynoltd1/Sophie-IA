@@ -12,10 +12,13 @@ export function HoursEditor({
   initialHours,
   defaultAppointmentMinutes,
   bufferMinutes,
+  contexte = "ONBOARDING",
 }: {
   initialHours: HourInput[];
   defaultAppointmentMinutes: number;
   bufferMinutes: number;
+  /** Pendant l'inscription on avance d'une etape ; ensuite on reste sur place. */
+  contexte?: "ONBOARDING" | "REGLAGES";
 }) {
   const [hours, setHours] = useState(initialHours);
   const [duration, setDuration] = useState(defaultAppointmentMinutes);
@@ -143,17 +146,25 @@ export function HoursEditor({
         loading={pending}
         onClick={() =>
           startTransition(async () => {
-            const result = await saveHours({
-              hours,
-              defaultAppointmentMinutes: duration,
-              bufferMinutes: buffer,
-            });
+            const result = await saveHours(
+              {
+                hours,
+                defaultAppointmentMinutes: duration,
+                bufferMinutes: buffer,
+              },
+              contexte,
+            );
             if (result) setState(result);
           })
         }
       >
-        Continuer
+        {contexte === "ONBOARDING" ? "Continuer" : "Enregistrer"}
       </Button>
+      {state.success ? (
+        <p role="status" className="text-sm text-signal-deep">
+          {state.success}
+        </p>
+      ) : null}
     </div>
   );
 }

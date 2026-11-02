@@ -85,24 +85,51 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
   {
     key: "voice",
     label: "Sophie Voice (conversation temps réel)",
-    status: "BLOCKED_EXTERNAL_CONFIG",
-    blockedBy: "Compte Vapi en région européenne (voir ADR-020).",
+    status: "TESTED",
     requiredEnv: ["VOICE_PROVIDER", "VOICE_API_KEY", "VOICE_WEBHOOK_SECRET"],
     notes:
-      "Abstraction et contrat d'outils définis. Le spike technique n'a pas encore été exécuté.",
+      "Exercé par de vrais appels les 22 et 23 octobre 2026 : Sophie répond en français, " +
+      "appelle les huit outils métier, crée contact, demande et rendez-vous provisoire. " +
+      "Région US faute d'accès libre-service à la région européenne (ADR-026). Les appels " +
+      "partent du navigateur : aucun numéro de téléphone n'est encore rattaché, donc tous " +
+      "sont marqués essai.",
   },
   {
     key: "transcription",
-    label: "Transcription et résumé post-appel",
+    label: "Transcription de l'appel",
+    status: "TESTED",
+    requiredEnv: ["VOICE_API_KEY"],
+    notes:
+      "Produite par le fournisseur de voix et conservée tour par tour avec horodatage " +
+      "(migration 0023). Vérifiée le 23 octobre. Qualité en français perfectible : noms " +
+      "propres et numéros dictés restent mal entendus (voir docs/VOICE_PROVIDERS.md).",
+  },
+  {
+    key: "recording-storage",
+    label: "Enregistrement audio conservé chez nous",
+    status: "TESTED",
+    requiredEnv: ["SUPABASE_SERVICE_ROLE_KEY"],
+    notes:
+      "Vérifié le 23 octobre : fichier rapatrié depuis le fournisseur vers le bucket privé, " +
+      "servi par adresse signée, écouté depuis la fiche d'appel. Les adresses du fournisseur " +
+      "expirent, d'où le rapatriement immédiat dans le webhook.",
+  },
+  {
+    key: "ai-postcall",
+    label: "Résumé et extraction après appel",
     status: "BLOCKED_EXTERNAL_CONFIG",
-    blockedBy: "Fournisseur non choisi.",
+    blockedBy: "Clé d'un fournisseur compatible OpenAI (AI_API_KEY). Mistral conseillé pour l'Europe.",
     requiredEnv: ["AI_PROVIDER", "AI_API_KEY"],
+    notes:
+      "Produits par nous à partir de la transcription conservée en base, et non par le " +
+      "fournisseur de voix, dont le plan d'analyse est accepté puis ignoré (ADR-031). " +
+      "Sans clé, un résumé simulé s'affiche en disant franchement qu'il est simulé.",
   },
   {
     key: "messaging",
-    label: "SMS de confirmation",
+    label: "SMS (confirmation, modification, annulation)",
     status: "BLOCKED_EXTERNAL_CONFIG",
-    blockedBy: "Dépend du choix de l'opérateur téléphonique.",
+    blockedBy: "Compte opérateur et numéro expéditeur.",
     requiredEnv: ["MESSAGING_PROVIDER", "MESSAGING_API_KEY", "MESSAGING_SENDER_ID"],
   },
 ] as const;

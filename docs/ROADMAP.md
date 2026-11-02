@@ -65,3 +65,38 @@ d'enregistrer un appel réel si le modèle applicable n'est pas marqué validé 
              │            └────────────┘
              └── le CRM doit exister avant que Sophie ait quelque chose à remplir
 ```
+
+
+## État au 2026-11-02 (version 0.13.0)
+
+### Phases terminées, au sens du code
+
+| Phase | État |
+|---|---|
+| 0 — Fondations | fait, vérifié contre la vraie base |
+| 1 — Entreprise et Sophie | fait, plus les écrans de modification après inscription |
+| 2 — CRM | fait |
+| 3 — Agenda | fait, vérifié avec Google |
+| 4 — Téléphonie et voix | fait, vérifié par de vrais appels depuis le navigateur |
+| 5 — Intelligence post-appel | audio et transcription vérifiés ; résumé et extraction écrits, jamais exercés |
+| 6 — Workflow complet | écrit en entier ; SMS jamais envoyé pour de vrai |
+| 7 — Administration SaaS | écrit en entier, jamais exercé en conditions réelles |
+| 8 — Durcissement | partiel : tests et documentation à jour, préproduction documentée mais non montée |
+
+### Ce qui n'avance plus sans vous
+
+1. **Un numéro de téléphone.** Tant qu'il n'y en a pas, tous les appels sont des essais et
+   rien ne peut être vérifié de bout en bout.
+2. **Une clé de fournisseur d'IA.** Sans elle, le résumé reste simulé.
+3. **Un compte opérateur SMS.** Sans lui, les messages restent en file.
+4. **La validation de l'application Google.** Sans elle, chaque client perd son agenda sept
+   jours après l'avoir connecté.
+5. **La liste juridique** de `LEGAL_COMPLIANCE.md`, points L1 à L12.
+
+### Ce qui reste à construire, et qui ne dépend de personne
+
+- Purge des transcriptions et des SMS (voir SECURITY.md, écart connu).
+- Adaptateurs WhatsApp, e-mail, formulaire web.
+- Envoi des invitations par e-mail (aujourd'hui, le lien est affiché et transmis à la main).
+- Réglages de notification par utilisateur.
+- Tests de bout en bout automatisés sur un environnement de préproduction.

@@ -9,9 +9,12 @@ import { InstallButton } from "@/components/pwa/install-button";
 export function AppHeader({
   organizationName,
   sophieActive,
+  alertes = 0,
 }: {
   organizationName: string;
   sophieActive: boolean;
+  /** Nombre d'alertes non lues. Zero = pas de pastille, pas de bruit. */
+  alertes?: number;
 }) {
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-paper/95 backdrop-blur">
@@ -22,6 +25,15 @@ export function AppHeader({
 
         <div className="flex shrink-0 items-center gap-2">
           <InstallButton />
+          {alertes > 0 ? (
+            <Link
+              href="/app/notifications"
+              aria-label={`${alertes} alerte${alertes > 1 ? "s" : ""} non lue${alertes > 1 ? "s" : ""}`}
+              className="flex min-h-10 min-w-10 items-center justify-center rounded-control border border-attention bg-attention-soft px-3 text-sm font-semibold text-attention"
+            >
+              {alertes > 9 ? "9+" : alertes}
+            </Link>
+          ) : null}
           <Link
             href="/app/sophie"
             className={cn(

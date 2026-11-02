@@ -9,52 +9,48 @@
 
 ## Où en est le projet
 
-**Version** 0.12.0 · **Phase 5 écrite en entier ; audio et résumé non encore constatés sur un appel** · **Vérifié le 2026-10-23**
+**Version** 0.13.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
-Pas `PRODUCTION READY` : la `PRE_PRODUCTION_LEGAL_CHECKLIST` de
-`docs/LEGAL_COMPLIANCE.md` n'est pas validée. Aucun client réel tant qu'elle ne l'est pas.
-Le développement technique continue normalement.
+Pas `PRODUCTION READY`, et pas « candidate à la 1.0 » non plus. Trois fonctions centrales
+n'ont jamais touché un service réel : le résumé (pas de clé d'IA), le SMS (pas de compte
+opérateur), l'appel sur un vrai numéro (pas de numéro). La `PRE_PRODUCTION_LEGAL_CHECKLIST`
+de `docs/LEGAL_COMPLIANCE.md` reste ouverte.
 
-### Le scénario du cahier des charges, section 63 : où il en est
+### Le scénario du cahier des charges, section 63
 
 | Étape | État |
 |---|---|
-| L'artisan configure entreprise, métier, services, horaires | ✅ vérifié |
-| Il connecte son agenda Google | ✅ vérifié par un événement réel le 2026-10-15 |
-| Un client appelle, Sophie répond en français | ✅ vérifié le 2026-10-22 |
+| Configuration entreprise, métier, services, horaires | ✅ vérifié |
+| Agenda Google connecté | ✅ vérifié le 2026-10-15 par un événement réel |
+| Un client appelle, Sophie répond en français | ✅ vérifié les 22 et 23 octobre |
 | Elle comprend, identifie ou crée le contact | ✅ vérifié |
-| Elle vérifie les **vraies** disponibilités et propose un créneau | ✅ vérifié |
-| Le créneau est bloqué, le rendez-vous apparaît « À valider » | ✅ vérifié |
-| L'artisan est alerté sur l'accueil | ✅ depuis 0.10.0 |
-| L'audio est conservé dans notre espace européen | ❌ Phase 5 |
-| Transcription, résumé, extraction | ❌ Phase 5 |
-| Il accepte, l'agenda Google est mis à jour | ⚠️ code en place, **non vérifié avec un vrai rendez-vous** |
-| Le client reçoit un SMS | ❌ Phase 6 |
+| Elle vérifie les vraies disponibilités, propose un créneau | ✅ vérifié |
+| Le créneau est bloqué, rendez-vous « À valider » | ✅ vérifié |
+| L'artisan est alerté | ✅ accueil, pastille et écran d'alertes |
+| L'audio est conservé chez nous et écoutable | ✅ vérifié le 2026-10-23 |
+| La transcription apparaît | ✅ vérifié |
+| Le résumé apparaît | ⚠️ écrit, produit par nous (ADR-031), **jamais exercé** : pas de clé |
+| Il accepte, l'agenda Google est mis à jour | ⚠️ écrit, **jamais exercé** avec un vrai rendez-vous |
+| Le client reçoit le SMS | ⚠️ écrit, **jamais envoyé** : pas de compte opérateur |
 
-Le point le plus trompeur de ce tableau est l'avant-dernier : `pushAppointment()` dans
-`src/app/(app)/app/agenda/actions.ts` est écrit et appelé à l'acceptation d'un rendez-vous,
-mais aucun rendez-vous réel n'est passé par ce chemin. Il doit être vérifié avant d'être
-compté comme acquis.
+Les trois dernières lignes sont les seules qui restent, et aucune ne dépend du code.
 
-### Vérifications passées, exécutées le 2026-10-22
+### Vérifications passées, exécutées le 2026-11-02
 
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  183 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  287 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
 
 **Ces quatre contrôles ne suffisent pas.** La version 0.5.1 les passait tous et son
-déploiement a pourtant été refusé par Vercel : la tâche planifiée était trop fréquente pour
-un compte Hobby, règle appliquée avant la compilation (ADR-024). `tests/vercel-config.test.ts`
-couvre ce cas. Avant d'annoncer une version livrable, **vérifier qu'un déploiement réel est
-passé**, pas seulement que le build est vert en local.
+déploiement a été refusé par Vercel (ADR-024). Avant d'annoncer une version livrable,
+vérifier qu'un déploiement réel est passé.
 
 Les 17 tests ignorés sont la suite d'isolation multi-tenant et un contrôle de
-configuration. Ils **ont tourné avec succès contre la vraie base le 2026-09-08** ; ils
-s'ignorent seulement quand les variables `SUPABASE_TEST_*` sont absentes de `.env.local`.
+configuration. Ils **ont tourné avec succès contre la vraie base le 2026-09-08**.
 
 ## Ce qui fonctionne réellement
 
@@ -107,6 +103,27 @@ s'ignorent seulement quand les variables `SUPABASE_TEST_*` sont absentes de `.en
 - Accueil : rendez-vous à valider, appels à rappeler et appels échoués (0.10.0). Un appel
   dont rien n'est sorti est la seule perte qui était invisible ; elle ne l'est plus.
 
+**Workflow du rendez-vous (Phase 6, 0.13.0)**
+- Accepter, refuser avec motif, proposer un autre horaire, annuler. Chaque décision peut
+  prévenir le client, et l'échec du message ne défait jamais la décision.
+- Page publique de réponse du client, par jeton, sans compte (ADR-034).
+- File des messages sortants avec reprise, accusés de réception, SMS entrants.
+- Alertes avec déduplication, pastille dans l'en-tête, écran dédié.
+
+**Réglages (0.13.0)**
+- Services, horaires, absences et vacances, équipe et invitations, connaissances de Sophie,
+  intégrations, consommation du mois. Chaque écran vérifie le rôle côté serveur.
+
+**Administration de la plateforme (Phase 7, 0.13.0)**
+- Entreprises, métiers modifiables sans déploiement, offres, abonnements, consommation,
+  erreurs des fournisseurs, santé des intégrations.
+- Autorisation entièrement séparée de celle des entreprises. Aucun accès aux
+  enregistrements (ADR-033). Chaque écriture est journalisée.
+
+**Conversations (0.13.0)**
+- Entité `Conversation` avec les cinq canaux ; fil unifié sur la fiche contact réunissant
+  appels, messages, rendez-vous et demandes.
+
 ## Ce qui est écrit mais jamais exercé
 
 Le registre `src/lib/providers/status.ts` fait foi. Un test interdit d'y déclarer une
@@ -114,33 +131,36 @@ intégration externe `PRODUCTION_READY`.
 
 | Élément | État | Ce qui manque |
 |---|---|---|
-| Écriture d'un rendez-vous confirmé dans Google Calendar | code en place, jamais exercé | accepter un vrai rendez-vous « À valider » et vérifier l'événement dans l'agenda |
-| Résumé et extraction structurée | plan d'analyse écrit, poussé par `npm run vapi:tools -- --apply`, **jamais vérifié sur un appel** |
-| Transcription | vérifiée sur un appel réel le 2026-10-23 : conversation et horodatage corrects | — |
-| (ancienne ligne) | écrits, jamais exercés contre un vrai rapport | un appel d'essai après déploiement de 0.11.0 ; le rapport brut sera conservé dans `call_events` et permettra de corriger la lecture si un champ diffère |
-| Audio | non commencé | un écran pour activer l'enregistrement et accepter la politique : `recording_allowed()` renvoie faux partout aujourd'hui (section 42). Ensuite seulement, copie dans le bucket privé et URL signée |
-| Provisionnement automatique de l'assistant Vapi | script écrit (`npm run vapi:tools`) | exercé en local uniquement ; dépend de `VOICE_API_KEY` |
+| Résumé et extraction | `BLOCKED_EXTERNAL_CONFIG` | `AI_API_KEY`. Sans elle, un résumé **simulé** s'affiche en disant qu'il l'est |
+| SMS (confirmation, refus, annulation, proposition) | `BLOCKED_EXTERNAL_CONFIG` | compte opérateur et numéro expéditeur. L'adaptateur gère signature, idempotence et reprise, mais aucun SMS n'est jamais parti |
+| Écriture d'un rendez-vous confirmé dans Google Calendar | code en place | accepter un vrai rendez-vous et vérifier l'événement |
+| Réponse du client à une proposition d'horaire | code en place | dépend du SMS pour que le lien arrive |
+| Administration de la plateforme | écrite en entier | aucun compte administrateur n'a encore été créé (`profiles.is_platform_admin`) |
+| SMS entrant et conversations | code en place | dépend du compte opérateur |
 
-**Vérifié depuis, et acquis :** OAuth Google et disponibilités réelles (2026-10-15),
-Sophie Voice sur un vrai numéro avec outils métier (2026-10-22).
+**Vérifié et acquis :** OAuth Google et disponibilités réelles (15 octobre), Sophie Voice
+avec ses huit outils (22-23 octobre), audio rapatrié et écouté, transcription horodatée
+(23 octobre).
 
 ## Ce qui est partiel
 
 | Élément | État |
 |---|---|
-| Déclaration d'un numéro de téléphone | **aucun écran, aucun script** : `phone_numbers` s'écrit en SQL à la main. Tant que la table est vide, `openCall()` renvoie `null` et un appel réel ne crée aucune ligne. Tous les appels passent par le repli `openTestCall()` et sont marqués `is_test` |
-| Transcription en français | qualité insuffisante avec Soniox : « Tongeren » → « Tangerine », numéro tronqué. Deepgram et Google restent à comparer. Aucun classement public francophone n'existe (`docs/VOICE_PROVIDERS.md`) |
-| Sophie coupe la parole | réglages du *Start/Stop Speaking Plan* identifiés, à appliquer et retester |
-| Écran Sophie | l'écran *Sophie → Connaissances* reste à faire (la table `business_knowledge` existe) |
-| Paramètres | pas d'édition des services et horaires après l'onboarding ; pas de gestion des absences |
+| Transcription en français | qualité insuffisante : « Tongeren » → « Tangerine », numéros dictés tronqués. Deepgram et Google restent à comparer (`docs/VOICE_PROVIDERS.md`) |
+| Sophie coupe la parole | réglages identifiés, à appliquer et retester |
+| Purge des transcriptions et des SMS | **aucune** : seuls l'audio et les rapports bruts se purgent. Contiennent nom, adresse, problème. À trancher avant production |
+| WhatsApp, e-mail, formulaire web | structure en base, aucun adaptateur, aucun point d'entrée |
+| Invitations d'équipe | le lien est affiché et transmis à la main : aucun service d'envoi d'e-mail |
+| Réglages de notification | déduplication en base, mais pas de préférence par utilisateur |
 | `src/types/database.ts` | écrit à la main (ADR-012), à régénérer depuis le schéma réel |
-| Application Google | en mode **Test** : les autorisations sont révoquées au bout de 7 jours (ADR-028). Prérequis de mise en production |
+| Application Google | en mode Test : autorisations révoquées à 7 jours (ADR-028) |
+| Préproduction | documentée dans `DEPLOYMENT.md`, jamais montée |
 
 ## Ce qui n'est pas commencé
 
-Enregistrement audio dans le bucket privé, lecteur alimenté par un vrai fichier,
-transcription, résumé, extraction structurée, jobs asynchrones et reprises, SMS,
-notifications, console plateforme, abonnements et usage, observabilité.
+Adaptateurs WhatsApp, e-mail et formulaire web. Envoi d'e-mails transactionnels. Tests de
+bout en bout automatisés. Facturation réelle (les offres et abonnements existent, aucun
+paiement n'est branché, et aucun prix n'est fixé — volontairement, section 38).
 
 ## Architecture en trois phrases
 
@@ -150,7 +170,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — vingt-deux
+## Migrations — vingt-huit
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -191,6 +211,13 @@ projet, et le premier critère de choix du fournisseur de voix.
 0022_call_links                  call_id sur leads, appointments, tasks ;
                                  dashboard_counts compte les rendez-vous a valider,
                                  les appels sans suite et les appels echoues
+0025_summary_pipeline            colonnes de reprise du resume, calls_awaiting_summary()
+0026_appointment_workflow        outbound_messages, notifications, proposition d horaire
+                                 par jeton, respond_to_proposal(), messages_to_send()
+0027_platform_admin              plans, subscriptions, usage_records, provider_errors,
+                                 platform_overview(), ecriture des metiers
+0028_conversations               conversations, conversation_messages,
+                                 receive_inbound_message()
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -288,76 +315,46 @@ toucher au code :
 
 ## Prochaines tâches recommandées
 
-**0. Obtenir un numéro de téléphone.** C'est le blocage du moment. Aucun numéro n'existe
-côté Vapi ni en base, donc aucun appel réel n'est possible et tout est marqué essai. Court
-terme : un numéro américain gratuit chez Vapi, pour exercer la chaîne réelle. Avant le
-premier client : un numéro belge ou français, qui demande une preuve d'adresse et plusieurs
-jours de dossier.
+**1. Appliquer les migrations 0025 à 0028**, dans l'ordre, puis déployer. Sans elles,
+plusieurs écrans échouent : le code attend des colonnes et des tables qui n'existent pas
+encore.
 
-**1. Appliquer la migration 0022**, puis déployer. Elle ajoute `call_id` sur `leads`,
-`appointments` et `tasks`, reprend l'historique, et étend `dashboard_counts()`. Sans elle,
-l'accueil et la liste des appels échouent : le type TypeScript attend deux colonnes que la
-fonction ne renvoie pas encore.
+**2. Créer le premier compte administrateur de plateforme.** L'espace `/admin` est écrit
+mais inaccessible : aucun profil n'a `is_platform_admin = true`. Une ligne de SQL.
 
-**2. Comparer les transcripteurs.** Soniox, puis Deepgram, puis Google, en dictant à chaque
-fois le même nom, la même ville et le même numéro. C'est la tâche la plus rentable du
-moment : tant que la transcription se trompe, tout ce qui est en aval travaille sur des
-données fausses. Aucun classement public francophone ne permet de trancher sur dossier.
+**3. Renseigner `AI_API_KEY`** pour que le résumé cesse d'être simulé. Mistral est le choix
+à retenir pour l'Europe : les transcriptions contiennent nom, adresse et problème d'un
+client.
 
-**3. Appliquer les réglages de prise de parole** (`On Number Seconds` 2.5, `Smart
-Endpointing` `vapi`, `On No Punctuation Seconds` 2.0, `Number of Words` 2, `Voice Seconds`
-0.3) et retester un numéro dicté.
+**4. Obtenir un numéro de téléphone.** C'est ce qui bloque la vérification de bout en bout.
+Court terme : un numéro américain gratuit chez le fournisseur de voix. Avant le premier
+client : un numéro belge ou français, qui demande une preuve d'adresse et plusieurs jours.
 
-**4. Vérifier l'acceptation d'un rendez-vous** de bout en bout : accepter un « À valider »
-et contrôler que l'événement apparaît dans Google Calendar.
+**5. Ouvrir un compte opérateur SMS**, puis déclarer les deux webhooks (voir
+`DEPLOYMENT.md`, section 5).
 
-**5. Constater la Phase 5 sur un appel réel.** Tout est écrit, rien n'est prouvé : le
-résumé, l'extraction structurée et le rapatriement de l'audio n'ont jamais été vus
-fonctionner. Un seul appel d'essai suffit à les vérifier tous les trois.
+**6. Lancer la validation de l'application Google** (ADR-028). Le délai ne se rattrape pas.
 
-Pour que l'audio soit conservé, l'organisation doit être une organisation d'essai
-(`is_test_organization`), parce que l'annonce applicable n'est pas validée juridiquement
-et que `recording_allowed()` refuse alors tout appel réel. **Remettre ce drapeau à faux
-avant le premier vrai client** : c'est un prérequis de mise en production.
+**7. Trancher la purge des transcriptions et des SMS.** C'est le dernier écart de
+conservation connu, et il porte sur des données personnelles.
 
-**6. Ancien point 5 — Finir la Phase 5 — l'audio.** La transcription et le résumé sont faits depuis 0.11.0.
-Il reste, dans cet ordre : un écran d'activation de l'enregistrement avec acceptation de la
-politique (sans lui, `recording_allowed()` renvoie faux et rien ne sera jamais enregistré) ;
-la copie du fichier vers un bucket privé ; la route `/api/calls/[id]/audio` qui sert une URL
-signée après contrôle de l'organisation — **cette route est référencée par l'interface mais
-n'existe pas encore** ; la purge à échéance.
-
-Le rapport brut de chaque appel est conservé dans `call_events`. Les noms de champs réels
-sont désormais connus, relevés sur un appel du 23 octobre : `message.recordingUrl`,
-`message.stereoRecordingUrl`, `message.artifact.presignedStereoUrl`,
-`message.artifact.presignedUrlsExpiresAt`.
-
-**Ces adresses expirent.** Le rapatriement doit donc avoir lieu dans le traitement du
-webhook de fin d'appel, ou dans les minutes qui suivent — jamais dans une tâche de nuit.
-
-Le fournisseur enregistre par défaut, indépendamment de `recording_allowed()`, qui ne
-gouverne que NOTRE conservation. Avant la mise en production, trancher : couper
-l'enregistrement côté fournisseur, ou rapatrier les fichiers dans le bucket européen.
-
-**6. Lancer la validation de l'application Google** (ADR-028). Le délai ne se rattrape pas,
-et sans elle chaque client perdra son agenda une semaine après l'avoir connecté.
-
-**Dettes utiles à tout moment** : écran *Sophie → Connaissances*, édition des services et
-horaires, gestion des absences, régénération de `src/types/database.ts`.
+**Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
+transcripteurs, monter la préproduction.
 
 ## Ce qui attend une décision
 
-**Tranché** : pays (France et Belgique), rétention audio (30 jours), design et palette,
-domaine de production (**zelicall.com**, ADR-023), modèle de numéro — l'artisan garde son
-numéro et le renvoie (ADR-022), fournisseur de voix — Vapi, région US faute d'accès
-libre-service à la région européenne (ADR-026).
+**Tranché** : pays (France et Belgique), rétention audio (30 jours), design, domaine
+(**zelicall.com**, ADR-023), modèle de numéro — renvoi depuis le numéro de l'artisan
+(ADR-022), fournisseur de voix — Vapi, région US faute de libre-service européen (ADR-026),
+résumé produit par nous (ADR-031), opérateur SMS pressenti — compatible Twilio (ADR-032),
+séparation stricte de l'administration plateforme (ADR-033).
 
-**Ouvert** : nom commercial du produit — le domaine est zelicall.com, le code dit
-« Sophie IA » partout (ADR-023) ; transcripteur ; fournisseur IA post-appel ; fournisseur
-SMS ; durées de conservation autres que l'audio (ADR-018).
+**Ouvert** : nom commercial du produit — le domaine est zelicall.com, le code dit « Sophie
+IA » partout (ADR-023) ; transcripteur ; fournisseur d'IA post-appel (Mistral conseillé,
+non décidé) ; durées de conservation hors audio (ADR-018) ; prix des offres (volontairement
+non fixés, section 38).
 
-**Chantiers non techniques** : `docs/LEGAL_COMPLIANCE.md`, points L1 à L12, avec pour
-chacun ce qu'il bloque. Ils peuvent avancer en parallèle du développement.
+**Chantiers non techniques** : `docs/LEGAL_COMPLIANCE.md`, points L1 à L12.
 
 Si une session future a besoin d'une de ces valeurs, la réponse correcte est de la
 demander, pas de la choisir.

@@ -197,3 +197,20 @@ export async function etatLigneSophie(organizationId: string): Promise<EtatLigne
     (numeros.data ?? []) as NumeroRelie[],
   );
 }
+
+/**
+ * Le nombre d'alertes non lues, pour la pastille de l'en-tête.
+ *
+ * `head: true` : on ne rapatrie aucune ligne, seulement le compte. Cette
+ * requête est faite à chaque page de l'application.
+ */
+export async function alertesNonLues(organizationId: string): Promise<number> {
+  const supabase = await createServerSupabase();
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationId)
+    .is("read_at", null);
+
+  return count ?? 0;
+}

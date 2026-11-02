@@ -3,6 +3,8 @@ import { VapiVoiceProvider } from "@/lib/providers/voice/vapi";
 import { closeCall, openCall, openTestCall, schedulePostCall } from "@/lib/calls/registry";
 import { etatsDepuisRapport, lireRapport } from "@/lib/calls/report";
 import { rapatrierEnregistrement } from "@/lib/calls/recording-storage";
+import { genererIntelligenceAppel } from "@/lib/calls/intelligence";
+import { enregistrerUsage } from "@/lib/platform/usage";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -183,6 +185,20 @@ async function terminer(rawBody: string, providerCallId: string, occurredAt: Dat
     endedReason: raison,
   });
 
+  // La consommation se compte une seule fois par appel, meme si le webhook
+  // est rejoue : la cle de deduplication est l identifiant de l appel chez le
+  // fournisseur (section 38).
+  const secondes = payload.message?.durationSeconds;
+  if (typeof secondes === "number" && secondes > 0 && !appel.is_test) {
+    await enregistrerUsage({
+      organizationId,
+      kind: "VOICE_MINUTES",
+      quantity: secondes / 60,
+      callId,
+      dedupeKey: `call:${providerCallId}`,
+    });
+  }
+
   await exploiterRapport(callId, organizationId, Boolean(appel.is_test), payload);
 }
 
@@ -264,11 +280,20 @@ async function exploiterRapport(
     if (error) console.error("[voice/events] transcription non écrite", error.message);
   }
 
-  // 4. Le résumé et les données extraites.
+  // 4. Le résumé et les données extraites, quand le fournisseur les donne.
+  //
+  //    Il ne les donne pas, en pratique : son plan d'analyse est accepté puis
+  //    ignoré (ADR-031). On garde ce chemin parce qu'il est gratuit quand il
+  //    fonctionne, et on produit nous-mêmes à l'étape 7 quand il ne donne rien.
   if (rapport.resume || rapport.donnees) {
     const { error } = await admin
       .from("calls")
-      .update({ summary: rapport.resume, structured_data: rapport.donnees })
+      .update({
+        summary: rapport.resume,
+        structured_data: rapport.donnees,
+        summary_source: "VAPI",
+        summary_generated_at: new Date().toISOString(),
+      })
       .eq("id", callId);
     if (error) console.error("[voice/events] résumé non écrit", error.message);
   }
@@ -298,6 +323,16 @@ async function exploiterRapport(
       sourceUrl: rapport.audioUrl,
       retentionDays: (org?.audio_retention_days as number | undefined) ?? 30,
     });
+  }
+
+  // 7. Le résumé, produit par nous si le fournisseur n'en a pas donné.
+  //
+  //    En dernier, et c'est voulu : l'audio passe avant parce que ses adresses
+  //    expirent, alors qu'un résumé manquant est rattrapable à tout moment par
+  //    le travail planifié ou par le bouton « Réessayer ». Si cette fonction
+  //    dépasse le temps imparti au webhook, rien n'est perdu.
+  if (!rapport.resume) {
+    await genererIntelligenceAppel(callId);
   }
 }
 

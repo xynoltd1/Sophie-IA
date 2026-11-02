@@ -336,3 +336,75 @@ doit apparaître et afficher des exécutions réussies.
 **Rappel** : la protection de déploiement Vercel bloque les webhooks. Avant la Phase 4, il
 faudra exempter `/api/voice/*` et `/api/webhooks/*`, sinon les appels des fournisseurs
 recevront une page de connexion au lieu de notre endpoint.
+
+## 5. Variables ajoutées en 0.13.0
+
+### Intelligence post-appel (résumé et extraction)
+
+```
+AI_PROVIDER=openai          # ou mistral, groq, ou tout service compatible
+AI_API_KEY=...              # la clé du service choisi
+AI_BASE_URL=https://api.openai.com/v1
+AI_MODEL=gpt-4.1-mini
+```
+
+Sans `AI_API_KEY`, l'application fonctionne : elle affiche un résumé **simulé**, qui dit
+qu'il est simulé. Rien n'est caché, rien n'est inventé.
+
+Pour une entreprise européenne, Mistral évite d'envoyer des transcriptions d'appels hors
+d'Europe :
+
+```
+AI_PROVIDER=mistral
+AI_BASE_URL=https://api.mistral.ai/v1
+AI_MODEL=mistral-small-latest
+```
+
+### SMS
+
+```
+MESSAGING_PROVIDER=twilio
+MESSAGING_ACCOUNT_SID=AC...
+MESSAGING_API_KEY=...        # le jeton d'authentification
+MESSAGING_SENDER_ID=+32...   # ou un nom, SOPHIE, selon le pays
+```
+
+Deux webhooks à déclarer chez l'opérateur :
+
+| Usage | URL |
+|---|---|
+| Accusés de réception | `https://<domaine>/api/messaging/status` |
+| SMS entrants | `https://<domaine>/api/messaging/inbound` |
+
+Les deux vérifient la signature de l'opérateur avant toute écriture.
+
+### Travaux planifiés
+
+`vercel.json` déclare maintenant deux tâches quotidiennes, le maximum d'un compte Hobby :
+
+| Tâche | Heure | Rôle |
+|---|---|---|
+| `/api/jobs/calendar-sync` | 04:00 | rattrape les agendas non consultés |
+| `/api/jobs/post-call` | 04:40 | résumés manqués, purge audio, purge des rapports, file SMS, libération des créneaux bloqués |
+
+Les deux exigent `CRON_SECRET` (ajouté par l'hébergeur) ou `JOB_RUNNER_SECRET`.
+
+## 6. Environnement de préproduction
+
+La chaîne recommandée est : local → GitHub → aperçu Vercel → production.
+
+Pour une préproduction réelle, il faut **un second projet Supabase**. Partager la base entre
+la préproduction et la production ferait tester sur des données de vrais clients, ce qui
+est exactement ce qu'un environnement de préproduction doit éviter.
+
+À dupliquer pour cet environnement :
+
+1. un projet Supabase distinct, migrations appliquées dans l'ordre ;
+2. les variables Vercel pour l'environnement *Preview* ;
+3. une application Google distincte, avec sa propre URL de retour ;
+4. un assistant de voix distinct, pointant vers le domaine d'aperçu ;
+5. `NEXT_PUBLIC_APP_ENV=staging`.
+
+**À ne jamais partager entre les deux** : la clé de service Supabase, la clé de chiffrement
+des jetons d'agenda, le secret des webhooks. Une préproduction compromise ne doit pas
+donner accès à la production.

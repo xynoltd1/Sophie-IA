@@ -894,3 +894,154 @@ La migration applique une derniere fois l ancienne heuristique — meme contact,
 deux heures suivant le debut de l appel — pour rattacher les lignes existantes, puis ne s en
 sert plus jamais. Sans cette reprise, tous les appels deja passes seraient apparus comme
 « sans suite » des le deploiement, y compris ceux qui avaient produit un rendez-vous.
+
+---
+
+## ADR-031 — Le resume et l extraction sont produits par nous, pas par le fournisseur de voix
+
+**Date** 2026-11-02 · **Statut** decide · **Remplace** la dependance au plan d analyse du fournisseur
+
+### Ce qui s est passe
+
+Le fournisseur de voix sait produire un resume d appel. Le 23 octobre, nous avons pousse
+notre plan d analyse par son interface de programmation. Il l a accepte. Il l a stocke. Il
+l a renvoye tel quel quand on l interrogeait — `summaryPlan.enabled: true`.
+
+Et les appels se sont executes avec `summaryPlan.enabled: false`.
+
+Trois corrections successives n y ont rien change. La derniere version envoyee a ete
+acceptee, relue, confirmee active, puis utilisee desactivee pendant l appel qui a suivi
+quatre minutes plus tard.
+
+### La decision
+
+Le resume et l extraction structuree sont produits par l application, a partir de la
+transcription deja conservee en base (migration 0023).
+
+`AIProvider` est une abstraction compatible avec les interfaces de type OpenAI, ce qui
+couvre avec le meme code OpenAI, Mistral, Groq et la plupart des serveurs auto-heberges.
+L URL de base et le modele sont des variables d environnement : changer de fournisseur ne
+demande pas de modifier une ligne.
+
+### Pourquoi c est meilleur, au-dela de l incident
+
+Trois proprietes qu on n avait pas, et qu on ne pouvait pas avoir :
+
+- **Reessayer.** Un resume rate se relance, depuis l ecran ou depuis le travail planifie.
+  Le plan du fournisseur ne laissait aucune prise.
+- **Corriger.** Le prompt vit dans `src/lib/sophie/analysis.ts`, versionne, teste.
+- **Choisir ou partent les donnees.** Une transcription d appel contient le nom, l adresse
+  et le probleme d un client. Le jour ou cette question sera tranchee, il suffira de
+  pointer `AI_BASE_URL` vers un fournisseur europeen.
+
+### Le cout
+
+Un appel de modele par appel telephonique, a notre charge. C est le prix de la fiabilite,
+et il est modeste au regard du cout d une minute de voix.
+
+### Ce qui reste du fournisseur
+
+S il renvoie un resume un jour, on le garde : c est gratuit. Le notre ne se declenche que
+lorsqu il n en donne pas, ce qui est le cas aujourd hui a chaque appel.
+
+---
+
+## ADR-032 — Un message sortant est une entite, pas un effet de bord
+
+**Date** 2026-11-02 · **Statut** decide
+
+### Le probleme
+
+« Envoyer un SMS de confirmation » peut s ecrire en trois lignes dans l action qui confirme
+le rendez-vous. Cette version marche tant que l operateur repond. Le jour ou il ne repond
+pas, le professionnel croit son client prevenu, et le client attend un artisan dont il n a
+jamais eu confirmation.
+
+### La decision
+
+Table `outbound_messages` (migration 0026). On met en file, puis on envoie. Le message
+existe avant la tentative et lui survit.
+
+Il en decoule trois choses que le cahier des charges demande et qu on ne pouvait pas offrir
+autrement : afficher « SMS non envoye — Reessayer » (section 26), reprendre les envois
+rates par le travail planifie, et lire l historique des messages d un client.
+
+### La cle d idempotence
+
+`idempotency_key` vaut, par exemple, `APPOINTMENT_CONFIRMED:<id du rendez-vous>`. Deux clics
+sur « Accepter » ne produisent qu un message. Confirmer puis annuler en produit deux, parce
+que la cle change. L operateur recoit la meme cle et refuse lui aussi le doublon.
+
+### Ce qui ne doit jamais arriver
+
+Un echec d envoi n annule pas le rendez-vous. Le rendez-vous est la realite ; le SMS n en
+est que l annonce. L ordre des operations dans `deciderEtPrevenir` applique cette regle, et
+un test verifie que l ordre ne s inverse pas.
+
+---
+
+## ADR-033 — L administration de la plateforme n a pas acces aux enregistrements
+
+**Date** 2026-11-02 · **Statut** decide · **Engagement de confidentialite**
+
+### La decision
+
+L espace `/admin` permet de gerer les entreprises, les metiers, les offres, les
+abonnements, la consommation et la sante du systeme. Il ne donne acces ni aux
+enregistrements audio, ni aux transcriptions, ni aux contacts des clients des entreprises.
+
+### Pourquoi
+
+Un enregistrement est la voix d une personne qui a appele un plombier. Elle a ete informee
+que son appel etait enregistre par ce plombier. Elle n a consenti a rien d autre, et
+surement pas a ce que l editeur du logiciel l ecoute.
+
+Le cahier des charges le formule a sa maniere (section 37) : « ne donne pas automatiquement
+au Super Admin un acces libre et non audite aux audios clients ». Nous allons plus loin :
+pas d acces du tout par l interface. Une demande judiciaire se traite hors application, et
+se journalise.
+
+### Comment c est tenu
+
+Deux chemins d autorisation separes de bout en bout. `is_platform_admin()` lit une colonne
+du profil ; `is_org_member()` lit l appartenance a une organisation. Aucune policy de la
+migration 0027 ne melange les deux. Un test parcourt tout le code de `/admin` et echoue s il
+y trouve une reference a `recording_path` ou au bucket audio.
+
+### La limite connue
+
+Le client d administration (cle de service) contourne RLS par construction, et deux pages
+de `/admin` s en servent pour lister les entreprises — sans quoi elles seraient vides. La
+garde applicative est alors la seule protection, d ou sa place en premiere ligne de chaque
+page et un test qui le verifie.
+
+---
+
+## ADR-034 — Le client repond sans compte, par un lien a jeton
+
+**Date** 2026-11-02 · **Statut** decide
+
+### Le probleme
+
+La section 23 demande qu un nouvel horaire propose ne devienne confirme qu apres accord du
+client. Or le client n a pas de compte, et n en aura jamais : c est quelqu un qui a appele
+un plombier une fois.
+
+### La decision
+
+Un jeton imprevisible, valable sept jours, une page publique minimale, deux boutons.
+
+La page ne montre que l entreprise, l objet, l ancien et le nouvel horaire. Ni telephone,
+ni adresse, ni notes, ni historique. Un lien recu par SMS peut etre transfere, lu sur un
+ecran verrouille, retrouve dans une sauvegarde : il ne doit jamais devenir une fiche client.
+Un test verifie que la fonction SQL publique ne renvoie aucun de ces champs.
+
+### La partie difficile
+
+Accepter deplace le rendez-vous sur le creneau propose. Entre l envoi du SMS et le clic du
+client, ce creneau a pu etre pris. La fonction `respond_to_proposal` passe donc par la meme
+contrainte d exclusion que tout le reste et, en cas de collision, renvoie `CRENEAU_PRIS` au
+lieu de confirmer un rendez-vous impossible.
+
+Le creneau d origine, lui, reste bloque tant que le client n a pas repondu. Le liberer
+exposerait a perdre les deux.

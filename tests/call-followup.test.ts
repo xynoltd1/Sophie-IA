@@ -5,6 +5,18 @@ import { SANS_SUITE, appelEchoue, sansSuite } from "@/lib/crm/calls";
 
 const RACINE = process.cwd();
 
+/** Tous les fichiers d une extension sous un dossier, recursivement. */
+function fichiers(dossier: string, extension: string): string[] {
+  const resultats: string[] = [];
+  for (const entree of readdirSync(resolve(RACINE, dossier), { withFileTypes: true })) {
+    const chemin = `${dossier}/${entree.name}`;
+    if (entree.isDirectory()) resultats.push(...fichiers(chemin, extension));
+    else if (entree.name.endsWith(extension)) resultats.push(chemin);
+  }
+  return resultats;
+}
+
+
 /**
  * Un appel sans suite est un client qui peut disparaitre en silence.
  *
@@ -145,13 +157,23 @@ describe("heures dictees par telephone", () => {
     // universelle : un rendez-vous de 8 h devenait 10 h (ADR-029), et la meme
     // faute decalait l echeance des rappels. La conversion passe par
     // instantDepuisHeureLocale(), jamais par une chaine.
-    const dossier = resolve(RACINE, "src/lib/sophie");
-    for (const fichier of readdirSync(dossier).filter((f) => f.endsWith(".ts"))) {
-      const contenu = readFileSync(resolve(dossier, fichier), "utf-8");
-      expect(
-        /\$\{\w+\}T\$\{\w+\}/.test(contenu),
-        `${fichier} assemble une heure murale a la main`,
-      ).toBe(false);
+    // La meme faute guette partout ou une heure saisie par un humain devient
+    // un instant : les outils de Sophie, mais aussi les formulaires de
+    // l application (`datetime-local` rend une heure sans fuseau).
+    // Une seule exception, et c est la bonne : `instantDepuisHeureLocale` EST
+    // la conversion. C est le seul endroit du code autorise a assembler une
+    // date et une heure, precisement pour que tous les autres s en servent.
+    const AUTORISE = ["src/lib/crm/timezone.ts"];
+
+    const suspects: string[] = [];
+    for (const fichier of fichiers("src", ".ts").concat(fichiers("src", ".tsx"))) {
+      if (AUTORISE.includes(fichier)) continue;
+      const contenu = readFileSync(resolve(RACINE, fichier), "utf-8");
+      if (/\$\{\w+\}T\$\{\w+\}/.test(contenu)) suspects.push(fichier);
+      // `new Date(` sur une valeur de formulaire datetime-local, sans passer
+      // par le fuseau de l organisation.
+      if (/new Date\(nouveauDebut\)/.test(contenu)) suspects.push(fichier);
     }
+    expect(suspects, "heure murale assemblee ou lue a la main").toEqual([]);
   });
 });

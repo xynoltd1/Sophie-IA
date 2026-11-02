@@ -3,6 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { instantDepuisHeureLocale } from "@/lib/crm/timezone";
 import { checkPhone } from "@/lib/crm/phone";
+import { notifier } from "@/lib/notifications/create";
 import {
   nombre,
   texte,
@@ -421,6 +422,20 @@ const createLead: SophieTool = {
       urgent,
     });
 
+    // Une urgence interrompt ; une demande ordinaire attend le prochain coup
+    // d'oeil. Confondre les deux, c'est apprendre a l'artisan a ignorer ses
+    // alertes (sections 27 et 34).
+    await notifier({
+      organizationId: context.organizationId,
+      category: urgent ? "CRITIQUE" : "INFO",
+      title: urgent ? `Urgence : ${titre}` : `Nouvelle demande : ${titre}`,
+      body: texte(args, "description"),
+      href: "/app/prospects",
+      subjectType: "lead",
+      subjectId: data?.id as string | undefined,
+      dedupeKey: data?.id ? `lead-${data.id}` : undefined,
+    });
+
     return {
       result: urgent
         ? "Demande urgente enregistrée. Le professionnel est prévenu immédiatement."
@@ -607,6 +622,17 @@ const createPendingAppointment: SophieTool = {
         .eq("organization_id", context.organizationId);
       if (lien) console.error("[sophie] rendez-vous non rattaché à l'appel", lien.message);
     }
+
+    await notifier({
+      organizationId: context.organizationId,
+      category: "ACTION",
+      title: "Rendez-vous à valider",
+      body: `Sophie a retenu le ${date} à ${heure}. Acceptez, modifiez ou refusez.`,
+      href: "/app/agenda",
+      subjectType: "appointment",
+      subjectId: data as unknown as string,
+      dedupeKey: data ? `appointment-${data}` : undefined,
+    });
 
     await activite(context, "APPOINTMENT_PROPOSED", `Rendez-vous provisoire le ${date} à ${heure}`, {
       appointmentId: data,
