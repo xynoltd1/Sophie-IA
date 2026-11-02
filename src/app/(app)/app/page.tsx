@@ -120,7 +120,7 @@ export default async function HomePage() {
             {counts.urgent_leads > 0 ? (
               <li>
                 <Link href="/app/prospects?filtre=urgent" className="block">
-                  <Sheet tone="urgent" className="flex items-center justify-between gap-3">
+                  <Sheet interactive tone="urgent" className="flex items-center justify-between gap-3">
                     <span className="font-medium">
                       {counts.urgent_leads} urgence{counts.urgent_leads > 1 ? "s" : ""}
                     </span>
@@ -132,7 +132,7 @@ export default async function HomePage() {
             {counts.pending_appointments > 0 ? (
               <li>
                 <Link href="/app/agenda" className="block">
-                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                  <Sheet interactive tone="attention" className="flex items-center justify-between gap-3">
                     <span className="font-medium">
                       {counts.pending_appointments} rendez-vous à valider
                     </span>
@@ -144,7 +144,7 @@ export default async function HomePage() {
             {counts.calls_no_followup > 0 ? (
               <li>
                 <Link href="/app/appels?filtre=sans-suite" className="block">
-                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                  <Sheet interactive tone="attention" className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium">
                         {counts.calls_no_followup} appel{counts.calls_no_followup > 1 ? "s" : ""} à
@@ -163,7 +163,7 @@ export default async function HomePage() {
             {counts.calls_failed > 0 ? (
               <li>
                 <Link href="/app/appels?filtre=echoues" className="block">
-                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                  <Sheet interactive tone="attention" className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium">
                         {counts.calls_failed} appel{counts.calls_failed > 1 ? "s" : ""} que Sophie n’a
@@ -181,7 +181,7 @@ export default async function HomePage() {
             {counts.new_leads > 0 ? (
               <li>
                 <Link href="/app/prospects?filtre=nouveau" className="block">
-                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                  <Sheet interactive tone="attention" className="flex items-center justify-between gap-3">
                     <span className="font-medium">
                       {counts.new_leads} nouveau{counts.new_leads > 1 ? "x" : ""} prospect
                       {counts.new_leads > 1 ? "s" : ""} à qualifier
@@ -194,7 +194,7 @@ export default async function HomePage() {
             {counts.overdue_tasks > 0 ? (
               <li>
                 <Link href="/app/prospects?filtre=retard" className="block">
-                  <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                  <Sheet interactive tone="attention" className="flex items-center justify-between gap-3">
                     <span className="font-medium">
                       {counts.overdue_tasks} tâche{counts.overdue_tasks > 1 ? "s" : ""} en retard
                     </span>
@@ -224,7 +224,7 @@ export default async function HomePage() {
             {rendezVous.map((rdv) => (
               <li key={rdv.id}>
                 <Link href="/app/agenda" className="block">
-                  <Sheet
+                  <Sheet interactive
                     tone={needsApproval(rdv.status) ? "attention" : "neutral"}
                     className="flex items-start justify-between gap-3"
                   >

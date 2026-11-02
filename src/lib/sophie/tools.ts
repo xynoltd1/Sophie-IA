@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureCalendarFresh } from "@/lib/providers/calendar/service";
 import type { VoiceToolDefinition } from "@/lib/providers/voice/types";
 import { CRM_TOOLS } from "./tools-crm";
-import type { SophieTool as SophieToolType } from "./tool-types";
+import { texte, type SophieTool as SophieToolType } from "./tool-types";
 
 /**
  * Outils métier de Sophie (section 11).
@@ -224,8 +224,16 @@ const getBusinessInformation: SophieToolType = {
       properties: {
         topic: {
           type: "string",
-          enum: ["services", "zone", "horaires"],
-          description: "Sujet de la question du client.",
+          enum: ["services", "zone", "horaires", "autre"],
+          description:
+            "Sujet de la question du client. « autre » pour tout ce qui ne rentre pas " +
+            "dans les trois premiers : conditions, matériel, déplacement, garantie.",
+        },
+        question: {
+          type: "string",
+          description:
+            "La question du client, dans ses mots. Sert à retrouver la réponse que le " +
+            "professionnel a préparée.",
         },
       },
       required: ["topic"],
@@ -235,6 +243,22 @@ const getBusinessInformation: SophieToolType = {
   async handler(args, context) {
     const admin = createAdminClient();
     const topic = typeof args.topic === "string" ? args.topic : "services";
+
+    // Les connaissances saisies par le professionnel passent avant tout le
+    // reste (section 9). C'est le seul moyen qu'il a de corriger Sophie, et
+    // jusqu'ici l'écran « Connaissances » existait sans que rien de ce qu'on
+    // y écrivait n'atteigne un appel.
+    const connue = await reponsePreparee(context.organizationId, texte(args, "question"), topic);
+    if (connue) return { result: connue };
+
+    if (topic === "autre") {
+      return {
+        result:
+          "Cette question n'a pas de réponse préparée. Dites au client que vous " +
+          "transmettez la question au professionnel, et notez-la avec create_lead ou " +
+          "create_task. N'inventez rien.",
+      };
+    }
 
     if (topic === "services") {
       const { data } = await admin
@@ -344,4 +368,57 @@ function repartir<T>(items: T[], n: number): T[] {
   if (items.length <= n) return items;
   const pas = (items.length - 1) / (n - 1);
   return Array.from({ length: n }, (_, i) => items[Math.round(i * pas)] as T);
+}
+
+/**
+ * Retrouve une réponse préparée par le professionnel.
+ *
+ * Recherche volontairement simple : les mots de la question contre la question
+ * enregistrée et sa réponse. Pas de recherche sémantique, pas de modèle — ce
+ * que Sophie dit doit venir d'une phrase écrite par un humain, et la
+ * correspondance doit être explicable (section 9).
+ *
+ * Les consignes de comportement (`INSTRUCTION`) sont toujours jointes : elles
+ * valent pour tout l'appel, pas seulement pour la question posée.
+ */
+async function reponsePreparee(
+  organizationId: string,
+  question: string | null,
+  topic: string,
+): Promise<string | null> {
+  const admin = createAdminClient();
+
+  const { data } = await admin
+    .from("business_knowledge")
+    .select("kind, question, answer")
+    .eq("organization_id", organizationId)
+    .eq("is_active", true)
+    .order("sort_order")
+    .limit(100);
+
+  const entrees = (data ?? []) as { kind: string; question: string | null; answer: string }[];
+  if (entrees.length === 0) return null;
+
+  const consignes = entrees.filter((e) => e.kind === "INSTRUCTION").map((e) => e.answer);
+
+  const mots = (question ?? "")
+    .toLowerCase()
+    .split(/[^a-zàâäéèêëîïôöùûüç0-9]+/i)
+    .filter((mot) => mot.length > 3);
+
+  const trouvees = mots.length
+    ? entrees.filter((entree) => {
+        if (entree.kind === "INSTRUCTION") return false;
+        const texte = `${entree.question ?? ""} ${entree.answer}`.toLowerCase();
+        return mots.some((mot) => texte.includes(mot));
+      })
+    : [];
+
+  // Sans question exploitable, on ne renvoie que les consignes : deviner
+  // laquelle des dix réponses préparées s'applique serait pire que rien.
+  const reponses = trouvees.slice(0, 3).map((e) => e.answer);
+
+  if (reponses.length === 0 && (consignes.length === 0 || topic !== "autre")) return null;
+
+  return [...reponses, ...consignes].join(" ");
 }

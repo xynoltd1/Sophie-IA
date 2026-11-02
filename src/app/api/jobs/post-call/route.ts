@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     smsEnvoyes: 0,
     smsEchoues: 0,
     holdsLiberes: 0,
+    appelsPurges: 0,
   };
   const erreurs: string[] = [];
 
@@ -119,6 +120,39 @@ export async function GET(request: NextRequest) {
     compte.holdsLiberes = typeof data === "number" ? data : 0;
   } catch (cause) {
     erreurs.push(`holds : ${cause instanceof Error ? cause.message : "échec"}`);
+  }
+
+  // 6. La corbeille des appels, passé trente jours.
+  //
+  //    Le fichier audio part AVANT la ligne : dans l'ordre inverse, un échec
+  //    laisserait un fichier que plus rien ne référence, donc que plus rien ne
+  //    supprimera jamais.
+  try {
+    const { data } = await admin.rpc("calls_to_purge", { limite: 100 });
+    const lignes = (data ?? []) as { call_id: string; recording_path: string | null }[];
+
+    const fichiers = lignes
+      .map((l) => l.recording_path)
+      .filter((chemin): chemin is string => Boolean(chemin));
+
+    if (fichiers.length > 0) {
+      const { error } = await admin.storage.from(BUCKET_ENREGISTREMENTS).remove(fichiers);
+      if (error) throw new Error(error.message);
+    }
+
+    if (lignes.length > 0) {
+      const { error } = await admin
+        .from("calls")
+        .delete()
+        .in(
+          "id",
+          lignes.map((l) => l.call_id),
+        );
+      if (error) throw new Error(error.message);
+      compte.appelsPurges = lignes.length;
+    }
+  } catch (cause) {
+    erreurs.push(`purge corbeille : ${cause instanceof Error ? cause.message : "échec"}`);
   }
 
   return NextResponse.json({ ...compte, erreurs });

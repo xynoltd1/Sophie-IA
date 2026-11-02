@@ -123,7 +123,7 @@ export default async function ProspectsPage({
           {visibles.map((lead) => (
             <li key={lead.id}>
               <Link href={`/app/prospects/${lead.id}`} className="block">
-                <Sheet
+                <Sheet interactive
                   tone={
                     lead.priority === "URGENT" && isOpen(lead.status)
                       ? "urgent"

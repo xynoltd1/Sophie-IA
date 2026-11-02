@@ -20,14 +20,22 @@ const TONES: Record<Tone, string> = {
 
 export function Sheet({
   tone = "neutral",
+  interactive = false,
   className,
   children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { tone?: Tone }) {
+}: React.HTMLAttributes<HTMLDivElement> & { tone?: Tone; interactive?: boolean }) {
   return (
     <div
       {...props}
-      className={cn("rounded-sheet border bg-surface p-4", TONES[tone], className)}
+      className={cn(
+        "rounded-sheet border bg-surface p-4 shadow-sheet",
+        TONES[tone],
+        // Un bloc cliquable doit reagir au doigt : c'est ce qui distingue
+        // une carte d'un simple encadre, mieux qu'une fleche.
+        interactive && "pressable cursor-pointer",
+        className,
+      )}
     >
       {children}
     </div>

@@ -145,6 +145,22 @@ export default async function FicheAppelPage({
 
       <SectionTitle>{nom}</SectionTitle>
 
+      {appel.deleted_at ? (
+        <Sheet tone="attention">
+          <p className="font-medium">Cet appel est à la corbeille</p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Il sera effacé définitivement, avec son enregistrement et sa transcription,
+            trente jours après sa suppression. D’ici là, il se restaure depuis la corbeille.
+          </p>
+          <Link
+            href="/app/appels?corbeille=1"
+            className="mt-2 inline-block text-sm font-medium text-signal underline underline-offset-4"
+          >
+            Ouvrir la corbeille
+          </Link>
+        </Sheet>
+      ) : null}
+
       <Sheet className="flex flex-col gap-1">
         <p className="text-sm text-ink-soft first-letter:uppercase">{formatCallMoment(appel.started_at)}</p>
         <p className="text-sm text-ink-soft">
@@ -176,11 +192,19 @@ export default async function FicheAppelPage({
             <audio controls preload="none" className="w-full" src={`/api/calls/${appel.id}/audio`}>
               Votre navigateur ne sait pas lire l’audio.
             </audio>
-            {appel.recording_expires_at ? (
-              <p className="mt-2 text-sm text-ink-soft">
-                Conservé jusqu’au {formatDay(appel.recording_expires_at)}.
-              </p>
-            ) : null}
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <a
+                href={`/api/calls/${appel.id}/audio?download=1`}
+                className="text-sm font-medium text-signal underline underline-offset-4"
+              >
+                Télécharger l’enregistrement
+              </a>
+              {appel.recording_expires_at ? (
+                <span className="text-sm text-ink-soft">
+                  Conservé jusqu’au {formatDay(appel.recording_expires_at)}.
+                </span>
+              ) : null}
+            </div>
           </Sheet>
         ) : (
           <Sheet tone="neutral">
@@ -323,7 +347,7 @@ export default async function FicheAppelPage({
             {leads.map((lead) => (
               <li key={lead.id}>
                 <Link href="/app/prospects" className="block">
-                  <Sheet tone={lead.priority === "URGENT" ? "urgent" : "neutral"}>
+                  <Sheet interactive tone={lead.priority === "URGENT" ? "urgent" : "neutral"}>
                     <p className="font-medium">{lead.title}</p>
                     <p className="mt-1 text-sm text-ink-soft">
                       {lead.priority === "URGENT" ? "Urgent · " : ""}

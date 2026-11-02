@@ -442,6 +442,9 @@ export interface CallRow {
   /** Qui a produit le resume : nom du fournisseur, VAPI, ou MOCK. */
   summary_source: string | null;
   summary_generated_at: string | null;
+  /** Mise a la corbeille : la ligne reste 30 jours avant purge definitive. */
+  deleted_at: string | null;
+  deleted_by: string | null;
   created_at: string;
   updated_at: string;
 }

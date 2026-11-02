@@ -78,7 +78,7 @@ export default async function ReglagesPage() {
           {visibles.map((entree) => (
             <li key={entree.href}>
               <Link href={entree.href} className="block">
-                <Sheet className="flex items-center justify-between gap-3">
+                <Sheet interactive className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium">{entree.titre}</p>
                     <p className="text-sm text-ink-soft">{entree.detail}</p>

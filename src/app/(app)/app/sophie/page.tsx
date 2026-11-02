@@ -47,7 +47,7 @@ export default async function SophiePage() {
         <ul className="flex flex-col gap-2">
           <li>
             <Link href="/app/sophie/enregistrement" className="block">
-              <Sheet className="flex items-center justify-between gap-3">
+              <Sheet interactive className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium">Enregistrement des appels</p>
                   <p className="text-sm text-ink-soft">

@@ -104,3 +104,19 @@ describe("registre des outils", () => {
     }
   });
 });
+
+describe("connaissances de l entreprise", () => {
+  it("get_business_information accepte une question libre", async () => {
+    // L ecran « Connaissances » existait depuis 0.13.0 sans que rien de ce
+    // qu on y ecrivait n atteigne un appel : l outil n avait pas de parametre
+    // pour la question du client.
+    const { findTool } = await import("@/lib/sophie/tools");
+    const outil = findTool("get_business_information");
+    const proprietes = (outil?.definition.parameters as {
+      properties?: Record<string, { enum?: string[]; description?: string }>;
+    }).properties;
+
+    expect(proprietes?.question?.description).toBeTruthy();
+    expect(proprietes?.topic?.enum).toContain("autre");
+  });
+});

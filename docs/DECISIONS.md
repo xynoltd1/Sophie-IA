@@ -1045,3 +1045,47 @@ lieu de confirmer un rendez-vous impossible.
 
 Le creneau d origine, lui, reste bloque tant que le client n a pas repondu. Le liberer
 exposerait a perdre les deux.
+
+---
+
+## ADR-035 — Supprimer un appel, c est le mettre a la corbeille
+
+**Date** 2026-11-02 · **Statut** decide
+
+### Le probleme
+
+Un appel porte une transcription, un enregistrement, et sert de preuve a un rendez-vous.
+Un `delete` immediat sur une liste de cinquante lignes, avec des cases a cocher et un pouce
+sur un ecran de telephone, produira tot ou tard une suppression non voulue — et il n y
+aura rien a faire.
+
+### La decision
+
+Suppression logique. `calls.deleted_at` marque la ligne, qui disparait des listes et des
+compteurs. Trente jours plus tard, le travail planifie supprime le fichier audio puis la
+ligne. Ce delai s aligne sur la retention audio : rien ne survit plus longtemps que ce que
+la politique de conservation autorise.
+
+### Ce que la suppression n emporte pas
+
+Ni rendez-vous, ni contact, ni demande, ni tache. Un rendez-vous confirme existe
+independamment de la trace de l appel qui l a produit : le client viendra, que l appel soit
+archive ou non. Les liens `call_id` se videront d eux-memes a la purge definitive
+(`on delete set null`), sans toucher aux lignes elles-memes.
+
+Un test parcourt la fonction `trash_calls` et echoue si elle mentionne l une de ces quatre
+tables.
+
+### Qui peut le faire
+
+OWNER et ADMIN. Un appel est une trace, et sa disparition doit etre une decision de
+responsable. Le controle est fait en base, dans la fonction : celui de l interface ne fait
+que cacher le bouton.
+
+Chaque suppression et chaque restauration ecrit dans `audit_logs`.
+
+### L ordre de la purge
+
+Le fichier audio part AVANT la ligne. Dans l ordre inverse, un echec de suppression du
+fichier laisserait un objet dans le stockage que plus rien ne reference — donc que plus
+rien ne supprimera jamais, et qui continuerait a contenir la voix d un client.

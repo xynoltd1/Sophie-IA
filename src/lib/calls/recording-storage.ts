@@ -131,15 +131,22 @@ export async function rapatrierEnregistrement(params: {
   return { ok: true };
 }
 
-/** Une adresse signée, valable quelques minutes, pour écouter l'appel. */
+/**
+ * Une adresse signée, valable quelques minutes, pour écouter l'appel.
+ *
+ * `telecharger` demande au stockage d'ajouter un en-tête de téléchargement :
+ * sans lui, le navigateur ouvre le fichier dans un lecteur et le
+ * professionnel qui voulait garder une preuve repart les mains vides.
+ */
 export async function adresseEcoute(
   chemin: string,
   secondes = 300,
+  telecharger = false,
 ): Promise<string | null> {
   const admin = createAdminClient();
   const { data, error } = await admin.storage
     .from(BUCKET_ENREGISTREMENTS)
-    .createSignedUrl(chemin, secondes);
+    .createSignedUrl(chemin, secondes, telecharger ? { download: true } : undefined);
 
   if (error) {
     console.error("[audio] adresse signée indisponible", error.message);

@@ -1,114 +1,164 @@
 import Link from "next/link";
 import { requireOrganization } from "@/lib/auth/session";
-import { createServerSupabase } from "@/lib/supabase/server";
-import { suitesDesAppels } from "@/lib/crm/queries";
-import { Sheet, SectionTitle } from "@/components/ui/sheet";
+import { SectionTitle, Sheet } from "@/components/ui/sheet";
 import { EmptyState, ErrorState } from "@/components/ui/states";
+import { can } from "@/lib/auth/permissions";
 import {
-  CALL_STATUS_LABELS,
-  appelEchoue,
-  formatCallMoment,
-  formatDuration,
-  formatPhone,
-  needsAttention,
-  sansSuite,
-} from "@/lib/crm/calls";
-import type { CallRow } from "@/types/database";
+  FILTRES,
+  PERIODES,
+  bornesAffichees,
+  listerAppels,
+  type FiltreAppels,
+  type Periode,
+} from "@/lib/crm/calls-query";
+import { Chip } from "@/components/ui/chip";
+import { ListeAppels } from "./liste-appels";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Appels — Sophie IA" };
 
-type Ligne = Pick<
-  CallRow,
-  "id" | "from_e164" | "status" | "started_at" | "duration_seconds" | "is_test" | "contact_id"
-> & { contacts: { full_name: string | null; company_name: string | null } | null };
-
-const AUCUNE_SUITE = { leads: 0, appointments: 0, tasks: 0 };
-
-const FILTRES = [
-  { cle: "", libelle: "Tous" },
-  { cle: "sans-suite", libelle: "Sans suite" },
-  { cle: "echoues", libelle: "Échoués" },
-] as const;
+/**
+ * La liste des appels.
+ *
+ * Paginée en base, parce qu'une liste qui charge tout finit par ne plus
+ * charger du tout, et parce que le filtre « sans suite » ne peut pas se
+ * calculer sur une page partielle.
+ *
+ * Dix par page par défaut : l'application se lit d'abord sur un téléphone, et
+ * dix cartes remplissent déjà un écran. Qui veut plus le choisit.
+ *
+ * Tous les filtres vivent dans l'adresse : une recherche peut être partagée,
+ * mise en favori, et le bouton Retour fait ce qu'on attend.
+ */
+const TAILLES = [10, 20, 50];
 
 export default async function AppelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filtre?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    filtre?: string;
+    periode?: string;
+    page?: string;
+    taille?: string;
+    corbeille?: string;
+  }>;
 }) {
-  const { filtre } = await searchParams;
+  const params = await searchParams;
   const { activeOrganization } = await requireOrganization();
-  const supabase = await createServerSupabase();
 
-  const { data, error } = await supabase
-    .from("calls")
-    .select(
-      "id, from_e164, status, started_at, duration_seconds, is_test, contact_id, " +
-        "contacts(full_name, company_name)",
-    )
-    .eq("organization_id", activeOrganization.organization_id)
-    .order("started_at", { ascending: false })
-    .limit(50);
+  const filtre = (FILTRES.find((f) => f.cle === params.filtre)?.cle ?? "TOUS") as FiltreAppels;
+  const periode = (PERIODES.find((p) => p.cle === params.periode)?.cle ?? "TOUT") as Periode;
+  const taille = TAILLES.includes(Number(params.taille)) ? Number(params.taille) : 10;
+  const corbeille = params.corbeille === "1";
+  const terme = (params.q ?? "").slice(0, 80);
 
-  const tous = (data ?? []) as unknown as Ligne[];
+  const resultat = await listerAppels({
+    organizationId: activeOrganization.organization_id,
+    terme,
+    filtre,
+    periode,
+    corbeille,
+    page: Number(params.page) || 1,
+    taille,
+  });
 
-  // Ce que chaque appel a produit (migration 0022). C'est ce qui distingue un
-  // appel traité d'un client qui attend un rappel sans que personne le sache.
-  const suites = await suitesDesAppels(
-    activeOrganization.organization_id,
-    tous.map((a) => a.id),
-  );
+  const { debut, fin } = bornesAffichees(resultat);
 
-  const appels =
-    filtre === "sans-suite"
-      ? tous.filter((a) => sansSuite(a, suites.get(a.id) ?? AUCUNE_SUITE))
-      : filtre === "echoues"
-        ? tous.filter(appelEchoue)
-        : tous;
+  /** Conserve les filtres en changeant un seul paramètre. */
+  const lien = (modifs: Record<string, string | number | undefined>) => {
+    const url = new URLSearchParams();
+    if (terme) url.set("q", terme);
+    if (filtre !== "TOUS") url.set("filtre", filtre);
+    if (periode !== "TOUT") url.set("periode", periode);
+    if (taille !== 10) url.set("taille", String(taille));
+    if (corbeille) url.set("corbeille", "1");
 
-  const actif = FILTRES.some((f) => f.cle === filtre) ? (filtre ?? "") : "";
+    for (const [cle, valeur] of Object.entries(modifs)) {
+      if (valeur === undefined || valeur === "") url.delete(cle);
+      else url.set(cle, String(valeur));
+    }
+
+    const chaine = url.toString();
+    return chaine ? `/app/appels?${chaine}` : "/app/appels";
+  };
 
   return (
     <div className="flex flex-col gap-4">
-      <SectionTitle>Appels</SectionTitle>
+      <div className="flex items-baseline justify-between gap-3">
+        <SectionTitle>{corbeille ? "Corbeille" : "Appels"}</SectionTitle>
+        <Link href={lien({ corbeille: corbeille ? undefined : "1", page: 1 })} className="text-sm text-ink-soft underline underline-offset-4">
+          {corbeille ? "Retour aux appels" : "Corbeille"}
+        </Link>
+      </div>
 
-      <nav aria-label="Filtrer les appels" className="flex gap-2 overflow-x-auto">
+      <form action="/app/appels" method="get" className="flex gap-2">
+        <input
+          type="search"
+          name="q"
+          defaultValue={terme}
+          placeholder="Nom, entreprise ou numéro"
+          aria-label="Rechercher un appel"
+          className="min-h-12 min-w-0 flex-1 rounded-control border border-line bg-surface px-3"
+        />
+        {filtre !== "TOUS" ? <input type="hidden" name="filtre" value={filtre} /> : null}
+        {periode !== "TOUT" ? <input type="hidden" name="periode" value={periode} /> : null}
+        {taille !== 10 ? <input type="hidden" name="taille" value={taille} /> : null}
+        {corbeille ? <input type="hidden" name="corbeille" value="1" /> : null}
+        <button
+          type="submit"
+          className="min-h-12 shrink-0 rounded-control bg-signal px-4 text-sm font-medium text-white"
+        >
+          Chercher
+        </button>
+      </form>
+
+      <nav aria-label="Filtrer les appels" className="-mx-4 flex gap-2 overflow-x-auto px-4">
         {FILTRES.map((f) => (
-          <Link
-            key={f.cle || "tous"}
-            href={f.cle ? `/app/appels?filtre=${f.cle}` : "/app/appels"}
-            aria-current={actif === f.cle ? "page" : undefined}
-            className={
-              actif === f.cle
-                ? "flex min-h-10 shrink-0 items-center rounded-control bg-signal px-4 text-sm font-medium text-white"
-                : "flex min-h-10 shrink-0 items-center rounded-control border border-line bg-surface px-4 text-sm text-ink-soft"
-            }
+          <Chip
+            key={f.cle}
+            href={lien({ filtre: f.cle === "TOUS" ? undefined : f.cle, page: 1 })}
+            actif={filtre === f.cle}
           >
             {f.libelle}
-          </Link>
+          </Chip>
         ))}
       </nav>
 
-      {error ? (
-        <ErrorState description="Vos appels n’ont pas pu être chargés." />
-      ) : appels.length === 0 ? (
+      <nav aria-label="Période" className="-mx-4 flex gap-2 overflow-x-auto px-4">
+        {PERIODES.map((p) => (
+          <Chip
+            key={p.cle}
+            href={lien({ periode: p.cle === "TOUT" ? undefined : p.cle, page: 1 })}
+            actif={periode === p.cle}
+          >
+            {p.libelle}
+          </Chip>
+        ))}
+      </nav>
+
+      {resultat.erreur ? (
+        <ErrorState description="Vos appels n’ont pas pu être chargés. Rechargez la page." />
+      ) : resultat.appels.length === 0 ? (
         <EmptyState
           title={
-            actif === "sans-suite"
-              ? "Aucun appel sans suite"
-              : actif === "echoues"
-                ? "Aucun appel échoué"
-                : "Aucun appel pour le moment"
+            terme
+              ? "Aucun appel ne correspond"
+              : corbeille
+                ? "La corbeille est vide"
+                : filtre === "TOUS"
+                  ? "Aucun appel pour le moment"
+                  : "Aucun appel dans ce filtre"
           }
           description={
-            actif === "sans-suite"
-              ? "Chaque appel de ces sept derniers jours a donné une demande, un rendez-vous ou un rappel."
-              : actif === "echoues"
-                ? "Sophie a pu répondre à tous les appels reçus."
+            terme
+              ? "Essayez un autre nom ou un autre numéro."
+              : corbeille
+                ? "Les appels supprimés restent ici 30 jours avant d’être effacés définitivement."
                 : "Chaque appel reçu par Sophie apparaîtra ici, avec son enregistrement, son résumé et sa transcription."
           }
           action={
-            actif ? (
+            terme || filtre !== "TOUS" || periode !== "TOUT" ? (
               <Link href="/app/appels" className="font-medium text-signal underline underline-offset-4">
                 Voir tous les appels
               </Link>
@@ -116,50 +166,59 @@ export default async function AppelsPage({
           }
         />
       ) : (
-        <ul className="flex flex-col gap-2">
-          {appels.map((appel) => {
-            const nom =
-              appel.contacts?.full_name ??
-              appel.contacts?.company_name ??
-              formatPhone(appel.from_e164);
+        <>
+          <p className="text-sm text-ink-soft">
+            Affichage de {debut} à {fin} sur {resultat.total} appel
+            {resultat.total > 1 ? "s" : ""}
+          </p>
 
-            const rien = sansSuite(appel, suites.get(appel.id) ?? AUCUNE_SUITE);
+          <ListeAppels
+            appels={resultat.appels}
+            peutSupprimer={can(activeOrganization.role, "organization:update")}
+            corbeille={corbeille}
+          />
 
-            return (
-              <li key={appel.id}>
-                <Link href={`/app/appels/${appel.id}`} className="block">
-                  <Sheet
-                    tone={needsAttention(appel.status) || rien ? "attention" : "neutral"}
-                    className="flex items-start justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {nom}
-                        {appel.is_test ? (
-                          <span className="ml-2 rounded-control bg-ink-soft/15 px-2 py-0.5 text-xs font-normal text-ink-soft">
-                            essai
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="text-sm text-ink-soft first-letter:uppercase">
-                        {formatCallMoment(appel.started_at)}
-                      </p>
-                      {rien ? (
-                        <p className="text-sm text-attention">
-                          Rien n’a été noté pendant cet appel.
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="shrink-0 text-right text-sm text-ink-soft">
-                      <p>{CALL_STATUS_LABELS[appel.status]}</p>
-                      <p>{formatDuration(appel.duration_seconds)}</p>
-                    </div>
-                  </Sheet>
+          {resultat.pages > 1 ? (
+            <nav aria-label="Pages" className="flex items-center justify-between gap-3">
+              {resultat.page > 1 ? (
+                <Link
+                  href={lien({ page: resultat.page - 1 })}
+                  className="flex min-h-12 items-center rounded-control border border-line bg-surface px-4 text-sm font-medium"
+                >
+                  Précédent
                 </Link>
-              </li>
-            );
-          })}
-        </ul>
+              ) : (
+                <span className="text-sm text-ink-faint">Précédent</span>
+              )}
+
+              <span className="text-sm text-ink-soft">
+                Page {resultat.page} sur {resultat.pages}
+              </span>
+
+              {resultat.page < resultat.pages ? (
+                <Link
+                  href={lien({ page: resultat.page + 1 })}
+                  className="flex min-h-12 items-center rounded-control border border-line bg-surface px-4 text-sm font-medium"
+                >
+                  Suivant
+                </Link>
+              ) : (
+                <span className="text-sm text-ink-faint">Suivant</span>
+              )}
+            </nav>
+          ) : null}
+
+          <Sheet tone="neutral" className="flex items-center justify-between gap-3">
+            <span className="text-sm text-ink-soft">Appels par page</span>
+            <span className="flex gap-2">
+              {TAILLES.map((valeur) => (
+                <Chip key={valeur} href={lien({ taille: valeur, page: 1 })} actif={taille === valeur}>
+                  {valeur}
+                </Chip>
+              ))}
+            </span>
+          </Sheet>
+        </>
       )}
     </div>
   );

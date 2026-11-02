@@ -3,6 +3,61 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.14.0] — 2026-11-02 — La liste des appels, et un bug vieux de deux mois
+
+### Corrigé : la liste de l'équipe ne s'était jamais chargée
+« Cette information n'a pas pu être chargée. »
+
+`organization_members.user_id` et `profiles.id` pointent tous les deux vers les comptes
+d'authentification, mais **aucune clé étrangère ne relie les deux tables**. PostgREST ne
+peut donc pas déduire la relation, et toute requête qui demande le nom d'un membre échoue.
+Le code était là depuis la Phase 0 ; il n'a jamais fonctionné.
+
+Migration 0029 : les profils manquants sont créés, puis la clé étrangère est posée. Une
+équipe réduite au seul propriétaire est un état normal, et elle s'affiche normalement.
+
+### La liste des appels est paginée, filtrée et cherchable
+Tout se décide en base, dans une seule fonction SQL : filtres, tri, comptage.
+
+- Dix appels par page par défaut, 20 ou 50 au choix. Dix parce que l'application se lit
+  d'abord sur un téléphone, et que dix cartes remplissent déjà un écran.
+- Recherche par nom, entreprise ou numéro.
+- Filtres : sans suite, rendez-vous, urgents, échoués, essais. Et une période.
+- **Affichage de 1 à 10 sur 147 appels**, avec Précédent / Suivant.
+- Les filtres vivent dans l'adresse : une recherche se partage et le bouton Retour
+  fonctionne.
+
+Deux pièges évités, et c'est le cœur du travail : le filtre « sans suite » ne peut pas se
+calculer sur une page partielle, et l'ordre doit être déterministe — sans tri secondaire,
+deux appels à la même seconde peuvent se répéter ou disparaître entre deux pages.
+
+### Supprimer un appel (ADR-035)
+Une corbeille, pas un effacement. Sélection multiple, confirmation qui dit ce qu'elle fait,
+réservée aux responsables, journalisée. Trente jours pour revenir en arrière, puis le
+fichier audio part avant la ligne — jamais l'inverse, sinon le fichier devient orphelin.
+
+La suppression n'emporte ni rendez-vous, ni contact, ni demande. Un test le vérifie.
+
+### Sophie lit enfin les connaissances
+L'écran « Connaissances de Sophie » existait depuis 0.13.0, et rien de ce qu'on y écrivait
+n'atteignait un appel : l'outil n'avait pas de paramètre pour la question du client. Il en
+a un, et les consignes de comportement remontent avec la réponse.
+
+### Design : ce qui change, et ce qui ne change pas
+La direction visuelle est conservée — fond non blanc contre l'éblouissement, couleur
+réservée au statut, arête de couleur sur les blocs qui demandent une action. Elle est bonne
+pour un artisan en extérieur, et la remplacer aurait été du goût, pas du progrès.
+
+Ce qui est ajouté : une ombre très basse sur les blocs, un retour au doigt sur les cartes
+cliquables (120 ms), deux composants partagés — `Badge` et `Chip` — qui remplacent les
+`<span>` stylés à la main qui s'étaient multipliés, et un téléchargement de
+l'enregistrement depuis la fiche d'appel.
+
+### Ajouté
+`docs/FUNCTIONAL_AUDIT.md` : l'état réel de chaque fonctionnalité, vérifié dans le code et
+non repris des anciens documents. Il liste aussi sept problèmes connus non corrigés, avec
+leur priorité et la raison.
+
 ## [0.13.0] — 2026-11-02 — Tout ce qui pouvait être construit sans comptes externes
 
 Développement autonome d'une traite : intelligence post-appel, workflow complet des

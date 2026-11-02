@@ -9,7 +9,10 @@
 
 ## Où en est le projet
 
-**Version** 0.13.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.14.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+
+> **Lire aussi `docs/FUNCTIONAL_AUDIT.md`** : l'état réel de chaque fonctionnalité, vérifié
+> dans le code, avec les sept problèmes connus non corrigés et leur priorité.
 
 **État de maturité : `TECHNICALLY READY` + `LEGAL REVIEW REQUIRED`.**
 Pas `PRODUCTION READY`, et pas « candidate à la 1.0 » non plus. Trois fonctions centrales
@@ -41,7 +44,7 @@ Les trois dernières lignes sont les seules qui restent, et aucune ne dépend du
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  287 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  307 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
 npm run build       ✓
 ```
 
@@ -152,6 +155,9 @@ avec ses huit outils (22-23 octobre), audio rapatrié et écouté, transcription
 | WhatsApp, e-mail, formulaire web | structure en base, aucun adaptateur, aucun point d'entrée |
 | Invitations d'équipe | le lien est affiché et transmis à la main : aucun service d'envoi d'e-mail |
 | Réglages de notification | déduplication en base, mais pas de préférence par utilisateur |
+| Connaissances de Sophie | l'écran existe, et Sophie les lit depuis 0.14.0 ; **jamais vérifié en appel réel** |
+| Écran de tâches | les tâches existent et sont comptées ; aucune liste, aucune clôture en un geste |
+| Configuration de Sophie après l'inscription | voix, style et message d'accueil se changent chez le fournisseur, pas dans l'application |
 | `src/types/database.ts` | écrit à la main (ADR-012), à régénérer depuis le schéma réel |
 | Application Google | en mode Test : autorisations révoquées à 7 jours (ADR-028) |
 | Préproduction | documentée dans `DEPLOYMENT.md`, jamais montée |
@@ -218,6 +224,9 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  platform_overview(), ecriture des metiers
 0028_conversations               conversations, conversation_messages,
                                  receive_inbound_message()
+0029_calls_management            cle etrangere membre -> profil (corrige la liste
+                                 d equipe), corbeille des appels, search_calls(),
+                                 trash_calls(), restore_calls(), calls_to_purge()
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -315,7 +324,7 @@ toucher au code :
 
 ## Prochaines tâches recommandées
 
-**1. Appliquer les migrations 0025 à 0028**, dans l'ordre, puis déployer. Sans elles,
+**1. Appliquer les migrations 0025 à 0029**, dans l'ordre, puis déployer. Sans elles,
 plusieurs écrans échouent : le code attend des colonnes et des tables qui n'existent pas
 encore.
 

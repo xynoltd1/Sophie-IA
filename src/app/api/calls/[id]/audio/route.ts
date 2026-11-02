@@ -24,10 +24,11 @@ export const dynamic = "force-dynamic";
  * serverless, et la balise `<audio>` suit la redirection sans rien savoir.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const telecharger = request.nextUrl.searchParams.get("download") === "1";
 
   let organizationId: string;
   try {
@@ -50,7 +51,7 @@ export async function GET(
   const chemin = appel.recording_path as string | null;
   if (!chemin) return new NextResponse("aucun enregistrement", { status: 404 });
 
-  const adresse = await adresseEcoute(chemin);
+  const adresse = await adresseEcoute(chemin, 300, telecharger);
   if (!adresse) return new NextResponse("enregistrement indisponible", { status: 503 });
 
   // 302 et non 301 : l'adresse signée change à chaque demande, elle ne doit

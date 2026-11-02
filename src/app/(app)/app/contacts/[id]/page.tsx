@@ -176,7 +176,7 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
             {leads.map((lead) => (
               <li key={lead.id}>
                 <Link href={`/app/prospects/${lead.id}`} className="block">
-                  <Sheet
+                  <Sheet interactive
                     tone={lead.priority === "URGENT" && isOpen(lead.status) ? "urgent" : "neutral"}
                     className="flex items-center justify-between gap-3"
                   >
