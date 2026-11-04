@@ -6,17 +6,27 @@ import { Field, Input } from "@/components/ui/field";
 import { signUp, type AuthFormState } from "../actions";
 
 export function SignupForm() {
-  const [state, action, pending] = useActionState<AuthFormState, FormData>(signUp, {});
+  const [state, action, pending] = useActionState<AuthFormState, FormData>(
+    signUp,
+    {},
+  );
 
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}
 
-      <Field label="Prenom et nom" htmlFor="fullName" error={state.fieldErrors?.fullName}>
+      <Field
+        label="Prenom et nom"
+        htmlFor="fullName"
+        error={state.fieldErrors?.fullName}
+      >
         <Input
           id="fullName"
           name="fullName"
@@ -26,7 +36,11 @@ export function SignupForm() {
         />
       </Field>
 
-      <Field label="Adresse e-mail" htmlFor="email" error={state.fieldErrors?.email}>
+      <Field
+        label="Adresse e-mail"
+        htmlFor="email"
+        error={state.fieldErrors?.email}
+      >
         <Input
           id="email"
           name="email"

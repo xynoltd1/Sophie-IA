@@ -8,8 +8,19 @@ export default function LoginPage() {
     <>
       <LoginForm />
       <p className="text-sm text-ink-soft">
+        <Link
+          href="/mot-de-passe-oublie"
+          className="font-medium text-signal underline underline-offset-4"
+        >
+          Mot de passe oublié ?
+        </Link>
+      </p>
+      <p className="text-sm text-ink-soft">
         Pas encore de compte ?{" "}
-        <Link href="/signup" className="font-medium text-signal underline underline-offset-4">
+        <Link
+          href="/signup"
+          className="font-medium text-signal underline underline-offset-4"
+        >
           Créer mon compte
         </Link>
       </p>

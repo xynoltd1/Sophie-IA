@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.15.3 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.16.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
 > **Pour tout ce qui dépend de Zehra et non du code — comptes, clés, numéro, juridique —
 > lire `docs/OWNER_ACTION_PLAN.md`.** C'est la liste ordonnée de ses actions, avec les
@@ -51,7 +51,7 @@ Les trois dernières lignes sont les seules qui restent, et aucune ne dépend du
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  338 tests passés, 17 ignorés (SUPABASE_TEST_* non renseignées ici)
+npm run test        ✓  361 tests passés, 0 ignoré avec SUPABASE_TEST_* (2026-11-04)
 npm run build       ✓
 ```
 
@@ -59,8 +59,17 @@ npm run build       ✓
 déploiement a été refusé par Vercel (ADR-024). Avant d'annoncer une version livrable,
 vérifier qu'un déploiement réel est passé.
 
-Les 17 tests ignorés sont la suite d'isolation multi-tenant et un contrôle de
-configuration. Ils **ont tourné avec succès contre la vraie base le 2026-09-08**.
+**La suite d'isolation multi-tenant a tourné contre une vraie base le
+2026-11-04** : 356 tests, **zéro ignoré**, 17 d'entre eux exercés contre le
+projet Supabase de préproduction. Sont vérifiés, en conditions réelles :
+lecture et écriture croisées entre deux organisations, auto-promotion comme
+membre ou comme administrateur de plateforme, illisibilité du journal d'audit,
+RLS active sur toutes les tables, et — depuis les migrations 0031 et 0032 —
+l'absence du droit de vider une table.
+
+Pour les relancer : renseigner `SUPABASE_TEST_URL`, `SUPABASE_TEST_ANON_KEY` et
+`SUPABASE_TEST_SERVICE_ROLE_KEY` dans `.env.local`, **jamais sur Vercel**, et de
+préférence avec les clés de la préproduction.
 
 ## Ce qui fonctionne réellement
 

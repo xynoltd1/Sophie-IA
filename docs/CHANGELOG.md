@@ -3,6 +3,40 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.16.0] — 2026-11-04 — Mot de passe oublié
+
+### Nouveau : récupérer son mot de passe
+
+L'application n'avait **aucune page** pour cela. Personne ne s'en était aperçu
+parce que personne n'avait encore perdu son mot de passe.
+
+C'est arrivé le 2026-11-04. Le bouton du tableau de bord Supabase envoie bien un
+e-mail, mais son lien renvoie vers la racine du site : le code de récupération
+n'y est jamais échangé, et la personne atterrit sur la page de connexion sans
+message et sans comprendre. Pour un artisan, cela aurait voulu dire rester
+dehors jusqu'à ce que quelqu'un aille dans Supabase à sa place.
+
+Deux pages et deux actions :
+
+- `/mot-de-passe-oublie` — demande le lien. Le lien pointe vers
+  `/auth/callback?suite=/nouveau-mot-de-passe`, seul endroit qui sait échanger
+  le code contre une session.
+- `/nouveau-mot-de-passe` — pose le nouveau, exige une session, et connecte
+  aussitôt.
+
+La page de connexion porte maintenant le lien : une page de récupération que
+personne ne trouve ne sert à rien.
+
+**La réponse est la même que l'adresse existe ou non.** Un message qui distingue
+les deux transforme le formulaire en annuaire : on y teste des adresses une par
+une pour savoir lesquelles ont un compte. Le prix est une personne qui attend un
+e-mail qui n'arrivera pas ; c'est le moindre mal, et c'est le même raisonnement
+que pour « E-mail ou mot de passe incorrect » à la connexion.
+
+### Tests
+Quatre, dont un qui vérifie que le lien pointe vers `/auth/callback` et non vers
+la racine — l'erreur exacte qui a coûté la matinée.
+
 ## [0.15.3] — 2026-11-04 — Les vues aussi
 
 La migration 0031 bouclait sur `pg_tables`, qui ne contient pas les vues.

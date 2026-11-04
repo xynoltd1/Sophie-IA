@@ -77,7 +77,22 @@ Vercel, redéployer, puis consulter `audit_logs` sur la période concernée. La 
   réglable par l'entreprise (ADR-036). Un échec de transcription ne supprime jamais l'audio,
   et une purge d'audio ne supprime jamais la transcription.
 
-### Le droit qui traverse RLS
+### Vérification du 2026-11-04
+
+L'isolation multi-tenant a été exercée contre une vraie base de données, pas
+seulement raisonnée : 17 contrôles passés contre le projet de préproduction,
+dans une suite de 356 tests sans aucun test ignoré.
+
+Ce qui est vérifié en conditions réelles : lecture croisée entre deux
+organisations, écriture croisée, auto-ajout comme membre d'une autre
+organisation, auto-promotion comme administrateur de la plateforme,
+illisibilité du journal d'audit par un client, RLS active sur toutes les tables
+de `public`, et absence du droit de vider une table.
+
+Ce qui n'est pas vérifié par cette suite : les volumes, la téléphonie, et tout
+ce qui dépend d'un fournisseur externe.
+
+## Le droit qui traverse RLS
 
 `TRUNCATE` ignore la sécurité au niveau ligne. RLS filtre des lignes ; TRUNCATE
 supprime la table entière sans les lire. C'est le seul privilège du catalogue

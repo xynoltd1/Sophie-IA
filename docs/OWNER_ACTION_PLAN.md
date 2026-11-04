@@ -1190,7 +1190,11 @@ pas les données d'une autre. Il me faut pour cela les trois variables `SUPABASE
 renseignées **sur votre ordinateur** — idéalement contre la base de préproduction (C6), pas
 la production.
 
-**Comment vérifier** `npm test` affiche 355 tests passés et **0 ignorés**.
+**Comment vérifier** `npm test` affiche **356 tests passés et 0 ignoré**.
+
+**Fait le 2026-11-04.** La préproduction existe, les 32 migrations y sont
+appliquées, et la suite d'isolation est passée en entier contre elle. Reste la
+double authentification sur les six comptes.
 
 ## C8 — Support et pages publiques
 
@@ -1345,7 +1349,7 @@ est confirmé quand ce n'est pas vrai. Utilisez *Réessayer*.
 | A5 | Ordinateur | Générer 3 secrets | Moi | Haute | 0 € | ☐ | 3 valeurs de 44 caractères |
 | A6 | Vercel | 8 variables | Moi | **Bloquante** | 0 € | ☐ | `npm run check:env` |
 | A7 | Vercel | Déployer | Moi | Haute | 0 € | ☐ | `/api/health` répond |
-| A8 | Supabase | Compte super admin | Partagé | Moyenne | 0 € | ☐ | `/admin` s'ouvre |
+| A8 | Supabase | Compte super admin | Partagé | Moyenne | 0 € | ☑ fait 2026-11-03 | `/admin` s'ouvre |
 | A9 | Vercel | Exempter les webhooks | Moi | **Piège** | 0 € | ☐ | `curl` renvoie du JSON |
 | A10 | Vercel + DNS | Domaine zelicall.com | Moi | Moyenne | 0 € | ☐ | HTTPS valide |
 | A11 | Vercel | Tâches planifiées | Moi | Moyenne | 0 € | ☐ | Purge visible dans `/admin` |
@@ -1367,8 +1371,8 @@ est confirmé quand ce n'est pas vrai. Utilisez *Réessayer*.
 | C3 | Juriste | Valider les durées | Moi | Haute | inclus C2 | ☐ | L5 daté |
 | C4 | Stripe + moi | Paiement | Partagé | Haute pour vendre | ≈ 1,5 % + 0,25 € (est.) | ☐ | Un abonnement payé |
 | C5 | Service e-mail | E-mails transactionnels | Partagé | Moyenne | 0–20 €/mois (est.) | ☐ | Invitation reçue |
-| C6 | Supabase + Vercel | Préproduction | Partagé | Moyenne | 0 € | ☐ | Branche avec ses données |
-| C7 | Tous | 2FA + tests d'isolation | Partagé | Haute | 0 € | ☐ | 355 tests, 0 ignorés |
+| C6 | Supabase + Vercel | Préproduction | Partagé | Moyenne | 0 € | ☑ base créée 2026-11-04 | 32 migrations appliquées |
+| C7 | Tous | 2FA + tests d'isolation | Partagé | Haute | 0 € | ☑ tests faits 2026-11-04 ; 2FA à faire | 356 tests, 0 ignoré |
 | C8 | Application | Support et pages | Partagé | Moyenne | 0 € | ☐ | Page de contact en ligne |
 | C9 | Vercel | Plan Pro si besoin | Moi | Basse | ≈ 20 $/mois | ☐ | Décision notée |
 
