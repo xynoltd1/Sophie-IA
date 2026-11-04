@@ -82,6 +82,20 @@ describe("purges en base", () => {
     }
   });
 
+  it("retire aux utilisateurs connectes le droit de vider une table", () => {
+    // Trouve sur la vraie base le 2026-11-03 : `authenticated` avait TRUNCATE
+    // sur les trente-quatre tables de public, herite d un privilege par defaut
+    // de Supabase. TRUNCATE ignore RLS. La migration doit traiter les tables
+    // existantes ET les futures, sinon la prochaine migration recree le trou.
+    expect(contenu).toContain("revoke truncate, references, trigger on public.%I");
+    // Les vues aussi : `pg_tables` ne les contient pas, et la premiere
+    // migration les avait manquees (0032).
+    expect(contenu).toContain("c.relkind in ('v', 'm', 'f', 'p')");
+    expect(contenu).toContain(
+      "alter default privileges in schema public\n  revoke truncate, references, trigger on tables from anon, authenticated",
+    );
+  });
+
   it("reserve le journal des purges a la plateforme", () => {
     const bloc = contenu.slice(
       contenu.indexOf("create table if not exists public.retention_runs"),

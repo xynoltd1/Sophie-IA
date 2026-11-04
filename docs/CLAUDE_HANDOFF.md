@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.15.1 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.15.3 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
 > **Pour tout ce qui dépend de Zehra et non du code — comptes, clés, numéro, juridique —
 > lire `docs/OWNER_ACTION_PLAN.md`.** C'est la liste ordonnée de ses actions, avec les
@@ -184,7 +184,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente
+## Migrations — trente-deux
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -243,6 +243,14 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  enum line_connection_mode, colonnes de phone_numbers
                                  (connection_mode, public_number, last_error,
                                  verified_at) et leurs policies OWNER/ADMIN
+0031_revoke_truncate             retire TRUNCATE, REFERENCES et TRIGGER a anon et
+                                 authenticated sur les tables existantes ET les
+                                 privileges par defaut. TRUNCATE ignore RLS :
+                                 c est le seul droit qui traverse l isolation.
+                                 Trouve sur la vraie base le 2026-11-03.
+0032_revoke_truncate_views       le meme nettoyage pour les vues : pg_tables ne
+                                 les contient pas, calendar_status avait ete
+                                 manquee par la 0031.
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du

@@ -3,6 +3,67 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.15.3] — 2026-11-04 — Les vues aussi
+
+La migration 0031 bouclait sur `pg_tables`, qui ne contient pas les vues.
+`public.calendar_status` a donc gardé `TRUNCATE`, `REFERENCES` et `TRIGGER` pour
+`authenticated`.
+
+Le risque réel est nul — vider une vue échoue à l'exécution. Ce qui comptait est
+ailleurs : le contrôle ajouté à la suite d'isolation ne fait pas la différence
+entre une table et une vue, donc il serait resté rouge. Un contrôle qui échoue
+pour une raison bénigne finit par être ignoré, et c'est comme ça qu'on rate le
+jour où il échoue pour une vraie raison.
+
+La migration 0032 traite les vues, les vues matérialisées, les tables distantes
+et les tables partitionnées — tout ce que `pg_tables` laissait de côté. Les
+objets créés plus tard étaient déjà couverts : `alter default privileges ... on
+tables` s'applique aussi aux vues.
+
+## [0.15.2] — 2026-11-03 — Un droit que RLS n'arrête pas
+
+### Corrigé : `authenticated` pouvait vider n'importe quelle table
+
+Trouvé sur la base de production, en comparant ses réglages à ceux d'une base
+neuve. Le rôle `authenticated` — c'est-à-dire **tout utilisateur connecté** —
+possédait le droit `TRUNCATE` sur les **trente-quatre tables** du schéma public.
+`calls`, `contacts`, `appointments`, `audit_logs` comprises.
+
+L'origine n'est pas dans notre code : à la création d'un projet, Supabase pose un
+privilège par défaut qui accorde `Dxtm` à `authenticated` sur toute table créée
+ensuite par le rôle `postgres` — donc sur toutes les nôtres. Le `D`, c'est
+TRUNCATE.
+
+**Pourquoi c'est sérieux.** TRUNCATE ignore la sécurité au niveau ligne. Aucune
+policy ne l'arrête : RLS filtre des lignes, TRUNCATE supprime la table entière
+sans les lire. C'est le seul droit du catalogue qui traverse toute notre
+architecture d'isolation.
+
+**Pourquoi ce n'était pas une urgence.** L'API REST de Supabase n'expose pas
+TRUNCATE, et un navigateur ne parle jamais à Postgres directement. Il aurait
+fallu une fonction SQL `security invoker` qui le fasse — nous n'en avons aucune.
+C'était un droit que personne n'utilisait, que rien ne justifiait, et qui serait
+devenu exploitable le jour où quelqu'un aurait écrit la mauvaise fonction.
+
+La migration 0031 le retire des tables existantes **et** des privilèges par
+défaut, sinon la migration suivante rouvrait le trou. `REFERENCES` et `TRIGGER`
+partent avec : un utilisateur connecté n'a aucune raison de poser une clé
+étrangère ou un déclencheur sur nos tables. Les droits sur les séquences aussi :
+les identifiants sont générés par la base, jamais par le client.
+
+### Tests
+Deux nouveaux. Un test statique vérifie que la migration traite les tables
+existantes **et** les futures. Un contrôle ajouté à la suite d'isolation relit
+les droits réels de la base plutôt que de faire confiance à la migration — parce
+qu'une table créée un jour depuis l'interface Supabase, par un autre rôle, ne
+serait pas couverte.
+
+### Ce que cet épisode dit de la méthode
+La faille n'a été trouvée ni par le typecheck, ni par le lint, ni par les 338
+tests, ni par le build. Elle a été trouvée en créant une deuxième base et en
+comparant ses réglages à ceux de la première. Les contrôles automatiques
+vérifient ce qu'on a pensé à vérifier.
+
 ## [0.15.1] — 2026-11-02 — Le plan d'action du propriétaire
 
 Aucun changement de comportement. Documentation, et trois corrections de documentation

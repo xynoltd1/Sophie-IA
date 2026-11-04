@@ -77,7 +77,28 @@ Vercel, redéployer, puis consulter `audit_logs` sur la période concernée. La 
   réglable par l'entreprise (ADR-036). Un échec de transcription ne supprime jamais l'audio,
   et une purge d'audio ne supprime jamais la transcription.
 
-### Ce qui reste à faire
+### Le droit qui traverse RLS
+
+`TRUNCATE` ignore la sécurité au niveau ligne. RLS filtre des lignes ; TRUNCATE
+supprime la table entière sans les lire. C'est le seul privilège du catalogue
+qui passe au travers de toute l'architecture d'isolation de ce produit.
+
+Il était accordé à `authenticated` sur les trente-quatre tables de la production
+— hérité d'un privilège par défaut posé par Supabase à la création du projet, et
+non de notre code. Retiré par la migration 0031, sur les tables existantes comme
+sur les privilèges par défaut.
+
+**La règle qui en découle** : accorder un droit table par table ne suffit pas, il
+faut aussi savoir ce que la plateforme accorde toute seule. Un contrôle de la
+suite d'isolation relit désormais les droits réels de la base ; il échoue si
+`anon` ou `authenticated` récupère `TRUNCATE`, `REFERENCES` ou `TRIGGER` sur une
+table de `public`.
+
+**Comment c'est arrivé jusqu'à nous** : ni le typecheck, ni le lint, ni les 338
+tests, ni le build ne l'ont vu. C'est la création d'une seconde base et la
+comparaison de ses réglages avec la première qui l'a montré.
+
+## Ce qui reste à faire
 
 **Phase 5** — le job de purge lui-même, la suppression effective dans Supabase Storage, et
 la journalisation de chaque écoute dans `audit_logs`.

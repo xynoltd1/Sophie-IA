@@ -257,6 +257,24 @@ suite("isolation multi-tenant", () => {
     expect(data).toBe(false);
   });
 
+  it("aucun utilisateur connecte ne peut vider une table", async () => {
+    // TRUNCATE ignore la securite au niveau ligne : aucune policy ne l arrete.
+    // C est le seul droit du catalogue qui passe au travers de toute notre
+    // architecture d isolation. Il etait accorde a `authenticated` sur les
+    // trente-quatre tables de la production, herite d un privilege par defaut
+    // pose a la creation du projet Supabase (migration 0031).
+    const { data, error } = await admin.rpc("exec_sql_readonly", {
+      statement: `select table_name
+                  from information_schema.role_table_grants
+                  where table_schema = 'public'
+                    and privilege_type in ('TRUNCATE', 'REFERENCES', 'TRIGGER')
+                    and grantee in ('anon', 'authenticated')`,
+    });
+
+    if (error) return;
+    expect(data).toEqual([]);
+  });
+
   it("toute table du schema public a RLS active", async () => {
     const { data, error } = await admin.rpc("exec_sql_readonly", {
       statement: `select relname from pg_class c
