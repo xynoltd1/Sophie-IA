@@ -85,6 +85,82 @@ code :
 La suite demande un accès à votre compte Google et au DNS du domaine : voir
 `docs/OWNER_ACTION_PLAN.md`, section D.
 
+## Search Console : ce que la connexion fait, et ce qu'elle ne fait pas
+
+`/admin/seo` → **Connecter Search Console**. OAuth réel, portée
+`https://www.googleapis.com/auth/webmasters.readonly` — lecture seule sur les propriétés,
+rien d'autre. Le client OAuth est celui de l'agenda : un seul à entretenir chez Google.
+
+Le jeton de rafraîchissement est chiffré (AES-256-GCM) dans `search_console_connection`,
+table sans aucune permission de lecture. Le jeton d'accès n'est jamais stocké : il vit une
+heure et se redemande à chaque besoin.
+
+Une fois la propriété choisie, l'écran affiche clics, impressions, position moyenne, les
+dix requêtes et les dix pages qui ressortent. **La fenêtre s'arrête trois jours avant
+aujourd'hui** : Google ne publie rien avant, et un zéro ressemble à une panne.
+
+Ce que la connexion ne fait **pas** :
+
+- **Vérifier la propriété du domaine.** Cela demanderait une portée d'écriture bien plus
+  large, et un accès DNS. Se fait une fois à la main (D3).
+- **Déposer le plan du site.** Même raison. Se fait une fois à la main (D4).
+- **Accélérer l'indexation.** Rien ne l'accélère de façon fiable.
+
+## Référencement page par page
+
+`/admin/seo`, section **Référencement page par page**. Pour chaque page publique : titre,
+description, priorité dans le plan du site, et trois interrupteurs — page active,
+indexable, dans le plan du site.
+
+Champ laissé vide = valeur du site reprise. C'est le cas normal.
+
+Le chemin n'est pas saisissable. Deux verrous, indépendants l'un de l'autre :
+
+1. `cheminAutorise()` exige que le chemin figure dans `PAGES_PUBLIQUES`
+   (`lib/seo/site.ts`) — la liste des pages que le code rend réellement.
+2. La contrainte `seo_pages_chemin_public` refuse en base tout chemin commençant par
+   `/app`, `/admin`, `/api`, `/auth`, `/onboarding`, `/rdv`, `/invitation`,
+   `/nouveau-mot-de-passe`.
+
+Le premier empêche d'annoncer une adresse en 404 ; le second d'annoncer une page privée.
+
+Une page entre dans le plan du site à **quatre** conditions : elle existe dans le code,
+elle est publiée, elle est marquée pour le plan, elle est indexable. Et son indexabilité
+ne peut pas dépasser celle du site — `siteIndexable() && page.indexable !== false`.
+
+Ajouter une page au site se fait dans le code. Son référencement se règle ensuite ici.
+
+## Image de partage
+
+Téléversée, pas saisie comme adresse : une image hébergée ailleurs disparaît un jour sans
+prévenir, et tous les liens déjà partagés perdent leur aperçu en silence.
+
+PNG, JPEG ou WebP, 2 Mo maximum. Vérifié côté serveur **et** par le bucket
+`public-assets`. Le nom du fichier envoyé par le navigateur est ignoré : le chemin est
+construit côté serveur, parce qu'un nom venant du client est une adresse qu'il contrôle.
+
+Chaque envoi porte un nom neuf (`partage/og-<horodatage>.<ext>`), parce que les caches des
+réseaux sociaux gardent longtemps une même adresse.
+
+Les dimensions ne sont pas vérifiées : il faudrait décoder l'image côté serveur. L'écran
+annonce 1200 × 630 et montre l'aperçu — une image mal proportionnée se voit tout de suite.
+
+## Les réglages atteignent-ils vraiment le site ?
+
+Oui, depuis 0.19.0. Avant, non, et l'écran le prétendait.
+
+La page d'accueil, `robots.txt` et `sitemap.xml` lisent des réglages en base. Sans
+instruction, Next les prérend au moment du build : le formulaire écrivait en base et le
+site affichait les valeurs figées du dernier déploiement.
+
+Les trois portent maintenant `export const revalidate = 60`. La page reste servie en
+statique — donc rapide, ce qui compte pour le référencement — et le réglage arrive dans la
+minute. Les actions d'administration demandent en plus `revalidatePath` du chemin
+concerné, ce qui rend le changement immédiat.
+
+Règle générale : **ajouter une lecture en base dans une page statique est un changement de
+mode de rendu, pas une modification locale.** Un test le vérifie sur les trois fichiers.
+
 ## Performance
 
 Ce que le code fait déjà : polices auto-hébergées (aucun appel à un CDN, donc aucun

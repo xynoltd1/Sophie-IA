@@ -1486,16 +1486,23 @@ ligne `Sitemap:`. La troisième liste deux adresses.
 Vercel. Corrigez la variable, puis **relancez un déploiement** : elle est lue à la
 compilation.
 
-## D2 — Appliquer la migration 0033
+## D2 — Appliquer les migrations 0033, 0034 et 0035
 
 - [ ] Fait
 `ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
 
-**Quoi** Coller `supabase/migrations/20261104120000_0033_analytics_and_stats.sql` dans
-l'éditeur SQL de la production, puis de la préproduction.
+**Quoi** Coller dans l'éditeur SQL de la production, **dans cet ordre** :
 
-**Pourquoi** Sans elle, la vue d'ensemble, les statistiques, la consommation et l'écran
-SEO affichent une erreur : ils appellent des fonctions qui n'existent pas encore.
+1. `supabase/migrations/20261104120000_0033_analytics_and_stats.sql`
+2. `supabase/migrations/20261105100000_0034_platform_configuration.sql`
+3. `supabase/migrations/20261105140000_0035_seo_pages.sql`
+
+Puis les mêmes sur la préproduction.
+
+**Pourquoi** Sans 0033, la vue d'ensemble, les statistiques, la consommation et l'écran
+SEO affichent une erreur : ils appellent des fonctions qui n'existent pas. Sans 0034,
+aucune clé ne peut être saisie depuis la console. Sans 0035, le référencement page par
+page et l'envoi de l'image de partage échouent.
 
 **Vérifier**
 
@@ -1509,6 +1516,20 @@ where n.nspname = 'public'
 ```
 
 **Réussi** Le résultat est **9**.
+
+Puis, pour 0034 et 0035 :
+
+```sql
+select
+  (select count(*) from information_schema.tables
+    where table_schema = 'public'
+      and table_name in ('platform_settings','provider_credentials',
+                         'search_console_connection','seo_pages')) as tables,
+  (select count(*) from storage.buckets where id = 'public-assets') as bucket,
+  (select count(*) from public.seo_pages) as pages_semees;
+```
+
+**Réussi** `tables` = **4**, `bucket` = **1**, `pages_semees` = **2**.
 
 ## D3 — Vérifier la propriété du site dans Search Console
 
@@ -1538,9 +1559,69 @@ Puis **relancez un déploiement** — elle est lue à la compilation.
 **Réussi** Google affiche « Propriété validée ». Dans la console, `/admin/seo` fait
 passer la ligne « Vérification Search Console » en *en place*.
 
+**Cette étape reste manuelle, et le restera.** La connexion de D3b lit les données de
+Search Console ; elle ne peut pas vérifier une propriété à votre place. Cela demanderait
+un droit d'écriture sur votre compte Google que l'application ne demande pas — et un
+accès au DNS que seul votre registrar vous donne.
+
 **Si Google ne trouve pas la balise** Vous avez probablement collé la balise entière au
 lieu du seul contenu de `content`. Regardez le code source de `https://zelicall.com` : la
 ligne doit ressembler à `<meta name="google-site-verification" content="...">`.
+
+## D3b — Ajouter la portée Search Console et connecter
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **haute** · dépend de **B1**, **D3** · **coût : 0 €**
+
+**Quoi** Autoriser l'application à **lire** vos données Search Console, puis cliquer sur
+le bouton de connexion.
+
+**Pourquoi** La vérification de propriété (D3) prouve à Google que le site est à vous.
+Elle ne donne rien à l'application. Sans cette connexion, `/admin/seo` ne peut afficher
+aucune position, aucune impression, aucun mot tapé par un visiteur — et il l'écrit au lieu
+d'inventer un classement.
+
+**Site** `https://console.cloud.google.com`
+
+**Les menus**
+1. **APIs & Services** → **Library** → cherchez *Google Search Console API* → *Enable*.
+2. **APIs & Services** → **OAuth consent screen** → **Data Access** (ou *Scopes* selon la
+   version) → *Add or remove scopes* → collez cette ligne exactement :
+
+```
+https://www.googleapis.com/auth/webmasters.readonly
+```
+
+3. **APIs & Services** → **Credentials** → votre identifiant OAuth → **Authorized
+   redirect URIs** → *Add URI* → collez exactement :
+
+```
+https://zelicall.com/api/integrations/search-console/callback
+```
+
+4. *Save*.
+
+**Puis, dans Sophie** `/admin/seo` → **Connecter Search Console** → choisissez votre
+compte Google → *Autoriser*. De retour sur l'écran, choisissez la propriété à suivre dans
+la liste déroulante (celle validée en D3).
+
+**Réussi** La carte Search Console affiche *connecté* et le nom de la propriété.
+
+**Pourquoi « readonly »** C'est la seule portée demandée : lecture des propriétés Search
+Console, rien d'autre. Elle ne permet ni de modifier votre compte Google, ni de lire vos
+mails, ni de toucher à votre agenda — cette dernière passe par la portée Calendar, déjà
+en place et distincte.
+
+**Si l'écran affiche « Google a refusé l'échange du jeton »** L'adresse de retour du
+point 3 n'est pas déclarée, ou pas à l'identique. Un `/` en trop à la fin suffit à faire
+échouer l'échange.
+
+**Si l'écran affiche « aucune propriété vérifiée »** D3 n'est pas terminée, ou le compte
+Google choisi à l'autorisation n'est pas celui qui détient la propriété.
+
+**Les chiffres restent à zéro quelques jours** Google ne publie rien avant deux à trois
+jours, et n'a rien à publier avant d'avoir indexé le site. L'écran le dit sous les
+chiffres.
 
 ## D4 — Déposer le plan du site
 
@@ -1567,8 +1648,21 @@ WhatsApp, LinkedIn ou un message.
 **Pourquoi** Aujourd'hui il n'y en a pas : le lien s'affiche en texte gris. C'est la
 différence entre un lien qu'on clique et un lien qu'on ignore.
 
-**Ce qu'il faut** Une image 1200 × 630 pixels. Dites-moi ce que vous voulez dessus et je
-la fabrique ; ou fournissez-la, et je la branche.
+**Ce qu'il faut** Une image 1200 × 630 pixels, en PNG, JPEG ou WebP, sous 2 Mo.
+
+**Les menus** `/admin/seo` → section **Image de partage** → *Nouvelle image* → choisissez
+le fichier → *Appliquer à : tout le site* → **Envoyer l'image**.
+
+Elle est stockée chez nous et l'aperçu s'affiche immédiatement sur l'écran. Vous pouvez
+aussi l'appliquer à une seule page.
+
+**Dites-moi ce que vous voulez dessus et je la fabrique** ; ou fournissez-la, et vous
+l'envoyez vous-même en trois clics.
+
+**Pour vérifier le rendu réel** Collez `https://zelicall.com` dans une conversation
+WhatsApp sans envoyer le message : l'aperçu se construit. Les réseaux sociaux gardent
+longtemps en cache l'ancienne image d'une même adresse — c'est pourquoi chaque envoi
+porte un nom de fichier neuf.
 
 ## D6 — Regarder la fréquentation après une semaine
 

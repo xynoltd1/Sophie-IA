@@ -2,6 +2,15 @@ import type { MetadataRoute } from "next";
 import { ESPACES_PRIVES, reglagesSite, siteIndexable } from "@/lib/seo/site";
 
 /**
+ * Ces pages lisent des réglages en base : sans durée de revalidation, Next les
+ * figerait au moment du build et un changement dans la console n'arriverait
+ * sur le site qu'au redéploiement suivant. Soixante secondes : la page reste
+ * servie en statique, donc rapide, et le réglage arrive dans la minute. Les
+ * actions d'administration demandent en plus une revalidation immédiate.
+ */
+export const revalidate = 60;
+
+/**
  * `robots.txt`, généré plutôt qu'écrit à la main.
  *
  * ## Ce que ce fichier n'est pas

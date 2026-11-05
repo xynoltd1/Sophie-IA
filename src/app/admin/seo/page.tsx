@@ -16,7 +16,20 @@ import {
   sourcesSite,
   traficSite,
 } from "@/lib/seo/audit";
-import { SITE_URL } from "@/lib/seo/site";
+import { reglagesSite, SITE_URL } from "@/lib/seo/site";
+import { pagesSeo } from "@/lib/seo/pages";
+import {
+  etatSearchConsole,
+  performance,
+  proprietes,
+  searchConsoleConfigurable,
+} from "@/lib/seo/search-console";
+import {
+  BoutonDeconnecterConsole,
+  FormulaireImagePartage,
+  FormulairePage,
+  FormulaireProprieteConsole,
+} from "./forms";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "SEO et acquisition — Plateforme" };
@@ -26,6 +39,25 @@ const TONS = {
   ATTENTION: "attention",
   MANQUE: "urgent",
 } as const;
+/** Les retours de l'autorisation Google, dits en clair. */
+const MESSAGES_CONSOLE: Record<string, string> = {
+  connecte: "Search Console est connecté. Choisissez la propriété à suivre.",
+  refuse:
+    "Vous avez refusé l’autorisation sur l’écran Google. Rien n’a changé.",
+  non_configure:
+    "Les identifiants OAuth Google sont absents. Renseignez-les dans Intégrations.",
+  reponse_incomplete:
+    "Google a renvoyé une réponse incomplète. Relancez la connexion.",
+  etat_invalide:
+    "Le retour d’autorisation n’a pas pu être vérifié. Relancez la connexion depuis cet écran.",
+  etat_expire:
+    "L’autorisation a mis trop de temps. Relancez la connexion et validez dans les dix minutes.",
+  session_differente:
+    "La session a changé pendant l’autorisation. Reconnectez-vous puis relancez.",
+  echec:
+    "Google a refusé l’échange du jeton. Vérifiez que l’adresse de retour est déclarée dans Google Cloud.",
+};
+
 const MOTS = {
   OK: "en place",
   ATTENTION: "à vérifier",
@@ -46,19 +78,39 @@ const MOTS = {
 export default async function SeoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periode?: string }>;
+  searchParams: Promise<{ periode?: string; console?: string }>;
 }) {
   await requirePlatformAdmin();
-  const { periode: brut } = await searchParams;
+  const { periode: brut, console: retourConsole } = await searchParams;
   const periode = periodeDepuis(brut);
 
-  const [points, { trafic, vide }, sources, pages, serie] = await Promise.all([
+  const [
+    points,
+    { trafic, vide },
+    sources,
+    pages,
+    serie,
+    site,
+    pagesReglees,
+    etatConsole,
+    consoleConfigurable,
+  ] = await Promise.all([
     Promise.resolve(auditSeo()),
     traficSite(periode.jours),
     sourcesSite(periode.jours),
     pagesSite(periode.jours),
     serieSite(periode.jours),
+    reglagesSite(),
+    pagesSeo(),
+    etatSearchConsole(),
+    searchConsoleConfigurable(),
   ]);
+
+  // Deux appels réseau seulement si la connexion existe : inutile de faire
+  // attendre l'écran pour obtenir deux listes vides.
+  const [listeProprietes, chiffres] = etatConsole.connecte
+    ? await Promise.all([proprietes(), performance(periode.jours)])
+    : [[], null];
 
   const total =
     trafic.sessions_humaines +
@@ -207,25 +259,207 @@ export default async function SeoPage({
       </section>
 
       <section>
-        <TitreSection>Search Console</TitreSection>
+        <TitreSection detail="Les positions, les impressions et les mots tapés par les visiteurs. Ces chiffres n’existent que là.">
+          Search Console
+        </TitreSection>
+
+        {MESSAGES_CONSOLE[retourConsole ?? ""] ? (
+          <p
+            className={`mb-3 rounded-control px-3 py-2.5 text-sm leading-relaxed ${
+              retourConsole === "connecte" ? "bg-signal-soft" : "bg-urgent-soft"
+            }`}
+          >
+            {MESSAGES_CONSOLE[retourConsole ?? ""]}
+          </p>
+        ) : null}
+
         <Carte>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="font-medium">Google Search Console</p>
-            <Badge ton="attention">Connexion nécessaire</Badge>
+            {etatConsole.connecte ? (
+              <Badge ton="signal">connecté</Badge>
+            ) : consoleConfigurable ? (
+              <Badge ton="attention">connexion nécessaire</Badge>
+            ) : (
+              <Badge ton="urgent">identifiants Google absents</Badge>
+            )}
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            Les positions dans Google, les impressions et les mots tapés par les
-            visiteurs ne viennent que de Search Console. Aucune de ces données
-            n’est accessible autrement, et aucune n’est affichée ici tant que la
-            connexion n’existe pas.
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            La marche à suivre — vérification de propriété, dépôt du plan du
-            site, suivi de l’indexation — est détaillée dans{" "}
-            <code>docs/SEO.md</code> et dans le plan d’action. Elle demande un
-            accès à votre compte Google et au DNS du domaine : je ne peux pas la
-            faire à votre place.
-          </p>
+
+          {!consoleConfigurable ? (
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              La connexion utilise les mêmes identifiants OAuth que l’agenda.
+              Renseignez-les d’abord dans Intégrations → Google Calendar.
+            </p>
+          ) : !etatConsole.connecte ? (
+            <>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                L’autorisation demandée est en lecture seule sur les propriétés
+                Search Console. Rien sur l’agenda, rien sur la messagerie.
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                La vérification de propriété du domaine se fait une fois chez
+                Google, à la main : elle demande un accès au DNS et ne peut pas
+                être faite d’ici.
+              </p>
+              <div className="mt-4">
+                <a
+                  href="/api/integrations/search-console/start"
+                  className="inline-flex min-h-12 items-center rounded-control bg-signal px-4 text-[0.9375rem] font-medium text-white hover:bg-signal-deep"
+                >
+                  Connecter Search Console
+                </a>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 flex flex-col gap-4">
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-ink-soft">Propriété suivie</dt>
+                  <dd className="font-medium">
+                    {etatConsole.propriete ?? "aucune encore choisie"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-ink-soft">Connecté le</dt>
+                  <dd className="font-medium">
+                    {etatConsole.connecteLe
+                      ? new Date(etatConsole.connecteLe).toLocaleDateString(
+                          "fr-FR",
+                        )
+                      : "—"}
+                  </dd>
+                </div>
+              </dl>
+
+              {etatConsole.derniereErreur ? (
+                <p className="rounded-control bg-urgent-soft px-3 py-2.5 text-sm leading-relaxed">
+                  Dernière erreur Google : {etatConsole.derniereErreur}
+                </p>
+              ) : null}
+
+              <FormulaireProprieteConsole
+                proprietes={listeProprietes}
+                actuelle={etatConsole.propriete}
+              />
+
+              <div className="flex justify-end border-t border-line pt-3">
+                <BoutonDeconnecterConsole />
+              </div>
+            </div>
+          )}
+        </Carte>
+
+        {chiffres ? (
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Chiffre
+                libelle="Clics depuis Google"
+                valeur={chiffres.clics}
+                detail={`${chiffres.ctr} % des impressions`}
+              />
+              <Chiffre
+                libelle="Impressions"
+                valeur={chiffres.impressions}
+                detail="apparitions dans les résultats"
+              />
+              <Chiffre
+                libelle="Position moyenne"
+                valeur={chiffres.position || "—"}
+                detail="1 est le premier résultat"
+              />
+              <Chiffre
+                libelle="Requêtes distinctes"
+                valeur={chiffres.requetes.length}
+                detail="les 10 premières ci-dessous"
+              />
+            </div>
+
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <div>
+                <p className="mb-2 text-sm font-medium">
+                  Ce que les gens tapent
+                </p>
+                <Tableau entetes={["Requête", "Clics", "Position"]}>
+                  {chiffres.requetes.map((ligne) => (
+                    <tr key={ligne.valeur}>
+                      <td className="px-4 py-2.5">{ligne.valeur}</td>
+                      <td className="px-4 py-2.5 tabular-nums">
+                        {ligne.clics}
+                      </td>
+                      <td className="px-4 py-2.5 tabular-nums text-ink-soft">
+                        {ligne.position}
+                      </td>
+                    </tr>
+                  ))}
+                </Tableau>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-medium">
+                  Les pages qui ressortent
+                </p>
+                <Tableau entetes={["Page", "Clics", "Position"]}>
+                  {chiffres.pages.map((ligne) => (
+                    <tr key={ligne.valeur}>
+                      <td className="px-4 py-2.5 font-mono text-sm">
+                        {ligne.valeur.replace(SITE_URL, "") || "/"}
+                      </td>
+                      <td className="px-4 py-2.5 tabular-nums">
+                        {ligne.clics}
+                      </td>
+                      <td className="px-4 py-2.5 tabular-nums text-ink-soft">
+                        {ligne.position}
+                      </td>
+                    </tr>
+                  ))}
+                </Tableau>
+              </div>
+            </div>
+
+            <p className="mt-2 text-sm text-ink-faint">
+              Google ne publie rien avant deux à trois jours. La fenêtre
+              s’arrête donc trois jours avant aujourd’hui : un zéro sur la
+              période la plus courte est normal, pas une panne.
+            </p>
+          </>
+        ) : etatConsole.connecte && etatConsole.propriete ? (
+          <Carte className="mt-3">
+            <p className="text-sm leading-relaxed text-ink-soft">
+              Google n’a renvoyé aucun chiffre pour cette période. C’est le cas
+              attendu tant que le site n’apparaît pas encore dans les résultats
+              : l’indexation prend de quelques jours à quelques semaines après
+              la première visite de Googlebot.
+            </p>
+          </Carte>
+        ) : null}
+      </section>
+
+      <section>
+        <TitreSection detail="Un titre et une description par page. Laissés vides, les champs reprennent les valeurs du site.">
+          Référencement page par page
+        </TitreSection>
+        <div className="flex flex-col gap-3">
+          {pagesReglees.map((page) => (
+            <Carte key={page.path}>
+              <FormulairePage page={page} />
+            </Carte>
+          ))}
+        </div>
+        <p className="mt-2 text-sm text-ink-faint">
+          Seules les pages que le code rend réellement apparaissent ici. Ajouter
+          une page au site se fait dans le code ; son référencement se règle
+          ensuite ici.
+        </p>
+      </section>
+
+      <section>
+        <TitreSection detail="L’aperçu affiché quand un lien vers le site est partagé.">
+          Image de partage
+        </TitreSection>
+        <Carte>
+          <FormulaireImagePartage
+            actuelle={site.og_image}
+            chemins={pagesReglees.map((page) => page.path)}
+          />
         </Carte>
       </section>
 

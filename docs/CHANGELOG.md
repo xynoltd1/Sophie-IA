@@ -3,6 +3,88 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.19.0] — 2026-11-05 — Search Console connecté, et le référencement page par page
+
+### Google Search Console
+
+Le bouton existe et il connecte réellement. `/admin/seo` → **Connecter Search Console**.
+
+L'autorisation demandée est `webmasters.readonly` : lecture seule sur les propriétés
+Search Console, rien d'autre. Elle réutilise les identifiants OAuth déjà saisis pour
+l'agenda — un seul client Google à entretenir.
+
+Le jeton de rafraîchissement est chiffré avant d'entrer en base, dans une table sans
+aucune permission de lecture. Le jeton d'accès, lui, n'est jamais stocké : il vit une
+heure et se redemande.
+
+Une fois connecté, l'écran affiche ce que Google rapporte : clics, impressions, position
+moyenne, les dix requêtes qui amènent du monde, les dix pages qui ressortent. La fenêtre
+s'arrête **trois jours avant aujourd'hui**, parce que Google ne publie rien avant : sans
+ce décalage, chaque consultation afficherait zéro et ressemblerait à une panne.
+
+Ce que cette connexion ne fait pas, et le dit : elle ne vérifie pas la propriété du
+domaine et ne dépose pas le plan du site. Ces deux gestes se font une fois, à la main,
+chez Google, et demandent un accès au DNS.
+
+### Référencement page par page
+
+Titre, description, priorité, et trois interrupteurs — page active, indexable, dans le
+plan du site — pour chaque page publique. Champs laissés vides : la valeur du site est
+reprise. C'est le cas normal ; recopier le même titre partout obligerait à repasser
+partout pour une correction.
+
+Le chemin n'est pas un champ libre. Deux verrous : la liste des pages que le code rend
+réellement, et une contrainte de la table qui refuse tout chemin commençant par `/app`,
+`/admin`, `/api`, `/auth`, `/onboarding`, `/rdv`, `/invitation`. Un plan du site qui
+annoncerait une page privée serait une page privée découverte ; un plan qui annoncerait
+une adresse en 404 mettrait des semaines à sortir de Search Console.
+
+Une page marquée non indexable le reste même si le site est indexable : les deux
+conditions sont nécessaires, jamais une seule.
+
+### Image de partage
+
+Elle se téléverse, et n'est plus une adresse à saisir. Une image hébergée ailleurs
+disparaît un jour sans prévenir, et tous les liens déjà partagés perdent leur aperçu en
+silence.
+
+PNG, JPEG ou WebP, 2 Mo maximum, vérifiés côté serveur **et** par le bucket. Le nom du
+fichier envoyé par le navigateur est ignoré : un nom venant du client est une adresse
+qu'il contrôle. Chaque envoi porte un nom neuf, parce que les caches des réseaux sociaux
+gardent longtemps une même adresse. L'image s'applique à tout le site, ou à une seule
+page.
+
+### Correction : les réglages n'atteignaient pas le site
+
+L'écran Paramètres annonçait « ces valeurs s'appliquent d'ici une minute, sans
+redéploiement ». C'était faux. La page d'accueil, `robots.txt` et `sitemap.xml` étaient
+prérendus au moment du build : le formulaire écrivait bien en base, et le site continuait
+d'afficher les valeurs figées du dernier déploiement.
+
+`export const revalidate = 60` sur les trois. La page reste servie en statique, donc
+rapide, et le réglage arrive dans la minute. Les actions d'administration demandent en
+plus une revalidation immédiate du chemin concerné.
+
+### Migration
+
+`0035_seo_pages` — table `seo_pages`, contrainte de chemin public, bucket
+`public-assets`. **À appliquer**, comme 0033 et 0034.
+
+### Vérifié
+
+415 tests (397 passants, 18 ignorés faute de base de test locale), typecheck, lint, build.
+Dix-huit tests nouveaux : portée en lecture seule, jeton chiffré et non exposé, état
+d'autorisation signé et borné à dix minutes, garde administrateur de plateforme sur les
+deux routes, décalage de trois jours, double verrou sur les chemins, chemin de fichier non
+choisi par le navigateur, et le fait que les réglages ne sont pas figés au build.
+
+### À faire de votre côté
+
+Ajouter la portée `https://www.googleapis.com/auth/webmasters.readonly` à votre client
+OAuth Google, et déclarer l'adresse de retour
+`https://zelicall.com/api/integrations/search-console/callback`. Détail dans
+`docs/OWNER_ACTION_PLAN.md`, section D.
+
 ## [0.18.1] — 2026-11-05 — Un trait qui ne voulait rien dire
 
 Les cartes sans champ ni bouton — Transcription, Opérateur téléphonique — dessinaient

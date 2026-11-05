@@ -119,6 +119,25 @@ opérations simulées n'écrivent rien : un résumé simulé ne prouve pas qu'un
   pas — une session valide suffit à son API. Mais une session valide, c'est un écran resté
   ouvert dans un bureau.
 
+## SEO et acquisition — ce qui se règle depuis l'écran
+
+Depuis la 0.19.0, `/admin/seo` ne fait plus que constater :
+
+- **Connecter Search Console** — OAuth réel, lecture seule. Puis choix de la propriété à
+  suivre, et affichage des clics, impressions, positions, requêtes et pages.
+- **Référencement page par page** — titre, description, priorité, et trois interrupteurs
+  par page publique. Le chemin n'est pas saisissable (ADR-044).
+- **Image de partage** — téléversement d'un PNG, JPEG ou WebP sous 2 Mo, applicable à tout
+  le site ou à une seule page.
+
+Ce que l'écran continue de refuser de faire : afficher une position sans connexion,
+inventer un créneau d'indexation, ou prétendre pouvoir vérifier une propriété de domaine à
+la place de son propriétaire.
+
+**Les trois actions sont journalisées** (`search_console.connect`,
+`search_console.property`, `search_console.disconnect`, `seo_page.update`,
+`seo_image.upload`) dans `audit_logs`, table qu'aucun client ne peut lire.
+
 ## Ce qui n'est pas fait
 
 - **Changer d'adresse e-mail.** Il faudrait vérifier la nouvelle avant d'abandonner

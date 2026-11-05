@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.18.1 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.19.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-quatre
+## Migrations — trente-cinq
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -279,7 +279,16 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  search_console_connection, credentials_state()
                                  et search_console_state() qui exposent l etat
                                  sans jamais les valeurs.
+0035_seo_pages                   seo_pages (titre/description/indexable par page) avec
+                                 la contrainte seo_pages_chemin_public qui refuse tout
+                                 chemin prive ; bucket public public-assets (2 Mo,
+                                 png/jpeg/webp) pour l image de partage.
 ```
+
+**0033, 0034 et 0035 ne sont pas appliquées en production.** Les écrans qui en dépendent
+— statistiques, consommation, SEO, intégrations, référencement page par page, envoi
+d'image — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
+étape D2.
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
 schéma en lecture seule. Les lancer après toute nouvelle migration.
@@ -424,8 +433,27 @@ résumé réel, et la fiche d'appel complète. C'est la vérification la plus re
 0.15.0 et les valeurs par défaut sont d'un an, choisies techniquement. La valeur correcte
 dépend du pays et du métier (`LEGAL_COMPLIANCE.md`, point L5).
 
+**9. Ajouter la portée Search Console au client OAuth Google** et déclarer l'adresse de
+retour `/api/integrations/search-console/callback` (`OWNER_ACTION_PLAN.md`, D3b). La
+connexion est écrite et fonctionnelle ; sans cette portée, Google refuse l'autorisation.
+
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Leçon de la 0.19.0 — une page statique ne relit pas la base
+
+La page d'accueil, `robots.txt` et `sitemap.xml` lisaient des réglages en base, et Next
+les prérendait au build. Le formulaire d'administration écrivait correctement ; le site
+affichait les valeurs du dernier déploiement. L'écran annonçait pourtant « s'applique
+d'ici une minute ».
+
+Les trois portent maintenant `export const revalidate = 60`, et un test le vérifie
+(ADR-045).
+
+**Le réflexe à garder** : ajouter une lecture en base dans un fichier de métadonnées ou
+une page statique est un changement de mode de rendu, pas une modification locale. La
+vérification n'est pas « le formulaire enregistre-t-il ? » mais « la valeur apparaît-elle
+sur la page servie ? ».
 
 ## Ce qui attend une décision
 

@@ -132,3 +132,54 @@ Une table sans policy est une fuite de données, pas un oubli mineur.
 - **Rétention audio (Phase 5)** : la politique de rétention est une colonne de
   configuration par organisation, jamais une constante dans le code.
 
+
+
+## Tables de plateforme — sans `organization_id`, et c'est voulu
+
+Quatre tables ne portent pas d'`organization_id` : elles décrivent la plateforme
+elle-même, pas un client. Elles n'ont donc ni policy de lecture pour `authenticated`, ni
+`GRANT` — seul le service role y touche, depuis une action gardée par
+`requirePlatformAdmin`.
+
+| Table | Migration | Contenu |
+|---|---|---|
+| `platform_settings` | 0034 | réglages du site, de la mesure, des fournisseurs (valeurs non secrètes) |
+| `provider_credentials` | 0034 | secrets des fournisseurs, chiffrés AES-256-GCM |
+| `search_console_connection` | 0034 | une ligne (`id = true`), jeton de rafraîchissement chiffré |
+| `seo_pages` | 0035 | titre, description, indexabilité, priorité par page publique |
+
+**La clé maîtresse ne vit jamais dans la même table que ce qu'elle protège** :
+`SECRETS_ENCRYPTION_KEY` reste dans l'environnement. La base ne détient jamais de quoi se
+déchiffrer elle-même.
+
+**L'état sort, les valeurs non.** `credentials_state()` et `search_console_state()` disent
+ce qui est configuré, depuis quand, avec quelle empreinte — jamais la valeur.
+
+### `seo_pages` : une contrainte, pas seulement un formulaire
+
+```sql
+constraint seo_pages_chemin_public check (
+  path like '/%'
+  and path not like '/app%'   and path not like '/admin%'
+  and path not like '/api%'   and path not like '/auth%'
+  and path not like '/onboarding%' and path not like '/rdv%'
+  and path not like '/invitation%'
+  and path not like '/nouveau-mot-de-passe%'
+)
+```
+
+Le formulaire vérifie déjà que le chemin figure dans la liste du code. La contrainte est le
+second verrou : le plan du site est précisément l'endroit où un moteur va chercher ce
+qu'il ne connaît pas, et une page privée annoncée là est une page privée découverte.
+
+## Stockage — deux buckets, deux natures
+
+| Bucket | Visibilité | Contenu | Accès |
+|---|---|---|---|
+| `call-recordings` | **privé** | enregistrements d'appels | URL signée, après vérification de l'organisation |
+| `public-assets` | **public en lecture** | image de partage du site | lecture libre ; écriture service role seule |
+
+`public-assets` est public **délibérément** : une image de partage doit être lisible par
+WhatsApp et LinkedIn, qui n'ont aucune session. Rien de sensible n'y entre. Les
+enregistrements d'appels restent dans leur bucket privé — les deux natures ne se mélangent
+jamais, et aucun chemin de fichier n'est choisi par le navigateur.

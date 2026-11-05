@@ -1463,3 +1463,122 @@ Supabase et Google Agenda affichaient « Jamais exerce » alors que l un fait to
 l application pendant qu on lit l ecran. L absence d historique etait une absence de
 mesure, pas un diagnostic. L etat s appelle desormais « Historique non disponible », et
 l action propose le test qui produira la preuve.
+
+## ADR-043 — Search Console se connecte en lecture seule, et ne touche pas au DNS
+
+**Date** : 2026-11-05 · **Statut** : accepté
+
+### Le problème
+
+Les positions dans Google, les impressions et les mots tapés par les visiteurs
+n'existent que dans Search Console. Notre propre mesure de fréquentation ne les
+remplace pas : elle compte des visites reçues, pas des apparitions dans les
+résultats. Une console qui afficherait un classement sans cette connexion
+afficherait un classement inventé — et orienterait de vraies décisions.
+
+### La décision
+
+Une connexion OAuth réelle, avec la seule portée
+`https://www.googleapis.com/auth/webmasters.readonly`.
+
+Elle réutilise le client OAuth de l'agenda. Deux clients Google voudraient dire
+deux vérifications Google à entretenir, pour le même compte.
+
+Le jeton de rafraîchissement est chiffré (AES-256-GCM, ADR-021) dans
+`search_console_connection`, table sans aucune permission de lecture pour `anon`
+et `authenticated`. Seul l'état — connecté ou non, quelle propriété, quelle
+dernière erreur — sort, par une fonction. Le jeton d'accès n'est jamais stocké :
+il vit une heure.
+
+La connexion est unique pour la plateforme, pas par organisation : elle décrit
+notre site, pas celui d'un client. Le garde est donc `requirePlatformAdmin`, et
+non un rôle d'organisation.
+
+### Ce que cette connexion ne fait pas
+
+**Elle ne vérifie pas la propriété du domaine et ne dépose pas le plan du
+site.** L'API ne le permet pas sans une portée d'écriture bien plus large.
+Demander en permanence un droit d'écriture sur Search Console pour deux gestes
+qui se font une fois, à la main, serait disproportionné — et rallongerait la
+vérification de l'application Google.
+
+### Le décalage de trois jours
+
+Google ne publie aucune donnée de recherche avant deux à trois jours. Une
+fenêtre qui s'arrêterait hier renverrait presque toujours zéro, et un zéro
+ressemble à une panne. La fenêtre s'arrête donc trois jours avant aujourd'hui,
+et l'écran l'écrit.
+
+## ADR-044 — Le référencement d une page se règle, son existence non
+
+**Date** : 2026-11-05 · **Statut** : accepté
+
+### Le problème
+
+Une page publique a besoin de son propre titre et de sa propre description. Les
+régler depuis la console évite un déploiement pour corriger une phrase. Mais un
+champ « chemin » libre dans un formulaire d'administration permettrait
+d'annoncer à Google n'importe quelle adresse.
+
+### La décision
+
+Le réglage est en base ; l'existence de la page reste dans le code.
+
+Deux verrous, indépendants :
+
+1. `cheminAutorise()` vérifie que le chemin figure dans `PAGES_PUBLIQUES`, la
+   liste écrite à la main dans `lib/seo/site.ts`.
+2. La contrainte `seo_pages_chemin_public` refuse tout chemin commençant par
+   `/app`, `/admin`, `/api`, `/auth`, `/onboarding`, `/rdv`, `/invitation` ou
+   `/nouveau-mot-de-passe`.
+
+Le premier empêche d'annoncer une adresse qui répondrait 404 — Search Console
+met des semaines à l'oublier. Le second empêche d'annoncer une page privée — le
+plan du site est précisément l'endroit où un moteur va chercher ce qu'il ne
+connaît pas encore.
+
+### Les champs vides reprennent le site
+
+Un titre vide ne veut pas dire « pas de titre » mais « garde celui du site ».
+Sans cela, on recopierait la même phrase sur chaque page, et la moindre
+correction demanderait de repasser partout.
+
+### Quatre conditions pour le plan du site
+
+La page existe dans le code, elle est publiée, elle est marquée pour le plan, et
+elle est indexable. Annoncer une page qu'on demande par ailleurs de ne pas
+indexer est une contradiction que Google signale.
+
+Et l'indexabilité d'une page ne peut pas dépasser celle du site : les deux
+conditions sont nécessaires. `siteIndexable() && page.indexable !== false`.
+
+## ADR-045 — Une page qui lit la base n est jamais prerendue une fois pour toutes
+
+**Date** : 2026-11-05 · **Statut** : accepté
+
+### Le problème constaté
+
+L'écran Paramètres annonçait « ces valeurs s'appliquent d'ici une minute, sans
+redéploiement ». C'était faux, et de la pire façon : le formulaire écrivait bien
+en base, et le site continuait d'afficher les valeurs du dernier build. Next
+avait prérendu la page d'accueil, `robots.txt` et `sitemap.xml` au moment du
+build, et rien dans le code ne lui disait de revenir voir.
+
+Un formulaire dont la valeur n'atteint pas le rendu est une interface
+décorative, exactement ce que le cahier des charges interdit.
+
+### La décision
+
+Toute page qui lit un réglage en base porte `export const revalidate = 60`.
+
+Soixante secondes, et non `force-dynamic` : la page d'accueil reste servie en
+statique, donc rapide, ce qui compte pour le référencement. Les actions
+d'administration demandent en plus `revalidatePath` du chemin concerné, ce qui
+rend le changement immédiat sans attendre la minute.
+
+### La règle générale
+
+Ajouter une lecture en base dans un fichier de métadonnées ou une page statique
+n'est pas une modification locale : c'est un changement de mode de rendu. Un
+test vérifie la présence de `revalidate` sur les trois fichiers concernés, pour
+que l'oubli se voie au lieu de produire un écran qui mentirait.

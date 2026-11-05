@@ -1,5 +1,15 @@
 import type { MetadataRoute } from "next";
-import { PAGES_PUBLIQUES, reglagesSite, siteIndexable } from "@/lib/seo/site";
+import { reglagesSite, siteIndexable } from "@/lib/seo/site";
+import { pagesPourPlanDuSite } from "@/lib/seo/pages";
+
+/**
+ * Ces pages lisent des réglages en base : sans durée de revalidation, Next les
+ * figerait au moment du build et un changement dans la console n'arriverait
+ * sur le site qu'au redéploiement suivant. Soixante secondes : la page reste
+ * servie en statique, donc rapide, et le réglage arrive dans la minute. Les
+ * actions d'administration demandent en plus une revalidation immédiate.
+ */
+export const revalidate = 60;
 
 /**
  * Plan du site.
@@ -16,13 +26,16 @@ import { PAGES_PUBLIQUES, reglagesSite, siteIndexable } from "@/lib/seo/site";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!siteIndexable()) return [];
 
-  const site = await reglagesSite();
+  const [site, pages] = await Promise.all([
+    reglagesSite(),
+    pagesPourPlanDuSite(),
+  ]);
   const maintenant = new Date();
 
-  return PAGES_PUBLIQUES.map((page) => ({
-    url: `${site.canonical}${page.chemin === "/" ? "" : page.chemin}`,
+  return pages.map((page) => ({
+    url: `${site.canonical}${page.path === "/" ? "" : page.path}`,
     lastModified: maintenant,
-    changeFrequency: page.frequence,
-    priority: page.priorite,
+    changeFrequency: "weekly" as const,
+    priority: page.priority,
   }));
 }

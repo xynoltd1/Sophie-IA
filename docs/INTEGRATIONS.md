@@ -196,3 +196,50 @@ simulé, jamais contre un vrai modèle.
 
 Les trois derniers existent dans l'énumération des canaux et dans les tables. Il ne faut
 pas en conclure qu'ils fonctionnent : rien ne les alimente.
+
+
+## Google Search Console
+
+**Statut** : implémenté, connexion réelle. Nécessite une portée à ajouter chez Google
+(OWNER_ACTION_PLAN D3b).
+
+| | |
+|---|---|
+| Portée OAuth | `https://www.googleapis.com/auth/webmasters.readonly` |
+| Client OAuth | celui de l'agenda (`GOOGLE_OAUTH_CLIENT_ID` / `_SECRET`, ou la console) |
+| Adresse de retour | `/api/integrations/search-console/callback` |
+| Jeton durable | `access_type=offline` + `prompt=consent`, chiffré en base |
+| Jeton d'accès | jamais stocké, redemandé à chaque besoin |
+| Table | `search_console_connection`, une ligne, aucune permission de lecture |
+| Garde | `requirePlatformAdmin` sur les deux routes |
+| API lue | `GET /webmasters/v3/sites`, `POST .../searchAnalytics/query` |
+| Module | `src/lib/seo/search-console.ts` |
+
+**Portée volontairement limitée.** Lecture seule. L'application ne peut ni vérifier une
+propriété, ni déposer un plan du site, ni modifier quoi que ce soit chez Google. Ces
+gestes se font une fois à la main et demandent un accès DNS.
+
+**Décalage de trois jours.** Google ne publie aucune donnée de recherche avant deux à
+trois jours. La fenêtre interrogée s'arrête donc trois jours avant aujourd'hui.
+
+**Mode dégradé.** Jeton refusé : l'erreur est écrite dans `last_error` et affichée sur
+l'écran, avec l'invitation à reconnecter. Aucune valeur de repli n'est inventée — sans
+connexion ou sans propriété, `performance()` rend `null` et l'écran dit pourquoi.
+
+## Stockage des images publiques
+
+**Statut** : implémenté.
+
+Bucket `public-assets`, **public en lecture** — c'est voulu : une image de partage doit
+être lisible par WhatsApp et LinkedIn, qui n'ont aucune session. Rien de sensible n'y
+entre jamais. Les enregistrements d'appels restent dans leur bucket privé, inchangé.
+
+| | |
+|---|---|
+| Types acceptés | `image/png`, `image/jpeg`, `image/webp` |
+| Taille maximale | 2 Mo, imposée par le bucket **et** vérifiée côté serveur |
+| Chemin | construit côté serveur : `partage/og-<horodatage>.<ext>` |
+| Écriture | service role uniquement, via une action d'administration |
+
+Le nom de fichier envoyé par le navigateur est ignoré. Un nom venant du client est une
+adresse qu'il contrôle.

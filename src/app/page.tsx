@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { reglagesSite, siteIndexable } from "@/lib/seo/site";
+import { pageSeo } from "@/lib/seo/pages";
 import { HabillagePublic } from "@/components/public/chrome";
+
+/**
+ * Ces pages lisent des réglages en base : sans durée de revalidation, Next les
+ * figerait au moment du build et un changement dans la console n'arriverait
+ * sur le site qu'au redéploiement suivant. Soixante secondes : la page reste
+ * servie en statique, donc rapide, et le réglage arrive dans la minute. Les
+ * actions d'administration demandent en plus une revalidation immédiate.
+ */
+export const revalidate = 60;
 
 /**
  * Les métadonnées viennent de la base, avec repli sur le code.
@@ -11,34 +21,45 @@ import { HabillagePublic } from "@/components/public/chrome";
  * que le rendu change serait une interface décorative.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await reglagesSite();
+  const [site, page] = await Promise.all([reglagesSite(), pageSeo("/")]);
+
+  // Le réglage de la page l'emporte sur celui du site, quand il existe. Les
+  // deux niveaux servent : l'un donne le ton général, l'autre affine une page
+  // précise.
+  const titre = page?.title?.trim() || site.title;
+  const description = page?.description?.trim() || site.description;
+  const image = page?.og_image?.trim() || site.og_image;
 
   return {
-    title: site.title,
-    description: site.description,
+    title: titre,
+    description,
     alternates: { canonical: site.canonical },
     openGraph: {
       type: "website",
       url: site.canonical,
       siteName: site.name,
       locale: site.locale,
-      title: site.title,
-      description: site.description,
-      images: site.og_image ? [{ url: site.og_image }] : undefined,
+      title: titre,
+      description,
+      images: image ? [{ url: image }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: site.name,
-      description: site.description,
-      images: site.og_image ? [site.og_image] : undefined,
+      description,
+      images: image ? [image] : undefined,
     },
     // L'indexation ne se règle pas depuis un formulaire : elle suit
     // l'environnement. Un interrupteur qui ferait indexer une préversion
     // mettrait deux sites en concurrence sur les mêmes mots, et c'est Google
     // qui choisirait lequel montrer.
-    robots: siteIndexable()
-      ? { index: true, follow: true }
-      : { index: false, follow: false },
+    // Deux conditions, jamais une seule : l'environnement doit autoriser
+    // l'indexation, ET la page doit être marquée indexable. Un réglage de page
+    // ne peut donc pas faire indexer une préversion.
+    robots:
+      siteIndexable() && page?.indexable !== false
+        ? { index: true, follow: true }
+        : { index: false, follow: false },
   };
 }
 

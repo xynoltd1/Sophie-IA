@@ -354,3 +354,146 @@ describe("configuration depuis la console", () => {
     expect(bloc).not.toContain("call_transcript_segments");
   });
 });
+
+describe("Search Console", () => {
+  it("la connexion est reelle : aucune donnee inventee", () => {
+    // Un ecran qui afficherait des positions sans connexion orienterait de
+    // vraies decisions avec des chiffres faux.
+    const client = lire("src/lib/seo/search-console.ts");
+    expect(client).toContain("searchconsole.googleapis.com");
+    expect(client).toContain("searchAnalytics/query");
+    // Aucune valeur de repli : sans connexion la fonction rend null.
+    expect(client).toContain("if (!etat.connecte || !etat.propriete) return null");
+    expect(client).not.toMatch(/clics:\s*\d+[^?]/);
+  });
+
+  it("la portee demandee est en lecture seule", () => {
+    // Demander l ecriture rallongerait la verification Google et donnerait un
+    // acces dont on ne se sert pas.
+    const client = lire("src/lib/seo/search-console.ts");
+    expect(client).toContain("webmasters.readonly");
+    expect(client).not.toContain("auth/webmasters\"");
+  });
+
+  it("le jeton de rafraichissement est chiffre et ne sort jamais", () => {
+    const client = lire("src/lib/seo/search-console.ts");
+    expect(client).toContain("encryptSecret(corps.refresh_token)");
+    // L etat expose a l ecran ne contient pas le jeton.
+    const etat = client.slice(client.indexOf("export async function etatSearchConsole"));
+    expect(etat).not.toContain("refresh_token");
+  });
+
+  it("l autorisation demande un jeton durable, explicitement", () => {
+    // Sans access_type=offline la connexion meurt au bout d une heure ; sans
+    // prompt=consent une reconnexion ne redonne pas de jeton durable.
+    const client = lire("src/lib/seo/search-console.ts");
+    expect(client).toContain('access_type: "offline"');
+    expect(client).toContain('prompt: "consent"');
+  });
+
+  it("le retour d autorisation est verifie et borne dans le temps", () => {
+    const callback = lire("src/app/api/integrations/search-console/callback/route.ts");
+    expect(callback).toContain("verifyPayload(state)");
+    expect(callback).toContain("ETAT_DUREE_MS");
+    // La signature ne prouve pas l identite de celui qui revient.
+    expect(callback).toContain("requirePlatformAdmin()");
+    expect(callback).toContain("userId !== donnees.user");
+  });
+
+  it("seul un administrateur de plateforme peut connecter", () => {
+    for (const route of [
+      "src/app/api/integrations/search-console/start/route.ts",
+      "src/app/api/integrations/search-console/callback/route.ts",
+    ]) {
+      expect(lire(route)).toContain("requirePlatformAdmin");
+    }
+  });
+
+  it("la fenetre de donnees tient compte du retard de Google", () => {
+    // Demander hier renvoie presque toujours zero : Google ne publie rien
+    // avant deux a trois jours.
+    const client = lire("src/lib/seo/search-console.ts");
+    expect(client).toContain("3 * 86_400_000");
+  });
+});
+
+describe("referencement page par page", () => {
+  it("un chemin de page ne peut pas etre invente", () => {
+    const actions = lire("src/app/admin/seo/actions.ts");
+    expect(actions).toContain("cheminAutorise(page.path)");
+    // Et la table refuse elle aussi, independamment du formulaire.
+    const migration = lire(
+      "supabase/migrations/20261105140000_0035_seo_pages.sql",
+    );
+    expect(migration).toContain("seo_pages_chemin_public");
+    for (const espace of ESPACES_PRIVES) {
+      expect(migration).toContain(`path not like '${espace}%'`);
+    }
+  });
+
+  it("le plan du site exige les quatre conditions", () => {
+    const pages = lire("src/lib/seo/pages.ts");
+    const bloc = pages.slice(pages.indexOf("pagesPourPlanDuSite"));
+    expect(bloc).toContain("cheminAutorise(page.path)");
+    expect(bloc).toContain("page.published");
+    expect(bloc).toContain("page.in_sitemap");
+    expect(bloc).toContain("page.indexable");
+  });
+
+  it("le reglage d une page atteint reellement la page", () => {
+    // Un formulaire dont la valeur n arriverait pas dans le rendu serait une
+    // interface decorative.
+    expect(lire("src/app/page.tsx")).toContain('pageSeo("/")');
+    expect(lire("src/app/sitemap.ts")).toContain("pagesPourPlanDuSite()");
+    expect(lire("src/app/admin/seo/actions.ts")).toContain(
+      'revalidatePath("/sitemap.xml")',
+    );
+  });
+
+  it("une page non indexable le reste meme si le site l est", () => {
+    const accueil = lire("src/app/page.tsx");
+    expect(accueil).toContain("siteIndexable() && page?.indexable !== false");
+  });
+});
+
+describe("image de partage", () => {
+  it("le chemin du fichier n est pas choisi par le navigateur", () => {
+    // Un nom venant du client est une adresse qu il controle : il pourrait
+    // ecrire ailleurs dans le bucket.
+    const actions = lire("src/app/admin/seo/actions.ts");
+    expect(actions).toContain("const chemin = `partage/og-${Date.now()}");
+    expect(actions).not.toContain("fichier.name");
+  });
+
+  it("le format et la taille sont verifies cote serveur", () => {
+    const actions = lire("src/app/admin/seo/actions.ts");
+    expect(actions).toContain("TYPES_IMAGE.includes(fichier.type)");
+    expect(actions).toContain("fichier.size > TAILLE_MAX");
+    // Et le bucket refuse aussi, independamment du formulaire.
+    const migration = lire(
+      "supabase/migrations/20261105140000_0035_seo_pages.sql",
+    );
+    expect(migration).toContain("2 * 1024 * 1024");
+    expect(migration).toContain("image/png");
+  });
+
+  it("chaque envoi porte un nom neuf", () => {
+    // Les caches des reseaux sociaux gardent longtemps une meme adresse.
+    expect(lire("src/app/admin/seo/actions.ts")).toContain("Date.now()");
+  });
+});
+
+describe("les reglages atteignent le site", () => {
+  it("les pages qui lisent la base ne sont pas figees au build", () => {
+    // Sans duree de revalidation, Next prerendrait ces pages une fois pour
+    // toutes : le formulaire d administration ecrirait en base sans que rien
+    // ne change sur le site, jusqu au redeploiement suivant.
+    for (const chemin of [
+      "src/app/page.tsx",
+      "src/app/sitemap.ts",
+      "src/app/robots.ts",
+    ]) {
+      expect(lire(chemin)).toContain("export const revalidate = 60");
+    }
+  });
+});
