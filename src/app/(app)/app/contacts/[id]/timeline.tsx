@@ -21,10 +21,14 @@ export function FilContact({ evenements }: { evenements: EvenementFil[] }) {
           const contenu = (
             <Sheet className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm text-ink-soft">{PUCES[evenement.genre] ?? ""}</p>
+                <p className="text-sm text-ink-soft">
+                  {PUCES[evenement.genre] ?? ""}
+                </p>
                 <p className="font-medium">{evenement.titre}</p>
                 {evenement.detail ? (
-                  <p className="mt-0.5 text-sm text-ink-soft">{evenement.detail}</p>
+                  <p className="mt-0.5 text-sm text-ink-soft">
+                    {evenement.detail}
+                  </p>
                 ) : null}
               </div>
               <p className="shrink-0 text-sm text-ink-faint first-letter:uppercase">

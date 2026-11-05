@@ -8,7 +8,12 @@ import { FilContact } from "./timeline";
 import { construireFil } from "@/lib/crm/timeline";
 import { EmptyState } from "@/components/ui/states";
 import { ContactPanels } from "./contact-panels";
-import { LEAD_STATUS_LABELS, contactLabel, isOpen, isOverdue } from "@/lib/crm/pipeline";
+import {
+  LEAD_STATUS_LABELS,
+  contactLabel,
+  isOpen,
+  isOverdue,
+} from "@/lib/crm/pipeline";
 import type { ContactRow, LeadRow, TaskRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +25,25 @@ export const dynamic = "force-dynamic";
  * les appels, les SMS et les rendez-vous aux phases suivantes. Aujourd'hui il
  * ne montre que les prospects, mais la forme est celle qui durera.
  */
-export default async function ContactPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ContactPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
   const orgId = activeOrganization.organization_id;
 
-  const [contactRes, leadsRes, tasksRes, messagesRes, appelsRes, rdvRes, filRes] =
-    await Promise.all([
+  const [
+    contactRes,
+    leadsRes,
+    tasksRes,
+    messagesRes,
+    appelsRes,
+    rdvRes,
+    filRes,
+  ] = await Promise.all([
     supabase
       .from("contacts")
       .select("*")
@@ -72,13 +88,15 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
     // et les afficherait dans l historique de celui-ci.
     supabase
       .from("conversation_messages")
-      .select("id, body, direction, occurred_at, conversations!inner(contact_id)")
+      .select(
+        "id, body, direction, occurred_at, conversations!inner(contact_id)",
+      )
       .eq("organization_id", orgId)
       .eq("conversations.contact_id", id)
       .eq("direction", "INBOUND")
       .order("occurred_at", { ascending: false })
       .limit(20),
-    ]);
+  ]);
 
   if (!contactRes.data) notFound();
 
@@ -108,7 +126,13 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
         created_at: m.created_at,
         direction: "OUTBOUND" as const,
       })),
-      ...((filRes.data ?? []) as { id: string; body: string; occurred_at: string }[]).map((m) => ({
+      ...(
+        (filRes.data ?? []) as {
+          id: string;
+          body: string;
+          occurred_at: string;
+        }[]
+      ).map((m) => ({
         id: m.id,
         body: m.body,
         created_at: m.occurred_at,
@@ -131,7 +155,10 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/prospects" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/prospects"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         Retour
       </Link>
 
@@ -157,7 +184,8 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
                  AVANT que l'artisan compose évite deux pertes : son temps, et
                  la tranquillité de l'inconnu qu'il risque d'appeler. */
               <p className="mt-2 text-sm text-attention">
-                Numéro communiqué par l’appelant, pas transmis par l’opérateur. À vérifier.
+                Numéro communiqué par l’appelant, pas transmis par l’opérateur.
+                À vérifier.
               </p>
             ) : null}
           </>
@@ -176,8 +204,13 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
             {leads.map((lead) => (
               <li key={lead.id}>
                 <Link href={`/app/prospects/${lead.id}`} className="block">
-                  <Sheet interactive
-                    tone={lead.priority === "URGENT" && isOpen(lead.status) ? "urgent" : "neutral"}
+                  <Sheet
+                    interactive
+                    tone={
+                      lead.priority === "URGENT" && isOpen(lead.status)
+                        ? "urgent"
+                        : "neutral"
+                    }
                     className="flex items-center justify-between gap-3"
                   >
                     <span className="font-medium">{lead.title}</span>

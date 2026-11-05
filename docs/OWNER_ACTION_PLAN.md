@@ -1448,3 +1448,155 @@ déploiement. Un test vérifie une logique ; seul un appel réel vérifie un app
 Trois fonctions centrales n'ont jamais touché un service réel : le résumé, le SMS, et
 l'appel sur un vrai numéro. Les trois dépendent d'un compte ou d'une clé, pas d'une ligne de
 code.
+
+---
+
+# D — Référencement, Search Console et mesure
+
+Ajouté le 2026-11-04, avec la version 0.17.0. Rien ici ne coûte d'argent.
+
+Jusqu'à cette version, le site n'avait **aucune page publique** : `/` renvoyait vers la
+connexion. Il y a maintenant une page d'accueil, un `robots.txt`, un plan du site et une
+mesure de fréquentation. Ce qui suit, c'est ce qui ne peut pas se faire depuis le code.
+
+## D1 — Vérifier que le site public est en ligne et indexable
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **haute** · dépend de **A10** · **coût : 0 €**
+
+**Quoi** Déployer la 0.17.0, puis regarder trois adresses.
+
+**Pourquoi** `robots.txt` et le plan du site ne s'activent que si `NEXT_PUBLIC_APP_ENV`
+vaut exactement `production`. Avec une autre valeur, tout le site reste en « ne pas
+indexer » — c'est volontaire, et c'est le genre de réglage qu'on découvre six mois plus
+tard en se demandant pourquoi Google ignore le site.
+
+**Les adresses à ouvrir**
+
+```
+https://zelicall.com/
+https://zelicall.com/robots.txt
+https://zelicall.com/sitemap.xml
+```
+
+**Réussi** La première affiche la page d'accueil. La deuxième contient `Allow: /` et une
+ligne `Sitemap:`. La troisième liste deux adresses.
+
+**Si `robots.txt` dit `Disallow: /`** `NEXT_PUBLIC_APP_ENV` ne vaut pas `production` sur
+Vercel. Corrigez la variable, puis **relancez un déploiement** : elle est lue à la
+compilation.
+
+## D2 — Appliquer la migration 0033
+
+- [ ] Fait
+`ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
+
+**Quoi** Coller `supabase/migrations/20261104120000_0033_analytics_and_stats.sql` dans
+l'éditeur SQL de la production, puis de la préproduction.
+
+**Pourquoi** Sans elle, la vue d'ensemble, les statistiques, la consommation et l'écran
+SEO affichent une erreur : ils appellent des fonctions qui n'existent pas encore.
+
+**Vérifier**
+
+```sql
+select count(*) as fonctions
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname in ('platform_stats','platform_series','usage_totals','site_traffic',
+                    'site_sources','site_pages','site_series','integration_health',
+                    'record_integration_check');
+```
+
+**Réussi** Le résultat est **9**.
+
+## D3 — Vérifier la propriété du site dans Search Console
+
+- [ ] Fait
+`ACTION PARTAGÉE` · priorité **haute** · dépend de **D1** · **coût : 0 €**
+
+**Quoi** Prouver à Google que le domaine est à vous.
+
+**Pourquoi** Sans cela, aucune donnée de recherche : ni les mots tapés par les visiteurs,
+ni les positions, ni les erreurs d'indexation. Ce sont des informations que **seul**
+Google détient ; aucun outil ne les remplace, et l'écran SEO affiche « Connexion
+nécessaire » tant qu'elles manquent.
+
+**Site** `https://search.google.com/search-console`
+
+**Les menus** *Ajouter une propriété*. Deux choix :
+
+- **Préfixe d'URL** — plus simple. Choisissez la méthode **Balise HTML**. Google affiche
+  une balise ; copiez **uniquement** le contenu de l'attribut `content`, pas la balise
+  entière.
+- **Domaine** — couvre aussi les sous-domaines, mais demande un enregistrement DNS TXT
+  chez votre registrar.
+
+**Variable d'environnement** `GOOGLE_SITE_VERIFICATION`, type **Config**, sur Vercel.
+Puis **relancez un déploiement** — elle est lue à la compilation.
+
+**Réussi** Google affiche « Propriété validée ». Dans la console, `/admin/seo` fait
+passer la ligne « Vérification Search Console » en *en place*.
+
+**Si Google ne trouve pas la balise** Vous avez probablement collé la balise entière au
+lieu du seul contenu de `content`. Regardez le code source de `https://zelicall.com` : la
+ligne doit ressembler à `<meta name="google-site-verification" content="...">`.
+
+## D4 — Déposer le plan du site
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité moyenne · dépend de **D3** · **coût : 0 €**
+
+**Quoi** Dire à Google où est le plan du site.
+
+**Les menus** Search Console → **Sitemaps** → saisir `sitemap.xml` → *Envoyer*.
+
+**Réussi** Statut « Réussite », deux URL découvertes.
+
+**Attention** Google met de quelques jours à quelques semaines à indexer un site neuf.
+Rien de ce que vous ferez n'accélère cela de façon fiable.
+
+## D5 — Fabriquer l'image de partage
+
+- [ ] Fait
+`ACTION PARTAGÉE` · priorité basse · **coût : 0 €**
+
+**Quoi** Une image qui s'affiche quand quelqu'un partage un lien vers zelicall.com sur
+WhatsApp, LinkedIn ou un message.
+
+**Pourquoi** Aujourd'hui il n'y en a pas : le lien s'affiche en texte gris. C'est la
+différence entre un lien qu'on clique et un lien qu'on ignore.
+
+**Ce qu'il faut** Une image 1200 × 630 pixels. Dites-moi ce que vous voulez dessus et je
+la fabrique ; ou fournissez-la, et je la branche.
+
+## D6 — Regarder la fréquentation après une semaine
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité basse · dépend de **D1**, **D2** · **coût : 0 €**
+
+**Les menus** `/admin/seo`.
+
+**Ce que vous y verrez** Visites humaines probables, trafic incertain, robots identifiés,
+sources, pages les plus vues.
+
+**Comment lire ces chiffres** Ce sont des **planchers**, jamais des totaux. Les bloqueurs
+de publicité refusent la requête de mesure, et l'empreinte de session change chaque jour
+— quelqu'un qui revient trois jours compte trois fois. C'est le prix de l'absence de
+cookie, donc de l'absence de bannière de consentement. Les limites sont écrites en bas de
+l'écran.
+
+## D7 — Faire valider la mesure de fréquentation
+
+- [ ] Fait
+`JE DOIS FAIRE` (avec le juriste de C2) · priorité moyenne · **coût : inclus dans C2**
+
+**Quoi** Faire confirmer que la mesure est exemptée de consentement.
+
+**Pourquoi** Sans cookie, sans stockage navigateur, sans identifiant persistant et sans
+transfert à un tiers, elle relève de la statistique strictement nécessaire, pour laquelle
+les autorités françaises et belges admettent une exemption. **Ce raisonnement est le
+mien, pas celui d'un juriste.**
+
+Le jour où vous ajouteriez un outil tiers, un cookie ou un identifiant persistant,
+l'exemption tombe immédiatement et il faut une bannière.

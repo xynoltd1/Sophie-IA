@@ -26,7 +26,8 @@ export default async function ConsommationPage() {
   const { activeOrganization } = await requireOrganization();
   // La consommation touche a la facturation : elle ne regarde pas un simple
   // membre, qui n'a pas a connaitre les engagements financiers de l'entreprise.
-  if (!can(activeOrganization.role, "billing:manage")) redirect("/app/reglages");
+  if (!can(activeOrganization.role, "billing:manage"))
+    redirect("/app/reglages");
 
   const supabase = await createServerSupabase();
   const orgId = activeOrganization.organization_id;
@@ -44,7 +45,11 @@ export default async function ConsommationPage() {
   const usage = (usageRes.data ?? []) as { kind: string; total: number }[];
   const abonnement = abonnementRes.data as unknown as {
     status: string;
-    plans: { label: string; included_voice_minutes: number; included_sms: number } | null;
+    plans: {
+      label: string;
+      included_voice_minutes: number;
+      included_sms: number;
+    } | null;
   } | null;
 
   const quotas: Record<string, number | null> = {
@@ -54,24 +59,33 @@ export default async function ConsommationPage() {
     STORAGE: null,
   };
 
-  const mois = new Date().toLocaleDateString("fr-BE", { month: "long", year: "numeric" });
+  const mois = new Date().toLocaleDateString("fr-BE", {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/reglages" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/reglages"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Réglages
       </Link>
       <SectionTitle>Consommation</SectionTitle>
       <p className="text-sm text-ink-soft first-letter:uppercase">
         {mois}
-        {abonnement?.plans ? ` · offre ${abonnement.plans.label}` : " · aucune offre souscrite"}
+        {abonnement?.plans
+          ? ` · offre ${abonnement.plans.label}`
+          : " · aucune offre souscrite"}
       </p>
 
       <ul className="flex flex-col gap-2">
         {Object.keys(LIBELLES).map((genre) => {
           const consomme = usage.find((u) => u.kind === genre)?.total ?? 0;
           const quota = quotas[genre] ?? null;
-          const part = quota && quota > 0 ? Math.min(100, (consomme / quota) * 100) : null;
+          const part =
+            quota && quota > 0 ? Math.min(100, (consomme / quota) * 100) : null;
 
           return (
             <li key={genre}>
@@ -80,7 +94,8 @@ export default async function ConsommationPage() {
                   <p className="font-medium">{LIBELLES[genre]?.titre}</p>
                   <p className="text-sm">
                     {arrondi(consomme)}
-                    {quota !== null ? ` / ${quota}` : ""} {LIBELLES[genre]?.unite}
+                    {quota !== null ? ` / ${quota}` : ""}{" "}
+                    {LIBELLES[genre]?.unite}
                   </p>
                 </div>
                 {part !== null ? (
@@ -93,7 +108,9 @@ export default async function ConsommationPage() {
                     aria-label={LIBELLES[genre]?.titre}
                   >
                     <div
-                      className={part >= 90 ? "h-full bg-urgent" : "h-full bg-signal"}
+                      className={
+                        part >= 90 ? "h-full bg-urgent" : "h-full bg-signal"
+                      }
                       style={{ width: `${part}%` }}
                     />
                   </div>
@@ -106,8 +123,8 @@ export default async function ConsommationPage() {
 
       <Sheet tone="neutral">
         <p className="text-sm text-ink-soft">
-          Les appels d’essai ne sont pas comptés. Un appel n’est compté qu’une fois, même si
-          son traitement est rejoué.
+          Les appels d’essai ne sont pas comptés. Un appel n’est compté qu’une
+          fois, même si son traitement est rejoué.
         </p>
       </Sheet>
     </div>

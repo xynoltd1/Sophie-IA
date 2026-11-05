@@ -30,7 +30,10 @@ export interface ContexteMessage {
 /** 160 caractères par SMS ; au-delà, l'opérateur découpe et facture plusieurs messages. */
 export const LONGUEUR_CONSEILLEE = 160;
 
-export function construireMessage(modele: ModeleMessage, c: ContexteMessage): string {
+export function construireMessage(
+  modele: ModeleMessage,
+  c: ContexteMessage,
+): string {
   const motif = c.motif?.trim() ? ` Motif : ${c.motif.trim()}.` : "";
 
   switch (modele) {
@@ -58,7 +61,10 @@ export function construireMessage(modele: ModeleMessage, c: ContexteMessage): st
 }
 
 /** Date et heure telles qu'un client les lit, dans le fuseau de l'entreprise. */
-export function quandLisible(iso: string, timezone = "Europe/Brussels"): string {
+export function quandLisible(
+  iso: string,
+  timezone = "Europe/Brussels",
+): string {
   const date = new Date(iso);
   const jour = date.toLocaleDateString("fr-BE", {
     weekday: "long",

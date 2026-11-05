@@ -42,7 +42,8 @@ export function MessagesContact({ messages }: { messages: LigneMessage[] }) {
       {erreur ? <p className="mb-2 text-sm text-urgent">{erreur}</p> : null}
       <ul className="flex flex-col gap-2">
         {messages.map((message) => {
-          const echoue = message.status === "FAILED" || message.status === "QUEUED";
+          const echoue =
+            message.status === "FAILED" || message.status === "QUEUED";
 
           return (
             <li key={message.id}>
@@ -59,7 +60,9 @@ export function MessagesContact({ messages }: { messages: LigneMessage[] }) {
                   })}
                 </p>
                 {message.last_error ? (
-                  <p className="mt-1 text-sm text-ink-soft">{message.last_error}</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    {message.last_error}
+                  </p>
                 ) : null}
                 {echoue ? (
                   <button
@@ -69,7 +72,10 @@ export function MessagesContact({ messages }: { messages: LigneMessage[] }) {
                       demarrer(async () => {
                         setErreur(null);
                         const resultat = await reessayerMessage(message.id);
-                        if (!resultat.ok) setErreur(resultat.erreur ?? "L’envoi a encore échoué.");
+                        if (!resultat.ok)
+                          setErreur(
+                            resultat.erreur ?? "L’envoi a encore échoué.",
+                          );
                         router.refresh();
                       })
                     }

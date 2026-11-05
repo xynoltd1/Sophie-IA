@@ -3,7 +3,11 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secrets";
 import { GoogleCalendarProvider } from "./google";
-import { CalendarError, type CalendarProvider, type CalendarTokens } from "./types";
+import {
+  CalendarError,
+  type CalendarProvider,
+  type CalendarTokens,
+} from "./types";
 
 /**
  * Service d'agenda externe.
@@ -79,7 +83,9 @@ async function audit(
   });
 }
 
-async function loadConnection(organizationId: string): Promise<ConnectionRow | null> {
+async function loadConnection(
+  organizationId: string,
+): Promise<ConnectionRow | null> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("calendar_connections")
@@ -122,7 +128,9 @@ async function freshAccessToken(connection: ConnectionRow): Promise<string> {
   const admin = createAdminClient();
 
   try {
-    const tokens = await provider.refreshTokens(decryptSecret(connection.refresh_token));
+    const tokens = await provider.refreshTokens(
+      decryptSecret(connection.refresh_token),
+    );
 
     await admin
       .from("calendar_connections")
@@ -153,9 +161,15 @@ async function freshAccessToken(connection: ConnectionRow): Promise<string> {
         })
         .eq("id", connection.id);
 
-      await audit(connection.organization_id, null, "CALENDAR_TOKEN_REVOKED", "ERROR", {
-        connection_id: connection.id,
-      });
+      await audit(
+        connection.organization_id,
+        null,
+        "CALENDAR_TOKEN_REVOKED",
+        "ERROR",
+        {
+          connection_id: connection.id,
+        },
+      );
     }
 
     throw error;
@@ -170,7 +184,8 @@ async function freshAccessToken(connection: ConnectionRow): Promise<string> {
  * notre cote. Les confondre derriere un « reessayez » generique oblige a aller
  * lire les journaux pour comprendre (ADR-025).
  */
-export type ConnectFailure = "ECHANGE_REFUSE" | "SANS_RENOUVELLEMENT" | "ENREGISTREMENT";
+export type ConnectFailure =
+  "ECHANGE_REFUSE" | "SANS_RENOUVELLEMENT" | "ENREGISTREMENT";
 
 export interface ConnectResult {
   ok: boolean;
@@ -198,13 +213,21 @@ export async function connectCalendar(params: {
   try {
     tokens = await provider.exchangeCode(params.code);
   } catch (error) {
-    await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "ERROR", {
-      reason: error instanceof Error ? error.message : "échec de l'échange de code",
-    });
+    await audit(
+      params.organizationId,
+      params.actorUserId,
+      "CALENDAR_CONNECT",
+      "ERROR",
+      {
+        reason:
+          error instanceof Error ? error.message : "échec de l'échange de code",
+      },
+    );
     return {
       ok: false,
       failure: "ECHANGE_REFUSE",
-      error: "Google a refusé l'autorisation. Réessayez en repartant des paramètres.",
+      error:
+        "Google a refusé l'autorisation. Réessayez en repartant des paramètres.",
     };
   }
 
@@ -212,9 +235,15 @@ export async function connectCalendar(params: {
     // Sans jeton de rafraîchissement, l'accès meurt dans une heure. Mieux vaut
     // refuser la connexion que livrer un agenda qui cessera de fonctionner.
     // Cet echec aussi doit laisser une trace : sans elle, il reste invisible.
-    await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "ERROR", {
-      reason: "aucun jeton de rafraîchissement renvoyé par Google",
-    });
+    await audit(
+      params.organizationId,
+      params.actorUserId,
+      "CALENDAR_CONNECT",
+      "ERROR",
+      {
+        reason: "aucun jeton de rafraîchissement renvoyé par Google",
+      },
+    );
     return {
       ok: false,
       failure: "SANS_RENOUVELLEMENT",
@@ -223,28 +252,36 @@ export async function connectCalendar(params: {
     };
   }
 
-  const { error: upsertError } = await admin.from("calendar_connections").upsert(
-    {
-      organization_id: params.organizationId,
-      member_id: null,
-      provider: "GOOGLE",
-      calendar_id: "primary",
-      external_account: tokens.account ?? null,
-      access_token: encryptSecret(tokens.accessToken),
-      refresh_token: encryptSecret(tokens.refreshToken),
-      token_expires_at: tokens.expiresAt.toISOString(),
-      sync_token: null,
-      is_active: true,
-      last_error: null,
-      consecutive_failures: 0,
-    },
-    { onConflict: "organization_id,member_id,provider" },
-  );
+  const { error: upsertError } = await admin
+    .from("calendar_connections")
+    .upsert(
+      {
+        organization_id: params.organizationId,
+        member_id: null,
+        provider: "GOOGLE",
+        calendar_id: "primary",
+        external_account: tokens.account ?? null,
+        access_token: encryptSecret(tokens.accessToken),
+        refresh_token: encryptSecret(tokens.refreshToken),
+        token_expires_at: tokens.expiresAt.toISOString(),
+        sync_token: null,
+        is_active: true,
+        last_error: null,
+        consecutive_failures: 0,
+      },
+      { onConflict: "organization_id,member_id,provider" },
+    );
 
   if (upsertError) {
-    await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "ERROR", {
-      reason: upsertError.message,
-    });
+    await audit(
+      params.organizationId,
+      params.actorUserId,
+      "CALENDAR_CONNECT",
+      "ERROR",
+      {
+        reason: upsertError.message,
+      },
+    );
     return {
       ok: false,
       failure: "ENREGISTREMENT",
@@ -252,9 +289,15 @@ export async function connectCalendar(params: {
     };
   }
 
-  await audit(params.organizationId, params.actorUserId, "CALENDAR_CONNECT", "SUCCESS", {
-    account: tokens.account ?? null,
-  });
+  await audit(
+    params.organizationId,
+    params.actorUserId,
+    "CALENDAR_CONNECT",
+    "SUCCESS",
+    {
+      account: tokens.account ?? null,
+    },
+  );
 
   // Première synchronisation immédiate : sans elle, l'agenda serait annoncé
   // comme connecté mais ne bloquerait encore aucun créneau.
@@ -301,7 +344,12 @@ export async function disconnectCalendar(params: {
       .eq("organization_id", params.organizationId);
   }
 
-  await audit(params.organizationId, params.actorUserId, "CALENDAR_DISCONNECT", "SUCCESS");
+  await audit(
+    params.organizationId,
+    params.actorUserId,
+    "CALENDAR_DISCONNECT",
+    "SUCCESS",
+  );
 }
 
 export interface SyncOutcome {
@@ -318,10 +366,18 @@ export interface SyncOutcome {
  * Utilise le jeton incrémental quand il existe. Si Google le refuse (410), on
  * relit toute la fenêtre — c'est prévu par le protocole, pas une anomalie.
  */
-export async function syncCalendar(organizationId: string): Promise<SyncOutcome> {
+export async function syncCalendar(
+  organizationId: string,
+): Promise<SyncOutcome> {
   const connection = await loadConnection(organizationId);
   if (!connection) {
-    return { ok: false, imported: 0, removed: 0, fullSync: false, error: "Aucun agenda connecté." };
+    return {
+      ok: false,
+      imported: 0,
+      removed: 0,
+      fullSync: false,
+      error: "Aucun agenda connecté.",
+    };
   }
 
   const admin = createAdminClient();
@@ -345,7 +401,10 @@ export async function syncCalendar(organizationId: string): Promise<SyncOutcome>
 
     if (result.requiresFullSync) {
       fullSync = true;
-      await admin.from("calendar_busy_blocks").delete().eq("connection_id", connection.id);
+      await admin
+        .from("calendar_busy_blocks")
+        .delete()
+        .eq("connection_id", connection.id);
       result = await provider.listBusy({
         accessToken,
         calendarId: connection.calendar_id ?? "primary",
@@ -425,7 +484,13 @@ export async function syncCalendar(organizationId: string): Promise<SyncOutcome>
       })
       .eq("id", connection.id);
 
-    return { ok: false, imported: 0, removed: 0, fullSync: false, error: message };
+    return {
+      ok: false,
+      imported: 0,
+      removed: 0,
+      fullSync: false,
+      error: message,
+    };
   }
 }
 
@@ -462,8 +527,11 @@ export async function pushAppointment(params: {
     .eq("id", params.organizationId)
     .maybeSingle();
 
-  const contact = (rdv as { contacts?: { full_name?: string | null; phone?: string | null } | null })
-    .contacts;
+  const contact = (
+    rdv as {
+      contacts?: { full_name?: string | null; phone?: string | null } | null;
+    }
+  ).contacts;
 
   const accessToken = await freshAccessToken(connection);
   const provider = getCalendarProvider();
@@ -483,7 +551,9 @@ export async function pushAppointment(params: {
     endsAt: new Date(rdv.ends_at as string),
     timezone: (org?.timezone as string | undefined) ?? "Europe/Brussels",
     location:
-      [rdv.address_line1, rdv.postal_code, rdv.city].filter(Boolean).join(", ") || undefined,
+      [rdv.address_line1, rdv.postal_code, rdv.city]
+        .filter(Boolean)
+        .join(", ") || undefined,
   };
 
   const existant = rdv.external_event_id as string | null;
@@ -498,11 +568,18 @@ export async function pushAppointment(params: {
     return { externalEventId: existant };
   }
 
-  const created = await provider.createEvent({ accessToken, calendarId, event });
+  const created = await provider.createEvent({
+    accessToken,
+    calendarId,
+    event,
+  });
 
   await admin
     .from("appointments")
-    .update({ external_event_id: created.externalEventId, external_provider: "GOOGLE" })
+    .update({
+      external_event_id: created.externalEventId,
+      external_provider: "GOOGLE",
+    })
     .eq("id", params.appointmentId);
 
   return created;
@@ -566,9 +643,14 @@ export async function removeAppointment(params: {
 export async function ensureCalendarFresh(
   organizationId: string,
   options: { timeoutMs?: number } = {},
-): Promise<{ synced: boolean; reason: "FRESH" | "SYNCED" | "SKIPPED" | "TIMEOUT" | "FAILED" }> {
+): Promise<{
+  synced: boolean;
+  reason: "FRESH" | "SYNCED" | "SKIPPED" | "TIMEOUT" | "FAILED";
+}> {
   const admin = createAdminClient();
-  const seuil = new Date(Date.now() - FRESHNESS_WINDOW_MINUTES * 60_000).toISOString();
+  const seuil = new Date(
+    Date.now() - FRESHNESS_WINDOW_MINUTES * 60_000,
+  ).toISOString();
 
   const { data } = await admin
     .from("calendar_connections")
@@ -584,7 +666,10 @@ export async function ensureCalendarFresh(
 
   // Une connexion cassée (jeton révoqué, agenda supprimé) ne doit pas ajouter
   // son délai d'attente à chaque chargement de page.
-  if ((data.consecutive_failures as number | null) !== null && (data.consecutive_failures as number) >= 3) {
+  if (
+    (data.consecutive_failures as number | null) !== null &&
+    (data.consecutive_failures as number) >= 3
+  ) {
     return { synced: false, reason: "SKIPPED" };
   }
 
@@ -593,8 +678,12 @@ export async function ensureCalendarFresh(
   type Issue = "SYNCED" | "FAILED" | "TIMEOUT";
 
   const course = await Promise.race<Issue>([
-    syncCalendar(organizationId).then((r): Issue => (r.ok ? "SYNCED" : "FAILED")),
-    new Promise<Issue>((resolve) => setTimeout(() => resolve("TIMEOUT"), timeoutMs)),
+    syncCalendar(organizationId).then((r): Issue =>
+      r.ok ? "SYNCED" : "FAILED",
+    ),
+    new Promise<Issue>((resolve) =>
+      setTimeout(() => resolve("TIMEOUT"), timeoutMs),
+    ),
   ]);
 
   return { synced: course === "SYNCED", reason: course };

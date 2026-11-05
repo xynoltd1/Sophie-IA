@@ -14,7 +14,12 @@ const contactSchema = z.object({
   contactId: z.string().uuid(),
   fullName: z.string().trim().max(120).optional(),
   companyName: z.string().trim().max(120).optional(),
-  email: z.string().trim().email("Adresse e-mail invalide").or(z.literal("")).optional(),
+  email: z
+    .string()
+    .trim()
+    .email("Adresse e-mail invalide")
+    .or(z.literal(""))
+    .optional(),
   phone: z.string().trim().max(30).optional(),
   addressLine1: z.string().trim().max(200).optional(),
   city: z.string().trim().max(120).optional(),
@@ -96,7 +101,9 @@ export async function createTask(
     contact_id: parsed.data.contactId,
     title: parsed.data.title,
     // Un champ date vide arrive en chaîne vide : Postgres refuserait.
-    due_at: parsed.data.dueAt ? new Date(parsed.data.dueAt).toISOString() : null,
+    due_at: parsed.data.dueAt
+      ? new Date(parsed.data.dueAt).toISOString()
+      : null,
     source: "MANUAL",
   });
 

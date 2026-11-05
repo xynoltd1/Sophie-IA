@@ -34,7 +34,9 @@ export function needsApproval(status: AppointmentStatus): boolean {
 }
 
 /** Actions proposées au professionnel selon l'état du rendez-vous. */
-export function appointmentActions(status: AppointmentStatus): AppointmentStatus[] {
+export function appointmentActions(
+  status: AppointmentStatus,
+): AppointmentStatus[] {
   switch (status) {
     case "PENDING_APPROVAL":
       return ["CONFIRMED", "REJECTED"];
@@ -80,5 +82,7 @@ export function todayISO(timeZone = "Europe/Brussels"): string {
 
 /** Fin d'un créneau à partir de son début et d'une durée en minutes. */
 export function endOfSlot(startIso: string, minutes: number): string {
-  return new Date(new Date(startIso).getTime() + minutes * 60_000).toISOString();
+  return new Date(
+    new Date(startIso).getTime() + minutes * 60_000,
+  ).toISOString();
 }

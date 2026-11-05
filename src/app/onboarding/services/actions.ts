@@ -99,7 +99,10 @@ export async function continueToSchedule() {
 
   if (!count) {
     // Sophie ne peut rien proposer si l'entreprise n'offre aucun service.
-    return { error: "Gardez au moins un service actif pour que Sophie puisse qualifier les demandes." };
+    return {
+      error:
+        "Gardez au moins un service actif pour que Sophie puisse qualifier les demandes.",
+    };
   }
 
   await supabase.rpc("set_onboarding_step", {

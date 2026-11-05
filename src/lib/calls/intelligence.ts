@@ -8,6 +8,7 @@ import {
   SCHEMA_DONNEES,
 } from "@/lib/sophie/analysis";
 import { signalerErreurFournisseur } from "@/lib/platform/errors";
+import { noterEchangeReussi } from "@/lib/platform/errors";
 
 /**
  * Production du résumé et des champs structurés à partir de la transcription.
@@ -206,6 +207,12 @@ export async function genererIntelligenceAppel(
       erreur: "Le résumé n'a pas pu être enregistré.",
       simule: fournisseur.isMock,
     };
+  }
+
+  // Un resume simule ne prouve rien : seul un vrai echange compte comme
+  // preuve que l integration fonctionne aujourd hui.
+  if (!fournisseur.isMock) {
+    await noterEchangeReussi("AI", `${fournisseur.name}:${fournisseur.model}`);
   }
 
   return { ok: true, resume, donnees, simule: fournisseur.isMock };

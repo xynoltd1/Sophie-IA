@@ -81,10 +81,15 @@ export interface VoiceAIProvider {
   readonly name: string;
 
   /** Crée ou met à jour l'assistant d'une organisation chez le fournisseur. */
-  upsertAssistant(config: VoiceAssistantConfig): Promise<{ assistantId: string }>;
+  upsertAssistant(
+    config: VoiceAssistantConfig,
+  ): Promise<{ assistantId: string }>;
 
   /** Associe un numéro de téléphone à un assistant. */
-  attachPhoneNumber(params: { assistantId: string; e164: string }): Promise<void>;
+  attachPhoneNumber(params: {
+    assistantId: string;
+    e164: string;
+  }): Promise<void>;
 
   /**
    * Vérifie l'authenticité d'une requête du fournisseur.

@@ -9,8 +9,13 @@
 
 ## Où en est le projet
 
-**Version** 0.16.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.17.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
+> **La console d'administration, le référencement et la mesure de fréquentation ont
+> leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
+> `docs/ANALYTICS.md`. Les lire avant de toucher à `/admin`, au site public ou à la
+> collecte.
+>
 > **Pour tout ce qui dépend de Zehra et non du code — comptes, clés, numéro, juridique —
 > lire `docs/OWNER_ACTION_PLAN.md`.** C'est la liste ordonnée de ses actions, avec les
 > dépendances et les preuves de réussite. Ne lui redemandez pas une étape qu'elle y a
@@ -51,7 +56,7 @@ Les trois dernières lignes sont les seules qui restent, et aucune ne dépend du
 ```
 npm run typecheck   ✓
 npm run lint        ✓
-npm run test        ✓  361 tests passés, 0 ignoré avec SUPABASE_TEST_* (2026-11-04)
+npm run test        ✓  383 tests passés, 0 ignoré avec SUPABASE_TEST_* (2026-11-04)
 npm run build       ✓
 ```
 
@@ -193,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-deux
+## Migrations — trente-trois
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -260,6 +265,14 @@ projet, et le premier critère de choix du fournisseur de voix.
 0032_revoke_truncate_views       le meme nettoyage pour les vues : pg_tables ne
                                  les contient pas, calendar_status avait ete
                                  manquee par la 0031.
+0033_analytics_and_stats         site_events (frequentation sans cookie, trois
+                                 classifications), integration_checks (preuve
+                                 datee qu une integration fonctionne), et neuf
+                                 fonctions d agregation reservees au super
+                                 administrateur : platform_stats,
+                                 platform_series, usage_totals, site_traffic,
+                                 site_sources, site_pages, site_series,
+                                 record_integration_check, integration_health.
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -276,6 +289,10 @@ que des assertions « X ne doit pas voir Y ». Une base entièrement verrouillé
 toutes passer. Quatre contrôles positifs ont été ajoutés ; garder ce réflexe.
 
 ## Variables d'environnement
+
+Ajoutée en 0.17.0 : `GOOGLE_SITE_VERIFICATION`, facultative, jeton de propriété Search
+Console. Absente, aucune balise n'est émise — une balise vide se lit comme une tentative
+ratée.
 
 Requises aujourd'hui : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`. Pour lancer la suite d'isolation : `SUPABASE_TEST_URL`,

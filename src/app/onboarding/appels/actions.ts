@@ -11,8 +11,13 @@ const schema = z
     transferNumber: z.string().trim().max(30).optional(),
   })
   .refine(
-    (value) => value.answerMode !== "WHEN_UNAVAILABLE" || Boolean(value.transferNumber),
-    { message: "Indiquez le numéro vers lequel appeler avant de passer la main à Sophie.", path: ["transferNumber"] },
+    (value) =>
+      value.answerMode !== "WHEN_UNAVAILABLE" || Boolean(value.transferNumber),
+    {
+      message:
+        "Indiquez le numéro vers lequel appeler avant de passer la main à Sophie.",
+      path: ["transferNumber"],
+    },
   );
 
 export interface PhoneState {
@@ -31,7 +36,12 @@ export async function savePhoneRules(
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return { fieldErrors: { [String(issue?.path[0] ?? "answerMode")]: issue?.message ?? "Formulaire invalide" } };
+    return {
+      fieldErrors: {
+        [String(issue?.path[0] ?? "answerMode")]:
+          issue?.message ?? "Formulaire invalide",
+      },
+    };
   }
 
   const { activeOrganization } = await requireOrganization();

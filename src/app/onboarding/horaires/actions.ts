@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isEveryDayClosed, validateHours, type HourInput } from "@/lib/org/schedule";
+import {
+  isEveryDayClosed,
+  validateHours,
+  type HourInput,
+} from "@/lib/org/schedule";
 
 const hourSchema = z.object({
   weekday: z.number().int().min(1).max(7),
@@ -40,7 +44,9 @@ export async function saveHours(
 ): Promise<HoursState> {
   const parsed = payload.safeParse(input);
   if (!parsed.success) {
-    return { error: "Les horaires envoyés sont incomplets. Rechargez la page." };
+    return {
+      error: "Les horaires envoyés sont incomplets. Rechargez la page.",
+    };
   }
 
   const hours = parsed.data.hours as HourInput[];
@@ -74,7 +80,9 @@ export async function saveHours(
       .eq("weekday", hour.weekday);
 
     if (error) {
-      return { error: "Les horaires n'ont pas pu être enregistrés. Réessayez." };
+      return {
+        error: "Les horaires n'ont pas pu être enregistrés. Réessayez.",
+      };
     }
   }
 
@@ -87,11 +95,17 @@ export async function saveHours(
     .eq("organization_id", orgId);
 
   if (profile.error) {
-    return { error: "Les horaires sont enregistrés, mais pas les durées de rendez-vous." };
+    return {
+      error:
+        "Les horaires sont enregistrés, mais pas les durées de rendez-vous.",
+    };
   }
 
   if (contexte === "ONBOARDING") {
-    await supabase.rpc("set_onboarding_step", { org_id: orgId, step: "CALENDAR" });
+    await supabase.rpc("set_onboarding_step", {
+      org_id: orgId,
+      step: "CALENDAR",
+    });
     redirect("/onboarding/agenda");
   }
 

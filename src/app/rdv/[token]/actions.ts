@@ -2,7 +2,13 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 
-export type ReponseClient = "ACCEPTE" | "REFUSE" | "EXPIRE" | "DEJA_TRAITE" | "CRENEAU_PRIS" | "INTROUVABLE";
+export type ReponseClient =
+  | "ACCEPTE"
+  | "REFUSE"
+  | "EXPIRE"
+  | "DEJA_TRAITE"
+  | "CRENEAU_PRIS"
+  | "INTROUVABLE";
 
 /**
  * Réponse du client, sans compte et sans session.
@@ -26,6 +32,7 @@ export async function repondreProposition(
 
   if (error) return { resultat: "INTROUVABLE" };
 
-  const ligne = (Array.isArray(data) ? data[0] : data) as { resultat?: string } | undefined;
+  const ligne = (Array.isArray(data) ? data[0] : data) as
+    { resultat?: string } | undefined;
   return { resultat: (ligne?.resultat as ReponseClient) ?? "INTROUVABLE" };
 }

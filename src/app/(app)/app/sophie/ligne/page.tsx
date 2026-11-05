@@ -44,7 +44,10 @@ export default async function LignePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/sophie" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/sophie"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Sophie
       </Link>
       <SectionTitle>Ligne téléphonique</SectionTitle>
@@ -57,9 +60,10 @@ export default async function LignePage() {
             <Sheet tone="attention">
               <p className="font-medium">Aucune ligne déclarée</p>
               <p className="mt-1 text-sm text-ink-soft">
-                Tant qu’aucun numéro n’est rattaché à votre entreprise, Sophie ne peut pas
-                savoir à qui appartient un appel entrant. Tous les appels sont alors marqués
-                « essai » et n’apparaissent dans aucune alerte.
+                Tant qu’aucun numéro n’est rattaché à votre entreprise, Sophie
+                ne peut pas savoir à qui appartient un appel entrant. Tous les
+                appels sont alors marqués « essai » et n’apparaissent dans
+                aucune alerte.
               </p>
             </Sheet>
           ) : null}

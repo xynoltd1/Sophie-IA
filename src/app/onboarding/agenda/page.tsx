@@ -33,7 +33,9 @@ export default async function CalendarStep() {
       {state.connected ? (
         <Sheet tone="done" className="flex flex-col gap-1">
           <p className="font-medium">Agenda connecté</p>
-          {state.account ? <p className="text-sm text-ink-soft">{state.account}</p> : null}
+          {state.account ? (
+            <p className="text-sm text-ink-soft">{state.account}</p>
+          ) : null}
           <p className="text-sm text-ink-soft">
             Sophie tiendra compte de vos rendez-vous personnels.
           </p>
@@ -42,9 +44,10 @@ export default async function CalendarStep() {
         <Sheet className="flex flex-col gap-3">
           <p className="font-medium">Connecter Google Calendar</p>
           <p className="text-sm text-ink-soft">
-            Sophie lira vos plages occupées pour ne pas proposer un créneau déjà pris. Elle
-            ne lit que les horaires de vos événements, jamais leur contenu, et elle
-            n&apos;accède qu&apos;à votre agenda — pas à vos e-mails ni à vos contacts.
+            Sophie lira vos plages occupées pour ne pas proposer un créneau déjà
+            pris. Elle ne lit que les horaires de vos événements, jamais leur
+            contenu, et elle n&apos;accède qu&apos;à votre agenda — pas à vos
+            e-mails ni à vos contacts.
           </p>
           <a
             href="/api/integrations/google/start"
@@ -55,15 +58,17 @@ export default async function CalendarStep() {
         </Sheet>
       ) : (
         <Sheet tone="attention" className="flex flex-col gap-2">
-          <p className="font-semibold">Connexion Google pas encore disponible</p>
-          <p className="text-sm text-ink-soft">
-            Cette installation n&apos;a pas encore ses identifiants Google. Vous pourrez
-            connecter votre agenda depuis les paramètres dès qu&apos;ils seront en place,
-            sans refaire la configuration.
+          <p className="font-semibold">
+            Connexion Google pas encore disponible
           </p>
           <p className="text-sm text-ink-soft">
-            En attendant, Sophie s&apos;appuiera uniquement sur les horaires que vous venez
-            de définir.
+            Cette installation n&apos;a pas encore ses identifiants Google. Vous
+            pourrez connecter votre agenda depuis les paramètres dès qu&apos;ils
+            seront en place, sans refaire la configuration.
+          </p>
+          <p className="text-sm text-ink-soft">
+            En attendant, Sophie s&apos;appuiera uniquement sur les horaires que
+            vous venez de définir.
           </p>
         </Sheet>
       )}

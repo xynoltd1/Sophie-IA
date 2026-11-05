@@ -12,12 +12,7 @@
 export type CallDirection = "INBOUND" | "OUTBOUND";
 
 export type CallStatus =
-  | "RINGING"
-  | "ANSWERED"
-  | "COMPLETED"
-  | "MISSED"
-  | "FAILED"
-  | "TRANSFERRED";
+  "RINGING" | "ANSWERED" | "COMPLETED" | "MISSED" | "FAILED" | "TRANSFERRED";
 
 export interface IncomingCall {
   /** Identifiant chez l'opérateur, pour corréler les webhooks suivants. */
@@ -59,7 +54,13 @@ export interface TelephonyProvider {
 
   hangup(providerCallId: string): Promise<void>;
 
-  listAvailableNumbers(params: { country: string; limit?: number }): Promise<PhoneNumber[]>;
+  listAvailableNumbers(params: {
+    country: string;
+    limit?: number;
+  }): Promise<PhoneNumber[]>;
 
-  provisionNumber(params: { e164: string; organizationId: string }): Promise<PhoneNumber>;
+  provisionNumber(params: {
+    e164: string;
+    organizationId: string;
+  }): Promise<PhoneNumber>;
 }

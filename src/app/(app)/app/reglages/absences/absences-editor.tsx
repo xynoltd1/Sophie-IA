@@ -27,7 +27,10 @@ export function AbsencesEditor({
   absences: LigneAbsence[];
   timezone: string;
 }) {
-  const [state, action, enCours] = useActionState<AbsenceState, FormData>(ajouterAbsence, {});
+  const [state, action, enCours] = useActionState<AbsenceState, FormData>(
+    ajouterAbsence,
+    {},
+  );
   const [suppression, demarrer] = useTransition();
   const router = useRouter();
 
@@ -66,8 +69,8 @@ export function AbsencesEditor({
       ) : (
         <Sheet>
           <p className="text-sm text-ink-soft">
-            Aucune absence enregistrée. Sophie propose des rendez-vous sur tous vos jours
-            ouvrés.
+            Aucune absence enregistrée. Sophie propose des rendez-vous sur tous
+            vos jours ouvrés.
           </p>
         </Sheet>
       )}
@@ -132,8 +135,12 @@ export function AbsencesEditor({
             />
           </div>
 
-          {state.error ? <p className="text-sm text-urgent">{state.error}</p> : null}
-          {state.success ? <p className="text-sm text-signal-deep">{state.success}</p> : null}
+          {state.error ? (
+            <p className="text-sm text-urgent">{state.error}</p>
+          ) : null}
+          {state.success ? (
+            <p className="text-sm text-signal-deep">{state.success}</p>
+          ) : null}
 
           <Button type="submit" loading={enCours}>
             Ajouter

@@ -9,10 +9,16 @@ import { z } from "zod";
  */
 
 const publicSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url("NEXT_PUBLIC_SUPABASE_URL doit etre une URL valide"),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20, "NEXT_PUBLIC_SUPABASE_ANON_KEY manquante"),
+  NEXT_PUBLIC_SUPABASE_URL: z
+    .string()
+    .url("NEXT_PUBLIC_SUPABASE_URL doit etre une URL valide"),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z
+    .string()
+    .min(20, "NEXT_PUBLIC_SUPABASE_ANON_KEY manquante"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-  NEXT_PUBLIC_APP_ENV: z.enum(["development", "staging", "production"]).default("development"),
+  NEXT_PUBLIC_APP_ENV: z
+    .enum(["development", "staging", "production"])
+    .default("development"),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
@@ -32,7 +38,9 @@ export function publicEnv(): PublicEnv {
   // en developpement, ou process.env est lu a l'execution.
   const parsed = publicSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: vide(process.env.NEXT_PUBLIC_SUPABASE_URL),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: vide(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: vide(
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    ),
     NEXT_PUBLIC_APP_URL: vide(process.env.NEXT_PUBLIC_APP_URL),
     NEXT_PUBLIC_APP_ENV: vide(process.env.NEXT_PUBLIC_APP_ENV),
   });

@@ -4,7 +4,11 @@ import { MockAIProvider } from "./mock";
 import { OpenAICompatibleProvider } from "./openai";
 import type { AIProvider } from "./types";
 
-export type { AIProvider, AICompletionRequest, AICompletionResult } from "./types";
+export type {
+  AIProvider,
+  AICompletionRequest,
+  AICompletionResult,
+} from "./types";
 
 /**
  * Le fournisseur d'IA configuré, ou la simulation.

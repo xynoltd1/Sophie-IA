@@ -68,7 +68,10 @@ export interface PageAppels {
 }
 
 /** Début de la période demandée, dans le fuseau de l'entreprise. */
-export function debutPeriode(periode: Periode, maintenant = new Date()): string | null {
+export function debutPeriode(
+  periode: Periode,
+  maintenant = new Date(),
+): string | null {
   switch (periode) {
     case "AUJOURD_HUI": {
       const jour = new Date(maintenant);
@@ -76,9 +79,13 @@ export function debutPeriode(periode: Periode, maintenant = new Date()): string 
       return jour.toISOString();
     }
     case "7J":
-      return new Date(maintenant.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      return new Date(
+        maintenant.getTime() - 7 * 24 * 60 * 60 * 1000,
+      ).toISOString();
     case "30J":
-      return new Date(maintenant.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      return new Date(
+        maintenant.getTime() - 30 * 24 * 60 * 60 * 1000,
+      ).toISOString();
     default:
       return null;
   }
@@ -135,7 +142,10 @@ export async function listerAppels(params: {
 }
 
 /** Bornes affichées : « 1 à 10 sur 147 ». */
-export function bornesAffichees(page: PageAppels): { debut: number; fin: number } {
+export function bornesAffichees(page: PageAppels): {
+  debut: number;
+  fin: number;
+} {
   if (page.total === 0) return { debut: 0, fin: 0 };
   const debut = (page.page - 1) * page.taille + 1;
   return { debut, fin: Math.min(debut + page.appels.length - 1, page.total) };

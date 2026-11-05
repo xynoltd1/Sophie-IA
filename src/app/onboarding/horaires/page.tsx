@@ -62,7 +62,9 @@ export default async function ScheduleStep() {
     >
       <HoursEditor
         initialHours={initial}
-        defaultAppointmentMinutes={profile.data?.default_appointment_minutes ?? 60}
+        defaultAppointmentMinutes={
+          profile.data?.default_appointment_minutes ?? 60
+        }
         bufferMinutes={profile.data?.buffer_minutes ?? 15}
       />
     </StepShell>

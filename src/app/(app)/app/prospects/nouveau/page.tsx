@@ -13,7 +13,10 @@ export default async function NouveauProspectPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <SectionTitle>Nouveau prospect</SectionTitle>
-        <Link href="/app/prospects" className="text-sm text-ink-soft underline underline-offset-4">
+        <Link
+          href="/app/prospects"
+          className="text-sm text-ink-soft underline underline-offset-4"
+        >
           Annuler
         </Link>
       </div>

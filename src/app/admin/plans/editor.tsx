@@ -17,7 +17,10 @@ export interface LignePlan {
 }
 
 export function PlansEditor({ plans }: { plans: LignePlan[] }) {
-  const [state, action, enCours] = useActionState<PlanState, FormData>(enregistrerPlan, {});
+  const [state, action, enCours] = useActionState<PlanState, FormData>(
+    enregistrerPlan,
+    {},
+  );
   const [ouvert, setOuvert] = useState(false);
 
   return (
@@ -30,15 +33,22 @@ export function PlansEditor({ plans }: { plans: LignePlan[] }) {
                 <p className="font-medium">
                   {plan.label}
                   {!plan.is_public ? (
-                    <span className="ml-2 text-sm font-normal text-ink-soft">(non publiée)</span>
+                    <span className="ml-2 text-sm font-normal text-ink-soft">
+                      (non publiée)
+                    </span>
                   ) : null}
                 </p>
                 <p className="text-sm text-ink-soft">
-                  {plan.included_voice_minutes} min de voix · {plan.included_sms} SMS ·{" "}
-                  {plan.max_members ? `${plan.max_members} membres` : "membres illimités"}
+                  {plan.included_voice_minutes} min de voix ·{" "}
+                  {plan.included_sms} SMS ·{" "}
+                  {plan.max_members
+                    ? `${plan.max_members} membres`
+                    : "membres illimités"}
                 </p>
                 {plan.description ? (
-                  <p className="mt-1 text-sm text-ink-soft">{plan.description}</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    {plan.description}
+                  </p>
                 ) : null}
               </div>
               <span className="shrink-0 text-sm font-medium">
@@ -52,7 +62,11 @@ export function PlansEditor({ plans }: { plans: LignePlan[] }) {
       </ul>
 
       {!ouvert ? (
-        <Button type="button" variant="secondary" onClick={() => setOuvert(true)}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setOuvert(true)}
+        >
           Ajouter ou modifier une offre
         </Button>
       ) : (
@@ -61,12 +75,24 @@ export function PlansEditor({ plans }: { plans: LignePlan[] }) {
             <Champ nom="code" libelle="Code (ex. PRO)" requis />
             <Champ nom="label" libelle="Nom affiché" requis />
             <Champ nom="description" libelle="Description (facultatif)" />
-            <Champ nom="prixEuros" libelle="Prix mensuel en euros (vide = à fixer)" />
+            <Champ
+              nom="prixEuros"
+              libelle="Prix mensuel en euros (vide = à fixer)"
+            />
             <div className="flex gap-3">
-              <Champ nom="minutes" libelle="Minutes incluses" type="number" defaut="0" />
+              <Champ
+                nom="minutes"
+                libelle="Minutes incluses"
+                type="number"
+                defaut="0"
+              />
               <Champ nom="sms" libelle="SMS inclus" type="number" defaut="0" />
             </div>
-            <Champ nom="membres" libelle="Membres maximum (vide = illimité)" type="number" />
+            <Champ
+              nom="membres"
+              libelle="Membres maximum (vide = illimité)"
+              type="number"
+            />
 
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -77,14 +103,22 @@ export function PlansEditor({ plans }: { plans: LignePlan[] }) {
               Offre publiée
             </label>
 
-            {state.error ? <p className="text-sm text-urgent">{state.error}</p> : null}
-            {state.success ? <p className="text-sm text-signal-deep">{state.success}</p> : null}
+            {state.error ? (
+              <p className="text-sm text-urgent">{state.error}</p>
+            ) : null}
+            {state.success ? (
+              <p className="text-sm text-signal-deep">{state.success}</p>
+            ) : null}
 
             <div className="flex gap-2">
               <Button type="submit" loading={enCours}>
                 Enregistrer
               </Button>
-              <Button type="button" variant="secondary" onClick={() => setOuvert(false)}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setOuvert(false)}
+              >
                 Fermer
               </Button>
             </div>

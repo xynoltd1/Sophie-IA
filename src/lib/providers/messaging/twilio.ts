@@ -48,7 +48,10 @@ export class TwilioMessagingProvider implements MessagingProvider {
           headers: {
             "content-type": "application/x-www-form-urlencoded",
             authorization:
-              "Basic " + Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64"),
+              "Basic " +
+              Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+                "base64",
+              ),
             // L'opérateur refuse un second envoi portant la même clé : c'est
             // notre garantie qu'un webhook rejoué n'envoie pas deux SMS.
             "i-twilio-idempotency-token": message.idempotencyKey,
@@ -96,19 +99,26 @@ export class TwilioMessagingProvider implements MessagingProvider {
    * Les accusés de réception sont signés. Sans cette vérification, n'importe
    * qui pourrait déclarer nos messages « échoués » ou « livrés ».
    */
-  verifyWebhook(params: { rawBody: string; headers: Record<string, string> }): boolean {
+  verifyWebhook(params: {
+    rawBody: string;
+    headers: Record<string, string>;
+  }): boolean {
     const signature = params.headers["x-twilio-signature"];
     const url = params.headers["x-webhook-url"];
     if (!signature || !url) return false;
 
-    const attendu = createHmac("sha1", this.authToken).update(url + params.rawBody).digest("base64");
+    const attendu = createHmac("sha1", this.authToken)
+      .update(url + params.rawBody)
+      .digest("base64");
 
     const a = Buffer.from(signature);
     const b = Buffer.from(attendu);
     return a.length === b.length && timingSafeEqual(a, b);
   }
 
-  parseStatusUpdate(rawBody: string): { providerMessageId: string; status: MessageStatus } | null {
+  parseStatusUpdate(
+    rawBody: string,
+  ): { providerMessageId: string; status: MessageStatus } | null {
     const champs = new URLSearchParams(rawBody);
     const sid = champs.get("MessageSid") ?? champs.get("SmsSid");
     const statut = champs.get("MessageStatus") ?? champs.get("SmsStatus");

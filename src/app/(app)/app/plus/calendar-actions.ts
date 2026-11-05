@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { requireOrganization } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
-import { disconnectCalendar, syncCalendar } from "@/lib/providers/calendar/service";
+import {
+  disconnectCalendar,
+  syncCalendar,
+} from "@/lib/providers/calendar/service";
 
 export async function syncCalendarAction(): Promise<{
   ok: boolean;
@@ -22,7 +25,11 @@ export async function syncCalendarAction(): Promise<{
   revalidatePath("/app/plus");
   revalidatePath("/app/agenda");
 
-  return { ok: resultat.ok, imported: resultat.imported, error: resultat.error };
+  return {
+    ok: resultat.ok,
+    imported: resultat.imported,
+    error: resultat.error,
+  };
 }
 
 export async function disconnectCalendarAction(): Promise<void> {

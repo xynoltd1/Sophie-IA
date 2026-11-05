@@ -39,7 +39,8 @@ export async function POST(
     .eq("organization_id", organizationId)
     .maybeSingle();
 
-  if (!appel) return NextResponse.json({ error: "introuvable" }, { status: 404 });
+  if (!appel)
+    return NextResponse.json({ error: "introuvable" }, { status: 404 });
 
   const resultat = await genererIntelligenceAppel(id, { force: true });
 

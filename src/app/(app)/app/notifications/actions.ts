@@ -11,7 +11,9 @@ import { createServerSupabase } from "@/lib/supabase/server";
  * que les notifications de l'organisation active, et seulement celles qui sont
  * adressées à tout le monde ou à l'utilisateur lui-même.
  */
-export async function marquerLue(notificationId: string): Promise<{ ok: boolean }> {
+export async function marquerLue(
+  notificationId: string,
+): Promise<{ ok: boolean }> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 

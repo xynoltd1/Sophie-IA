@@ -14,7 +14,11 @@ import type { LeadStatus, LeadPriority } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProspectPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProspectPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
@@ -50,12 +54,17 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/prospects" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/prospects"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         Retour aux prospects
       </Link>
 
       <section>
-        <h1 className="font-display text-2xl font-semibold leading-tight">{lead.title}</h1>
+        <h1 className="font-display text-2xl font-semibold leading-tight">
+          {lead.title}
+        </h1>
         <p className="mt-1 text-ink-soft">
           {LEAD_STATUS_LABELS[lead.status]} · {PRIORITY_LABELS[lead.priority]}
         </p>
@@ -97,7 +106,10 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
 
       <section>
         <SectionTitle>Faire avancer</SectionTitle>
-        <StatusActions leadId={lead.id} options={[...nextStatuses(lead.status)]} />
+        <StatusActions
+          leadId={lead.id}
+          options={[...nextStatuses(lead.status)]}
+        />
       </section>
     </div>
   );

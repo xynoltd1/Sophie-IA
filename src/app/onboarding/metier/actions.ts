@@ -25,7 +25,9 @@ export async function chooseProfession(
   });
 
   if (!parsed.success) {
-    return { fieldErrors: { templateId: "Choisissez un métier pour continuer." } };
+    return {
+      fieldErrors: { templateId: "Choisissez un métier pour continuer." },
+    };
   }
 
   const { activeOrganization } = await requireOrganization();
@@ -52,7 +54,10 @@ export async function chooseProfession(
   });
 
   if (advanced.error) {
-    return { error: "Le métier est enregistré, mais la progression n'a pas pu être sauvegardée." };
+    return {
+      error:
+        "Le métier est enregistré, mais la progression n'a pas pu être sauvegardée.",
+    };
   }
 
   redirect("/onboarding/services");

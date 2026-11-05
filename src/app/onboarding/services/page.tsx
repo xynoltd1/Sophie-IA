@@ -12,7 +12,9 @@ export default async function ServicesStep() {
 
   const { data, error } = await supabase
     .from("services")
-    .select("id, name, duration_minutes, is_urgent, is_active, price_indication, source, sort_order")
+    .select(
+      "id, name, duration_minutes, is_urgent, is_active, price_indication, source, sort_order",
+    )
     .eq("organization_id", organization.organization_id)
     .order("sort_order");
 

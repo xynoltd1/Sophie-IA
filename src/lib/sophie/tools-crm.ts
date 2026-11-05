@@ -114,7 +114,7 @@ async function contactDeLAppelant(
     if (appel?.contact_id) return appel.contact_id as string;
   }
 
-  const numero = context.callerNumber ?? (numeroDicte ?? null);
+  const numero = context.callerNumber ?? numeroDicte ?? null;
   if (!numero) return null;
 
   // Un numéro venu du réseau est certain ; un numéro dicté a traversé la
@@ -147,17 +147,25 @@ async function contactDeLAppelant(
       org_id: context.organizationId,
       numero,
     });
-    return typeof concurrent === "string" && concurrent.length > 0 ? concurrent : null;
+    return typeof concurrent === "string" && concurrent.length > 0
+      ? concurrent
+      : null;
   }
 
   return (data?.id as string | undefined) ?? null;
 }
 
 /** Rattache l'appel au contact, pour que la fiche contact montre l'historique. */
-async function lierAppelAuContact(context: ToolContext, contactId: string): Promise<void> {
+async function lierAppelAuContact(
+  context: ToolContext,
+  contactId: string,
+): Promise<void> {
   if (!context.callId) return;
   const admin = createAdminClient();
-  await admin.from("calls").update({ contact_id: contactId }).eq("id", context.callId);
+  await admin
+    .from("calls")
+    .update({ contact_id: contactId })
+    .eq("id", context.callId);
 }
 
 // ---------------------------------------------------------------------------
@@ -193,7 +201,9 @@ const identifyCaller: SophieTool = {
     });
 
     if (typeof contactId !== "string" || contactId.length === 0) {
-      return { result: "Ce numéro est inconnu. Demandez le nom de l'appelant." };
+      return {
+        result: "Ce numéro est inconnu. Demandez le nom de l'appelant.",
+      };
     }
 
     const { data: contact } = await admin
@@ -234,11 +244,17 @@ const saveCallerDetails: SophieTool = {
     parameters: {
       type: "object",
       properties: {
-        full_name: { type: "string", description: "Nom et prénom tels qu'énoncés." },
+        full_name: {
+          type: "string",
+          description: "Nom et prénom tels qu'énoncés.",
+        },
         address_line1: { type: "string", description: "Rue et numéro." },
         postal_code: { type: "string", description: "Code postal." },
         city: { type: "string", description: "Commune." },
-        email: { type: "string", description: "Adresse e-mail, si elle est donnée." },
+        email: {
+          type: "string",
+          description: "Adresse e-mail, si elle est donnée.",
+        },
         phone: {
           type: "string",
           description:
@@ -280,13 +296,21 @@ const saveCallerDetails: SophieTool = {
     // valeur existante intacte : un appel où le client ne redonne pas son
     // adresse ne doit pas l'effacer.
     const champs: Record<string, string> = {};
-    for (const nom of ["full_name", "address_line1", "postal_code", "city", "email"]) {
+    for (const nom of [
+      "full_name",
+      "address_line1",
+      "postal_code",
+      "city",
+      "email",
+    ]) {
       const valeur = texte(args, nom);
       if (valeur) champs[nom] = valeur;
     }
 
     if (Object.keys(champs).length === 0) {
-      return { error: "Aucune coordonnée reçue. Reposez la question au client." };
+      return {
+        error: "Aucune coordonnée reçue. Reposez la question au client.",
+      };
     }
 
     const admin = createAdminClient();
@@ -294,7 +318,8 @@ const saveCallerDetails: SophieTool = {
     // Un numéro dicté n'écrase jamais un numéro venu du réseau. Le réseau ne
     // se trompe pas ; la reconnaissance vocale, si. Remplacer le certain par
     // l'incertain serait une perte sèche d'information.
-    let numeroAEcrire: { phone: string; phone_origin: "DICTATED" } | null = null;
+    let numeroAEcrire: { phone: string; phone_origin: "DICTATED" } | null =
+      null;
     if (numeroDicte && !context.callerNumber) {
       const { data: actuel } = await admin
         .from("contacts")
@@ -320,14 +345,20 @@ const saveCallerDetails: SophieTool = {
 
     if (error) {
       return {
-        error: "Les coordonnées n'ont pas pu être enregistrées. Poursuivez l'appel.",
+        error:
+          "Les coordonnées n'ont pas pu être enregistrées. Poursuivez l'appel.",
       };
     }
 
     await lierAppelAuContact(context, contactId);
-    await activite(context, "CONTACT_UPDATED", `Coordonnées mises à jour par Sophie`, {
-      champs: Object.keys(champs),
-    });
+    await activite(
+      context,
+      "CONTACT_UPDATED",
+      `Coordonnées mises à jour par Sophie`,
+      {
+        champs: Object.keys(champs),
+      },
+    );
 
     return { result: "Coordonnées enregistrées. Continuez." };
   },
@@ -348,22 +379,31 @@ const createLead: SophieTool = {
       properties: {
         title: {
           type: "string",
-          description: "Résumé court de la demande, par exemple « Fuite sous l'évier ».",
+          description:
+            "Résumé court de la demande, par exemple « Fuite sous l'évier ».",
         },
         description: {
           type: "string",
           description: "Ce que le client a décrit, dans ses termes.",
         },
-        address_line1: { type: "string", description: "Adresse de l'intervention." },
-        postal_code: { type: "string", description: "Code postal de l'intervention." },
+        address_line1: {
+          type: "string",
+          description: "Adresse de l'intervention.",
+        },
+        postal_code: {
+          type: "string",
+          description: "Code postal de l'intervention.",
+        },
         city: { type: "string", description: "Commune de l'intervention." },
         requested_date: {
           type: "string",
-          description: "Date souhaitée au format AAAA-MM-JJ, si le client en donne une.",
+          description:
+            "Date souhaitée au format AAAA-MM-JJ, si le client en donne une.",
         },
         urgent: {
           type: "boolean",
-          description: "Vrai seulement si le client décrit une situation urgente.",
+          description:
+            "Vrai seulement si le client décrit une situation urgente.",
         },
       },
       required: ["title"],
@@ -373,7 +413,9 @@ const createLead: SophieTool = {
   async handler(args, context): Promise<ToolOutcome> {
     const titre = texte(args, "title");
     if (!titre) {
-      return { error: "La demande n'est pas claire. Faites préciser le client." };
+      return {
+        error: "La demande n'est pas claire. Faites préciser le client.",
+      };
     }
 
     const contactId = await contactDeLAppelant(context);
@@ -464,7 +506,8 @@ const createTask: SophieTool = {
         description: { type: "string", description: "Précisions utiles." },
         due_date: {
           type: "string",
-          description: "Date au format AAAA-MM-JJ, si le client en indique une.",
+          description:
+            "Date au format AAAA-MM-JJ, si le client en indique une.",
         },
         due_time: {
           type: "string",
@@ -481,7 +524,8 @@ const createTask: SophieTool = {
 
   async handler(args, context): Promise<ToolOutcome> {
     const titre = texte(args, "title");
-    if (!titre) return { error: "Précisez ce que le professionnel doit faire." };
+    if (!titre)
+      return { error: "Précisez ce que le professionnel doit faire." };
 
     const contactId = await contactDeLAppelant(context);
 
@@ -497,7 +541,11 @@ const createTask: SophieTool = {
     let echeance: string | null = null;
     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
       const h = heure && /^\d{2}:\d{2}$/.test(heure) ? heure : "08:00";
-      const instant = instantDepuisHeureLocale(date, h, await fuseauDeLOrganisation(context));
+      const instant = instantDepuisHeureLocale(
+        date,
+        h,
+        await fuseauDeLOrganisation(context),
+      );
       echeance = instant ? instant.toISOString() : null;
     }
 
@@ -520,7 +568,10 @@ const createTask: SophieTool = {
       .single();
 
     if (error) {
-      return { error: "Le rappel n'a pas pu être créé. Dites-le au client honnêtement." };
+      return {
+        error:
+          "Le rappel n'a pas pu être créé. Dites-le au client honnêtement.",
+      };
     }
 
     await activite(context, "TASK_CREATED", titre, { taskId: data?.id });
@@ -544,7 +595,10 @@ const createPendingAppointment: SophieTool = {
       type: "object",
       properties: {
         date: { type: "string", description: "Date au format AAAA-MM-JJ." },
-        time: { type: "string", description: "Heure de début au format HH:MM." },
+        time: {
+          type: "string",
+          description: "Heure de début au format HH:MM.",
+        },
         duration_minutes: {
           type: "number",
           description: "Durée en minutes. 60 si elle n'est pas connue.",
@@ -566,14 +620,19 @@ const createPendingAppointment: SophieTool = {
       return { error: "Heure invalide. Faites répéter l'heure au client." };
     }
 
-    const duree = Math.min(Math.max(Math.round(nombre(args, "duration_minutes") ?? 60), 15), 480);
+    const duree = Math.min(
+      Math.max(Math.round(nombre(args, "duration_minutes") ?? 60), 15),
+      480,
+    );
 
     const admin = createAdminClient();
 
     const timezone = await fuseauDeLOrganisation(context);
     const debut = instantDepuisHeureLocale(date, heure, timezone);
     if (!debut) {
-      return { error: "Date ou heure incompréhensible. Faites répéter le client." };
+      return {
+        error: "Date ou heure incompréhensible. Faites répéter le client.",
+      };
     }
 
     const fin = new Date(debut.getTime() + duree * 60_000);
@@ -620,7 +679,11 @@ const createPendingAppointment: SophieTool = {
         .update({ call_id: context.callId })
         .eq("id", data as unknown as string)
         .eq("organization_id", context.organizationId);
-      if (lien) console.error("[sophie] rendez-vous non rattaché à l'appel", lien.message);
+      if (lien)
+        console.error(
+          "[sophie] rendez-vous non rattaché à l'appel",
+          lien.message,
+        );
     }
 
     await notifier({
@@ -634,12 +697,17 @@ const createPendingAppointment: SophieTool = {
       dedupeKey: data ? `appointment-${data}` : undefined,
     });
 
-    await activite(context, "APPOINTMENT_PROPOSED", `Rendez-vous provisoire le ${date} à ${heure}`, {
-      appointmentId: data,
-      date,
-      heure,
-      duree,
-    });
+    await activite(
+      context,
+      "APPOINTMENT_PROPOSED",
+      `Rendez-vous provisoire le ${date} à ${heure}`,
+      {
+        appointmentId: data,
+        date,
+        heure,
+        duree,
+      },
+    );
 
     return {
       result:
@@ -662,7 +730,10 @@ const requestHumanTransfer: SophieTool = {
     parameters: {
       type: "object",
       properties: {
-        reason: { type: "string", description: "Pourquoi le transfert est demandé." },
+        reason: {
+          type: "string",
+          description: "Pourquoi le transfert est demandé.",
+        },
       },
       required: [],
     },
@@ -677,11 +748,17 @@ const requestHumanTransfer: SophieTool = {
       .eq("organization_id", context.organizationId)
       .maybeSingle();
 
-    const numero = (config?.transfer_number_e164 ?? config?.transfer_number) as string | null;
+    const numero = (config?.transfer_number_e164 ?? config?.transfer_number) as
+      string | null;
 
-    await activite(context, "TRANSFER_REQUESTED", texte(args, "reason") ?? "Transfert demandé", {
-      possible: Boolean(numero),
-    });
+    await activite(
+      context,
+      "TRANSFER_REQUESTED",
+      texte(args, "reason") ?? "Transfert demandé",
+      {
+        possible: Boolean(numero),
+      },
+    );
 
     if (!numero) {
       // Dire la vérité plutôt que de promettre un transfert qui n'aura pas

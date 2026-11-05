@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
     provider_id: identifiant,
   });
 
-  if (error) console.error("[messagerie] message entrant non enregistré", error.message);
+  if (error)
+    console.error("[messagerie] message entrant non enregistré", error.message);
 
   // Toujours 200 : un code d'erreur ferait réessayer l'opérateur, et ses
   // réessais arrivent dans le désordre.

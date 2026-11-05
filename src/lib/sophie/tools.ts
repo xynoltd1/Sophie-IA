@@ -72,7 +72,8 @@ const checkAvailability: SophieToolType = {
         },
         duration_minutes: {
           type: "number",
-          description: "Durée de l'intervention en minutes, si elle est connue.",
+          description:
+            "Durée de l'intervention en minutes, si elle est connue.",
         },
       },
       required: ["date"],
@@ -82,7 +83,9 @@ const checkAvailability: SophieToolType = {
   async handler(args, context) {
     const date = typeof args.date === "string" ? args.date.trim() : "";
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return { error: "Date invalide. Demandez au client de préciser le jour." };
+      return {
+        error: "Date invalide. Demandez au client de préciser le jour.",
+      };
     }
 
     const jour = new Date(`${date}T12:00:00Z`);
@@ -184,11 +187,14 @@ const checkAvailability: SophieToolType = {
       };
     }
 
-    const creneaux = ((data ?? []) as { creneau: string }[]).map((ligne) => ligne.creneau);
+    const creneaux = ((data ?? []) as { creneau: string }[]).map(
+      (ligne) => ligne.creneau,
+    );
 
     if (creneaux.length === 0) {
       return {
-        result: `Aucun créneau libre le ${jourParle(`${date}T12:00:00Z`, timezone)}. ` +
+        result:
+          `Aucun créneau libre le ${jourParle(`${date}T12:00:00Z`, timezone)}. ` +
           "Propose un autre jour au client, puis rappelle cet outil avec cette " +
           "nouvelle date. Ne rappelle jamais cet outil avec la même date.",
       };
@@ -196,7 +202,9 @@ const checkAvailability: SophieToolType = {
 
     // Trois propositions au plus : une liste de vingt horaires est
     // inutilisable à l'oral.
-    const proposes = repartir(creneaux, 3).map((iso) => heureParlee(iso, timezone));
+    const proposes = repartir(creneaux, 3).map((iso) =>
+      heureParlee(iso, timezone),
+    );
 
     return {
       result:
@@ -248,7 +256,11 @@ const getBusinessInformation: SophieToolType = {
     // reste (section 9). C'est le seul moyen qu'il a de corriger Sophie, et
     // jusqu'ici l'écran « Connaissances » existait sans que rien de ce qu'on
     // y écrivait n'atteigne un appel.
-    const connue = await reponsePreparee(context.organizationId, texte(args, "question"), topic);
+    const connue = await reponsePreparee(
+      context.organizationId,
+      texte(args, "question"),
+      topic,
+    );
     if (connue) return { result: connue };
 
     if (topic === "autre") {
@@ -327,13 +339,23 @@ const getBusinessInformation: SophieToolType = {
       .is("member_id", null)
       .order("weekday");
 
-    const jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
-    const ouverts = ((data ?? []) as {
-      weekday: number;
-      is_open: boolean;
-      opens_at: string | null;
-      closes_at: string | null;
-    }[])
+    const jours = [
+      "lundi",
+      "mardi",
+      "mercredi",
+      "jeudi",
+      "vendredi",
+      "samedi",
+      "dimanche",
+    ];
+    const ouverts = (
+      (data ?? []) as {
+        weekday: number;
+        is_open: boolean;
+        opens_at: string | null;
+        closes_at: string | null;
+      }[]
+    )
       .filter((ligne) => ligne.is_open)
       .map(
         (ligne) =>
@@ -396,10 +418,16 @@ async function reponsePreparee(
     .order("sort_order")
     .limit(100);
 
-  const entrees = (data ?? []) as { kind: string; question: string | null; answer: string }[];
+  const entrees = (data ?? []) as {
+    kind: string;
+    question: string | null;
+    answer: string;
+  }[];
   if (entrees.length === 0) return null;
 
-  const consignes = entrees.filter((e) => e.kind === "INSTRUCTION").map((e) => e.answer);
+  const consignes = entrees
+    .filter((e) => e.kind === "INSTRUCTION")
+    .map((e) => e.answer);
 
   const mots = (question ?? "")
     .toLowerCase()
@@ -418,7 +446,8 @@ async function reponsePreparee(
   // laquelle des dix réponses préparées s'applique serait pire que rien.
   const reponses = trouvees.slice(0, 3).map((e) => e.answer);
 
-  if (reponses.length === 0 && (consignes.length === 0 || topic !== "autre")) return null;
+  if (reponses.length === 0 && (consignes.length === 0 || topic !== "autre"))
+    return null;
 
   return [...reponses, ...consignes].join(" ");
 }

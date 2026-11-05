@@ -36,8 +36,10 @@ export async function GET(request: NextRequest) {
     return retour(origin, "etat_invalide");
   }
 
-  if (!donnees.org || !donnees.user || !donnees.at) return retour(origin, "etat_invalide");
-  if (Date.now() - donnees.at > STATE_MAX_AGE_MS) return retour(origin, "etat_expire");
+  if (!donnees.org || !donnees.user || !donnees.at)
+    return retour(origin, "etat_invalide");
+  if (Date.now() - donnees.at > STATE_MAX_AGE_MS)
+    return retour(origin, "etat_expire");
 
   // La signature prouve que l'état vient de nous. Elle ne prouve pas que la
   // personne qui revient est celle qui est partie : on revérifie la session.

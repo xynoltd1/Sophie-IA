@@ -1,4 +1,8 @@
-import type { AICompletionRequest, AICompletionResult, AIProvider } from "./types";
+import type {
+  AICompletionRequest,
+  AICompletionResult,
+  AIProvider,
+} from "./types";
 
 /**
  * Fournisseur simulé, pour le développement et les tests.

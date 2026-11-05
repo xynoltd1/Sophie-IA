@@ -101,16 +101,21 @@ function speakerDepuisRole(role: unknown): Speaker | null {
 }
 
 /** Les millisecondes d'un message, à partir des champs réellement observés. */
-function bornes(message: Inconnu): { startedMs: number | null; endedMs: number | null } {
+function bornes(message: Inconnu): {
+  startedMs: number | null;
+  endedMs: number | null;
+} {
   const secondes = nombreOuNull(message.secondsFromStart);
-  const startedMs = secondes === null ? null : Math.max(0, Math.round(secondes * 1000));
+  const startedMs =
+    secondes === null ? null : Math.max(0, Math.round(secondes * 1000));
 
   if (startedMs === null) return { startedMs: null, endedMs: null };
 
   // `duration` est en millisecondes ; `time` et `endTime` sont des instants
   // absolus. On n'additionne que des grandeurs de même nature.
   const duree = nombreOuNull(message.duration);
-  if (duree !== null && duree >= 0) return { startedMs, endedMs: startedMs + Math.round(duree) };
+  if (duree !== null && duree >= 0)
+    return { startedMs, endedMs: startedMs + Math.round(duree) };
 
   const debut = nombreOuNull(message.time);
   const fin = nombreOuNull(message.endTime);
@@ -121,7 +126,9 @@ function bornes(message: Inconnu): { startedMs: number | null; endedMs: number |
   return { startedMs, endedMs: null };
 }
 
-export function segmentsDepuisMessages(messages: unknown): SegmentTranscription[] {
+export function segmentsDepuisMessages(
+  messages: unknown,
+): SegmentTranscription[] {
   if (!Array.isArray(messages)) return [];
 
   const segments: SegmentTranscription[] = [];
@@ -133,11 +140,18 @@ export function segmentsDepuisMessages(messages: unknown): SegmentTranscription[
     const speaker = speakerDepuisRole(message.role);
     if (!speaker) continue;
 
-    const content = texteOuNull(message.message) ?? texteOuNull(message.content);
+    const content =
+      texteOuNull(message.message) ?? texteOuNull(message.content);
     if (!content) continue;
 
     const { startedMs, endedMs } = bornes(message);
-    segments.push({ ordinal: segments.length, speaker, content, startedMs, endedMs });
+    segments.push({
+      ordinal: segments.length,
+      speaker,
+      content,
+      startedMs,
+      endedMs,
+    });
   }
 
   return segments;
@@ -231,7 +245,8 @@ export function etatsDepuisRapport(
   resume: EtatTraitement;
   enregistrement: EtatTraitement;
 } {
-  const aTranscription = rapport.segments.length > 0 || rapport.transcriptBrut !== null;
+  const aTranscription =
+    rapport.segments.length > 0 || rapport.transcriptBrut !== null;
 
   return {
     transcription: aTranscription ? "DONE" : "FAILED",

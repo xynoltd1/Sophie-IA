@@ -1,50 +1,55 @@
-import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/auth/platform";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { Sidebar } from "@/components/admin/sidebar";
+import { AccountMenu } from "@/components/admin/account-menu";
 
 export const dynamic = "force-dynamic";
 
-const ONGLETS = [
-  { href: "/admin", libelle: "Vue d’ensemble" },
-  { href: "/admin/organisations", libelle: "Entreprises" },
-  { href: "/admin/metiers", libelle: "Métiers" },
-  { href: "/admin/plans", libelle: "Offres" },
-  { href: "/admin/sante", libelle: "Santé" },
-];
+// Espace privé : jamais indexé, quoi que dise robots.txt. Ce fichier-là est
+// une demande polie ; cet en-tête est une consigne que Google applique même
+// s'il arrive sur la page par un lien.
+export const metadata = { robots: { index: false, follow: false } };
 
 /**
- * Espace d'administration de la plateforme (section 37).
+ * Console d'administration de la plateforme (section 37).
  *
- * Séparé de l'application cliente : une autre mise en page, un autre chemin,
- * un autre contrôle d'accès. Rien n'y est partagé avec l'espace des
- * entreprises, pour qu'aucune erreur de l'un ne devienne une faille de l'autre.
+ * Séparée de l'application cliente de bout en bout : autre mise en page, autre
+ * chemin, autre contrôle d'accès, autre couleur. La couleur n'est pas un
+ * détail : quelqu'un qui a sous les yeux les données de toutes les entreprises
+ * doit savoir en un coup d'œil qu'il n'est plus chez lui.
+ *
+ * La garde est appelée ici **et** dans chaque page. Une mise en page protégée
+ * ne protège pas les pages qu'elle contient si l'une d'elles est atteinte
+ * autrement — et une vérification en trop ne coûte qu'une requête.
  */
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requirePlatformAdmin();
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { userId, email } = await requirePlatformAdmin();
+
+  const supabase = await createServerSupabase();
+  const { data: profil } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .maybeSingle();
 
   return (
-    <div className="min-h-dvh">
-      <header className="sticky top-0 z-10 border-b border-line bg-ink text-surface">
-        <div className="mx-auto flex max-w-4xl flex-col gap-2 px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-display text-lg font-semibold">Sophie — plateforme</p>
-            <Link href="/app" className="text-sm underline underline-offset-4">
-              Retour à l’application
-            </Link>
-          </div>
-          <nav className="flex gap-3 overflow-x-auto">
-            {ONGLETS.map((onglet) => (
-              <Link
-                key={onglet.href}
-                href={onglet.href}
-                className="shrink-0 text-sm text-surface/80 underline-offset-4 hover:underline"
-              >
-                {onglet.libelle}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </header>
-      <main className="mx-auto max-w-4xl px-4 py-6">{children}</main>
+    <div className="min-h-dvh bg-paper">
+      <Sidebar
+        compte={
+          <AccountMenu
+            nom={(profil?.full_name as string | undefined) ?? "Administrateur"}
+            email={email ?? ""}
+          />
+        }
+      />
+
+      <div className="lg:pl-64">
+        <div className="mx-auto max-w-5xl px-5 py-6 lg:py-8">{children}</div>
+      </div>
     </div>
   );
 }

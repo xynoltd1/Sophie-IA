@@ -11,6 +11,7 @@ import {
 import { signalerErreurFournisseur } from "@/lib/platform/errors";
 import { instantDepuisHeureLocale } from "@/lib/crm/timezone";
 import type { AppointmentStatus } from "@/types/database";
+import { noterEchangeReussi } from "@/lib/platform/errors";
 
 export interface AgendaState {
   error?: string;
@@ -125,6 +126,7 @@ export async function changeAppointmentStatus(
         appointmentId,
       });
       if (pousse) {
+        await noterEchangeReussi("GOOGLE_CALENDAR", "pushAppointment");
         await supabase
           .from("appointments")
           .update({

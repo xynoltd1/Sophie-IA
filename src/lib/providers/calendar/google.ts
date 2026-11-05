@@ -100,10 +100,18 @@ function toCalendarError(status: number, body: string): CalendarError {
     return new CalendarError("RATE_LIMITED", "Quota Google dépassé.", status);
   }
   if (status === 403) {
-    return new CalendarError("UNAUTHORIZED", "Accès refusé par Google.", status);
+    return new CalendarError(
+      "UNAUTHORIZED",
+      "Accès refusé par Google.",
+      status,
+    );
   }
   if (status === 404) {
-    return new CalendarError("NOT_FOUND", "Ressource introuvable chez Google.", status);
+    return new CalendarError(
+      "NOT_FOUND",
+      "Ressource introuvable chez Google.",
+      status,
+    );
   }
   // 410 Gone sur events.list : le jeton de synchronisation incrémentale a
   // expiré. Ce n'est pas une panne, c'est une demande de tout relire.
@@ -115,12 +123,24 @@ function toCalendarError(status: number, body: string): CalendarError {
     );
   }
   if (status === 429) {
-    return new CalendarError("RATE_LIMITED", "Trop de requêtes vers Google.", status);
+    return new CalendarError(
+      "RATE_LIMITED",
+      "Trop de requêtes vers Google.",
+      status,
+    );
   }
   if (status >= 500) {
-    return new CalendarError("UNAVAILABLE", "Google Calendar est indisponible.", status);
+    return new CalendarError(
+      "UNAVAILABLE",
+      "Google Calendar est indisponible.",
+      status,
+    );
   }
-  return new CalendarError("INVALID_REQUEST", `Google a refusé la requête : ${body.slice(0, 200)}`, status);
+  return new CalendarError(
+    "INVALID_REQUEST",
+    `Google a refusé la requête : ${body.slice(0, 200)}`,
+    status,
+  );
 }
 
 async function googleFetch(url: string, init: RequestInit): Promise<Response> {
@@ -137,7 +157,10 @@ async function googleFetch(url: string, init: RequestInit): Promise<Response> {
   }
 
   if (!response.ok) {
-    throw toCalendarError(response.status, await response.text().catch(() => ""));
+    throw toCalendarError(
+      response.status,
+      await response.text().catch(() => ""),
+    );
   }
   return response;
 }
@@ -287,7 +310,10 @@ export class GoogleCalendarProvider implements CalendarProvider {
           { headers: { authorization: `Bearer ${params.accessToken}` } },
         );
       } catch (error) {
-        if (error instanceof CalendarError && error.kind === "SYNC_TOKEN_EXPIRED") {
+        if (
+          error instanceof CalendarError &&
+          error.kind === "SYNC_TOKEN_EXPIRED"
+        ) {
           return { blocks: [], nextSyncToken: null, requiresFullSync: true };
         }
         throw error;
@@ -359,7 +385,10 @@ export class GoogleCalendarProvider implements CalendarProvider {
     try {
       await googleFetch(
         `${API}/calendars/${encodeURIComponent(params.calendarId)}/events/${encodeURIComponent(params.externalEventId)}`,
-        { method: "DELETE", headers: { authorization: `Bearer ${params.accessToken}` } },
+        {
+          method: "DELETE",
+          headers: { authorization: `Bearer ${params.accessToken}` },
+        },
       );
     } catch (error) {
       // Déjà supprimé chez Google : le résultat voulu est atteint.
@@ -394,7 +423,10 @@ export class GoogleCalendarProvider implements CalendarProvider {
       },
     );
 
-    const data = (await response.json()) as { resourceId: string; expiration?: string };
+    const data = (await response.json()) as {
+      resourceId: string;
+      expiration?: string;
+    };
     return {
       channelId,
       resourceId: data.resourceId,
@@ -410,14 +442,20 @@ export class GoogleCalendarProvider implements CalendarProvider {
     resourceId: string;
   }): Promise<void> {
     try {
-      await googleFetch("https://www.googleapis.com/calendar/v3/channels/stop", {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${params.accessToken}`,
-          "content-type": "application/json",
+      await googleFetch(
+        "https://www.googleapis.com/calendar/v3/channels/stop",
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${params.accessToken}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            id: params.channelId,
+            resourceId: params.resourceId,
+          }),
         },
-        body: JSON.stringify({ id: params.channelId, resourceId: params.resourceId }),
-      });
+      );
     } catch {
       /* l'abonnement expirera de lui-même */
     }
@@ -431,7 +469,9 @@ function toGoogleEvent(event: ExternalEventInput) {
     location: event.location,
     start: { dateTime: event.startsAt.toISOString(), timeZone: event.timezone },
     end: { dateTime: event.endsAt.toISOString(), timeZone: event.timezone },
-    ...(event.attendeeEmail ? { attendees: [{ email: event.attendeeEmail }] } : {}),
+    ...(event.attendeeEmail
+      ? { attendees: [{ email: event.attendeeEmail }] }
+      : {}),
   };
 }
 
@@ -464,7 +504,8 @@ function toBusyBlock(event: GoogleEvent): BusyBlock | null {
     startsAt: new Date(startRaw),
     endsAt: new Date(endRaw),
     isAllDay,
-    transparency: event.transparency === "transparent" ? "transparent" : "opaque",
+    transparency:
+      event.transparency === "transparent" ? "transparent" : "opaque",
     deleted: false,
   };
 }

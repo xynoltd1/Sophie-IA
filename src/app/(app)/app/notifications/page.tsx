@@ -50,7 +50,10 @@ export default async function NotificationsPage() {
           title="Aucune alerte"
           description="Les urgences, les rendez-vous à valider et les nouveaux prospects apparaîtront ici."
           action={
-            <Link href="/app" className="font-medium text-signal underline underline-offset-4">
+            <Link
+              href="/app"
+              className="font-medium text-signal underline underline-offset-4"
+            >
               Retour à l’accueil
             </Link>
           }
@@ -61,8 +64,8 @@ export default async function NotificationsPage() {
 
       <Sheet tone="neutral">
         <p className="text-sm text-ink-soft">
-          Une alerte mène toujours à la fiche concernée. Celles que vous avez lues restent
-          consultables pendant un temps, puis disparaissent.
+          Une alerte mène toujours à la fiche concernée. Celles que vous avez
+          lues restent consultables pendant un temps, puis disparaissent.
         </p>
       </Sheet>
     </div>

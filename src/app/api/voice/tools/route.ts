@@ -87,7 +87,10 @@ export async function POST(request: NextRequest) {
   if (!outil) {
     return NextResponse.json(
       provider.formatToolResponse([
-        { toolCallId: appel.toolCallId, error: `Outil inconnu : ${appel.name}.` },
+        {
+          toolCallId: appel.toolCallId,
+          error: `Outil inconnu : ${appel.name}.`,
+        },
       ]),
     );
   }
@@ -114,7 +117,8 @@ export async function POST(request: NextRequest) {
       providerCallId: appel.providerCallId,
       // ADR-019 : un appel n'est un test que dans une organisation d'essai.
       isTest: Boolean(estTest),
-      callerNumber: (appelEnregistre?.from_e164 as string | null) ?? callerNumber(rawBody),
+      callerNumber:
+        (appelEnregistre?.from_e164 as string | null) ?? callerNumber(rawBody),
       callId: (appelEnregistre?.id as string | null) ?? null,
     });
 
@@ -129,7 +133,9 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      provider.formatToolResponse([{ toolCallId: appel.toolCallId, ...resultat }]),
+      provider.formatToolResponse([
+        { toolCallId: appel.toolCallId, ...resultat },
+      ]),
     );
   } catch (cause) {
     // Une exception non prévue ne doit pas couper l'appel en cours : on la
@@ -310,9 +316,12 @@ function callerNumber(rawBody: string): string | null {
     };
 
     const brut =
-      payload.message?.customer?.number ?? payload.message?.call?.customer?.number;
+      payload.message?.customer?.number ??
+      payload.message?.call?.customer?.number;
 
-    return typeof brut === "string" && brut.trim().length > 0 ? brut.trim() : null;
+    return typeof brut === "string" && brut.trim().length > 0
+      ? brut.trim()
+      : null;
   } catch {
     return null;
   }

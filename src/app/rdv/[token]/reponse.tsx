@@ -6,7 +6,8 @@ import { repondreProposition, type ReponseClient } from "./actions";
 
 const MESSAGES: Record<ReponseClient, string> = {
   ACCEPTE: "C’est noté, votre rendez-vous est confirmé à ce nouvel horaire.",
-  REFUSE: "C’est noté. L’entreprise vous recontactera pour trouver un autre moment.",
+  REFUSE:
+    "C’est noté. L’entreprise vous recontactera pour trouver un autre moment.",
   EXPIRE: "Cette proposition a expiré. Contactez directement l’entreprise.",
   DEJA_TRAITE: "Cette proposition a déjà reçu une réponse.",
   CRENEAU_PRIS:
@@ -31,7 +32,12 @@ export function ReponseProposition({ token }: { token: string }) {
 
   return (
     <div className="mt-5 flex flex-col gap-2">
-      <Button type="button" size="lg" onClick={() => repondre(true)} loading={enCours}>
+      <Button
+        type="button"
+        size="lg"
+        onClick={() => repondre(true)}
+        loading={enCours}
+      >
         Ce nouvel horaire me convient
       </Button>
       <Button

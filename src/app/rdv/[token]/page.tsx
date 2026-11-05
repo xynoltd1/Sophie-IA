@@ -46,7 +46,8 @@ export default async function PageProposition({
       <Cadre>
         <p className="font-medium">Ce lien n’est plus valable.</p>
         <p className="mt-1 text-sm text-ink-soft">
-          Le rendez-vous a peut-être déjà été réglé. Contactez directement l’entreprise.
+          Le rendez-vous a peut-être déjà été réglé. Contactez directement
+          l’entreprise.
         </p>
       </Cadre>
     );
@@ -54,13 +55,16 @@ export default async function PageProposition({
 
   const fuseau = proposition.timezone ?? "Europe/Brussels";
   const expire =
-    proposition.expires_at !== null && new Date(proposition.expires_at).getTime() < Date.now();
+    proposition.expires_at !== null &&
+    new Date(proposition.expires_at).getTime() < Date.now();
 
   if (proposition.status !== "CHANGE_PROPOSED" || expire) {
     return (
       <Cadre>
         <p className="font-medium">
-          {expire ? "Cette proposition a expiré." : "Cette proposition a déjà reçu une réponse."}
+          {expire
+            ? "Cette proposition a expiré."
+            : "Cette proposition a déjà reçu une réponse."}
         </p>
         <p className="mt-1 text-sm text-ink-soft">
           Contactez {proposition.organization_name} pour convenir d’un horaire.
@@ -72,17 +76,23 @@ export default async function PageProposition({
   return (
     <Cadre>
       <p className="text-sm text-ink-soft">{proposition.organization_name}</p>
-      <h1 className="mt-1 font-display text-xl font-semibold">{proposition.title}</h1>
+      <h1 className="mt-1 font-display text-xl font-semibold">
+        {proposition.title}
+      </h1>
 
       <div className="mt-4 flex flex-col gap-3">
         <div>
           <p className="text-sm text-ink-soft">Horaire prévu</p>
-          <p className="text-sm line-through">{lisible(proposition.current_starts_at, fuseau)}</p>
+          <p className="text-sm line-through">
+            {lisible(proposition.current_starts_at, fuseau)}
+          </p>
         </div>
         <div>
           <p className="text-sm text-ink-soft">Nouvel horaire proposé</p>
           <p className="font-medium first-letter:uppercase">
-            {proposition.proposed_starts_at ? lisible(proposition.proposed_starts_at, fuseau) : "—"}
+            {proposition.proposed_starts_at
+              ? lisible(proposition.proposed_starts_at, fuseau)
+              : "—"}
           </p>
         </div>
       </div>

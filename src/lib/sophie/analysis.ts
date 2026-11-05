@@ -61,7 +61,8 @@ export const SCHEMA_DONNEES = {
     },
     service: {
       type: "string",
-      description: "Le service ou le type d'intervention demandé, dans les mots de l'appelant.",
+      description:
+        "Le service ou le type d'intervention demandé, dans les mots de l'appelant.",
     },
     urgency: {
       type: "string",
@@ -69,22 +70,29 @@ export const SCHEMA_DONNEES = {
         "URGENTE si l'appelant décrit une situation qui ne peut pas attendre (fuite, panne " +
         "totale, danger), NORMALE sinon. En cas de doute, NORMALE.",
     },
-    customer_name: { type: "string", description: "Nom de l'appelant, tel qu'il l'a donné." },
+    customer_name: {
+      type: "string",
+      description: "Nom de l'appelant, tel qu'il l'a donné.",
+    },
     address: {
       type: "string",
-      description: "Adresse de l'intervention, uniquement si elle a été dictée.",
+      description:
+        "Adresse de l'intervention, uniquement si elle a été dictée.",
     },
     requested_date: {
       type: "string",
-      description: "Date souhaitée au format AAAA-MM-JJ, uniquement si elle a été dite.",
+      description:
+        "Date souhaitée au format AAAA-MM-JJ, uniquement si elle a été dite.",
     },
     requested_time: {
       type: "string",
-      description: "Heure souhaitée au format HH:MM, uniquement si elle a été dite.",
+      description:
+        "Heure souhaitée au format HH:MM, uniquement si elle a été dite.",
     },
     problem_description: {
       type: "string",
-      description: "Le problème décrit par l'appelant, dans ses mots, en une ou deux phrases.",
+      description:
+        "Le problème décrit par l'appelant, dans ses mots, en une ou deux phrases.",
     },
     appointment_requested: {
       type: "boolean",
@@ -118,7 +126,8 @@ export function analysisPlan() {
         { role: "system", content: PROMPT_RESUME },
         {
           role: "user",
-          content: "Voici la transcription de l'appel :\n\n{{transcript}}\n\nRésume-le.",
+          content:
+            "Voici la transcription de l'appel :\n\n{{transcript}}\n\nRésume-le.",
         },
       ],
     },

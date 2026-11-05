@@ -35,13 +35,15 @@ const ENTREES = [
   {
     href: "/app/sophie/ligne",
     titre: "Ligne téléphonique",
-    detail: "Le numéro sur lequel Sophie répond, et comment y renvoyer vos appels.",
+    detail:
+      "Le numéro sur lequel Sophie répond, et comment y renvoyer vos appels.",
     permission: "organization:update" as const,
   },
   {
     href: "/app/sophie/connaissances",
     titre: "Connaissances de Sophie",
-    detail: "Ce qu'elle a le droit de répondre : questions fréquentes et consignes.",
+    detail:
+      "Ce qu'elle a le droit de répondre : questions fréquentes et consignes.",
     permission: "sophie:configure" as const,
   },
   {
@@ -65,7 +67,8 @@ const ENTREES = [
   {
     href: "/app/reglages/integrations",
     titre: "Intégrations",
-    detail: "Ce qui est branché, ce qui attend une clé, ce qui n'est pas testé.",
+    detail:
+      "Ce qui est branché, ce qui attend une clé, ce qui n'est pas testé.",
     permission: "organization:update" as const,
   },
 ];
@@ -73,7 +76,9 @@ const ENTREES = [
 export default async function ReglagesPage() {
   const { activeOrganization } = await requireOrganization();
 
-  const visibles = ENTREES.filter((entree) => can(activeOrganization.role, entree.permission));
+  const visibles = ENTREES.filter((entree) =>
+    can(activeOrganization.role, entree.permission),
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -90,12 +95,17 @@ export default async function ReglagesPage() {
           {visibles.map((entree) => (
             <li key={entree.href}>
               <Link href={entree.href} className="block">
-                <Sheet interactive className="flex items-center justify-between gap-3">
+                <Sheet
+                  interactive
+                  className="flex items-center justify-between gap-3"
+                >
                   <div className="min-w-0">
                     <p className="font-medium">{entree.titre}</p>
                     <p className="text-sm text-ink-soft">{entree.detail}</p>
                   </div>
-                  <span aria-hidden className="shrink-0 text-ink-soft">→</span>
+                  <span aria-hidden className="shrink-0 text-ink-soft">
+                    →
+                  </span>
                 </Sheet>
               </Link>
             </li>

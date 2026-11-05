@@ -50,7 +50,10 @@ const ROLE_PERMISSIONS: Record<MemberRole, readonly Permission[]> = {
   ],
 };
 
-export function can(role: MemberRole | null | undefined, permission: Permission): boolean {
+export function can(
+  role: MemberRole | null | undefined,
+  permission: Permission,
+): boolean {
   if (!role) return false;
   return ROLE_PERMISSIONS[role].includes(permission);
 }

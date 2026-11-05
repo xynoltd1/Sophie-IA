@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { jobAutorise } from "@/lib/jobs/auth";
-import { PLAFOND_TENTATIVES, genererIntelligenceAppel } from "@/lib/calls/intelligence";
+import {
+  PLAFOND_TENTATIVES,
+  genererIntelligenceAppel,
+} from "@/lib/calls/intelligence";
 import { viderLaFile } from "@/lib/messaging/outbox";
 import { executerPurges } from "@/lib/jobs/retention";
 
@@ -51,7 +54,9 @@ export async function GET(request: NextRequest) {
       else compte.resumesEchoues += 1;
     }
   } catch (cause) {
-    erreurs.push(`résumés : ${cause instanceof Error ? cause.message : "échec"}`);
+    erreurs.push(
+      `résumés : ${cause instanceof Error ? cause.message : "échec"}`,
+    );
   }
 
   // 2. Toutes les purges de conservation, journalisées une par une.
@@ -62,10 +67,13 @@ export async function GET(request: NextRequest) {
   try {
     for (const rapport of await executerPurges()) {
       purges[rapport.genre] = rapport.traites;
-      if (rapport.erreur) erreurs.push(`purge ${rapport.genre} : ${rapport.erreur}`);
+      if (rapport.erreur)
+        erreurs.push(`purge ${rapport.genre} : ${rapport.erreur}`);
     }
   } catch (cause) {
-    erreurs.push(`purges : ${cause instanceof Error ? cause.message : "échec"}`);
+    erreurs.push(
+      `purges : ${cause instanceof Error ? cause.message : "échec"}`,
+    );
   }
 
   // 3. Les messages restés en file (section 26).
@@ -74,7 +82,9 @@ export async function GET(request: NextRequest) {
     compte.smsEnvoyes = envoyes;
     compte.smsEchoues = echoues;
   } catch (cause) {
-    erreurs.push(`messages : ${cause instanceof Error ? cause.message : "échec"}`);
+    erreurs.push(
+      `messages : ${cause instanceof Error ? cause.message : "échec"}`,
+    );
   }
 
   // 4. Les créneaux bloqués par un appel interrompu (section 20).

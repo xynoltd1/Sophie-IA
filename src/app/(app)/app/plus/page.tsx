@@ -33,7 +33,9 @@ export default async function PlusPage({
 }) {
   const { activeOrganization } = await requireOrganization();
   const { agenda } = await searchParams;
-  const calendarState = await getCalendarState(activeOrganization.organization_id);
+  const calendarState = await getCalendarState(
+    activeOrganization.organization_id,
+  );
   const supabase = await createServerSupabase();
 
   // Cette requete est filtree par RLS : elle ne peut renvoyer que les membres
@@ -74,7 +76,10 @@ export default async function PlusPage({
         ) : (
           <Sheet className="divide-y divide-line p-0">
             {team.map((member) => (
-              <div key={member.user_id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div
+                key={member.user_id}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
                 <div className="min-w-0">
                   <p className="truncate font-medium">
                     {member.profiles?.full_name ?? "Membre sans nom"}
@@ -102,19 +107,40 @@ export default async function PlusPage({
         <SectionTitle>Réglages</SectionTitle>
         <ul className="flex flex-col gap-2">
           {[
-            { href: "/app/reglages", titre: "Tous les réglages", detail: "Services, horaires, absences, intégrations." },
-            { href: "/app/taches", titre: "Tâches", detail: "Les rappels à faire, en retard ou à venir." },
-            { href: "/app/notifications", titre: "Alertes", detail: "Ce que Sophie a signalé." },
-            { href: "/app/sophie", titre: "Sophie", detail: "Son état, ses connaissances, l’enregistrement." },
+            {
+              href: "/app/reglages",
+              titre: "Tous les réglages",
+              detail: "Services, horaires, absences, intégrations.",
+            },
+            {
+              href: "/app/taches",
+              titre: "Tâches",
+              detail: "Les rappels à faire, en retard ou à venir.",
+            },
+            {
+              href: "/app/notifications",
+              titre: "Alertes",
+              detail: "Ce que Sophie a signalé.",
+            },
+            {
+              href: "/app/sophie",
+              titre: "Sophie",
+              detail: "Son état, ses connaissances, l’enregistrement.",
+            },
           ].map((entree) => (
             <li key={entree.href}>
               <Link href={entree.href} className="block">
-                <Sheet interactive className="flex items-center justify-between gap-3">
+                <Sheet
+                  interactive
+                  className="flex items-center justify-between gap-3"
+                >
                   <div className="min-w-0">
                     <p className="font-medium">{entree.titre}</p>
                     <p className="text-sm text-ink-soft">{entree.detail}</p>
                   </div>
-                  <span aria-hidden className="shrink-0 text-ink-soft">→</span>
+                  <span aria-hidden className="shrink-0 text-ink-soft">
+                    →
+                  </span>
                 </Sheet>
               </Link>
             </li>

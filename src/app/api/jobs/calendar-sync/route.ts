@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { jobAutorise } from "@/lib/jobs/auth";
 import { syncCalendar } from "@/lib/providers/calendar/service";
 import { signalerErreurFournisseur } from "@/lib/platform/errors";
+import { noterEchangeReussi } from "@/lib/platform/errors";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -53,6 +54,10 @@ export async function GET(request: NextRequest) {
 
     // Un agenda qui ne se synchronise plus se voit d'abord ici : l'artisan,
     // lui, ne constate rien tant qu'il ne propose pas de créneau.
+    if (resultat.ok) {
+      await noterEchangeReussi("GOOGLE_CALENDAR", "syncCalendar");
+    }
+
     if (!resultat.ok) {
       await signalerErreurFournisseur({
         provider: "GOOGLE_CALENDAR",

@@ -123,7 +123,10 @@ export function AppointmentActions({
             </Bouton>
           ) : null}
           {peutProposer ? (
-            <Bouton disabled={pending} onClick={() => setFormulaire("PROPOSITION")}>
+            <Bouton
+              disabled={pending}
+              onClick={() => setFormulaire("PROPOSITION")}
+            >
               Proposer un autre horaire
             </Bouton>
           ) : null}
@@ -133,7 +136,10 @@ export function AppointmentActions({
             </Bouton>
           ) : null}
           {peutAnnuler ? (
-            <Bouton disabled={pending} onClick={() => setFormulaire("ANNULATION")}>
+            <Bouton
+              disabled={pending}
+              onClick={() => setFormulaire("ANNULATION")}
+            >
               Annuler
             </Bouton>
           ) : null}
@@ -142,8 +148,12 @@ export function AppointmentActions({
 
       {formulaire === "REFUS" || formulaire === "ANNULATION" ? (
         <div className="flex flex-col gap-2 rounded-control border border-line bg-surface p-3">
-          <label className="text-sm font-medium" htmlFor={`motif-${appointmentId}`}>
-            Motif {formulaire === "REFUS" ? "du refus" : "de l’annulation"} (facultatif)
+          <label
+            className="text-sm font-medium"
+            htmlFor={`motif-${appointmentId}`}
+          >
+            Motif {formulaire === "REFUS" ? "du refus" : "de l’annulation"}{" "}
+            (facultatif)
           </label>
           <input
             id={`motif-${appointmentId}`}
@@ -154,7 +164,8 @@ export function AppointmentActions({
             className="min-h-12 rounded-control border border-line px-3"
           />
           <p className="text-sm text-ink-soft">
-            Ce motif est envoyé au client. N’y mettez rien que vous ne lui diriez pas.
+            Ce motif est envoyé au client. N’y mettez rien que vous ne lui
+            diriez pas.
           </p>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -172,8 +183,14 @@ export function AppointmentActions({
               onClick={() =>
                 traiter(
                   formulaire === "REFUS"
-                    ? refuserRendezVous(appointmentId, { motif, prevenirClient: prevenir })
-                    : annulerRendezVous(appointmentId, { motif, prevenirClient: prevenir }),
+                    ? refuserRendezVous(appointmentId, {
+                        motif,
+                        prevenirClient: prevenir,
+                      })
+                    : annulerRendezVous(appointmentId, {
+                        motif,
+                        prevenirClient: prevenir,
+                      }),
                 )
               }
             >
@@ -188,7 +205,10 @@ export function AppointmentActions({
 
       {formulaire === "PROPOSITION" ? (
         <div className="flex flex-col gap-2 rounded-control border border-line bg-surface p-3">
-          <label className="text-sm font-medium" htmlFor={`horaire-${appointmentId}`}>
+          <label
+            className="text-sm font-medium"
+            htmlFor={`horaire-${appointmentId}`}
+          >
             Nouvel horaire proposé
           </label>
           <input
@@ -199,8 +219,9 @@ export function AppointmentActions({
             className="min-h-12 rounded-control border border-line px-3"
           />
           <p className="text-sm text-ink-soft">
-            Le client reçoit un lien pour accepter ou refuser. Le rendez-vous n’est
-            confirmé que s’il accepte, et le créneau d’origine reste bloqué d’ici là.
+            Le client reçoit un lien pour accepter ou refuser. Le rendez-vous
+            n’est confirmé que s’il accepte, et le créneau d’origine reste
+            bloqué d’ici là.
           </p>
           <div className="flex gap-2">
             <Bouton
@@ -208,9 +229,14 @@ export function AppointmentActions({
               disabled={pending || !nouvelHoraire}
               onClick={() =>
                 traiter(
-                  proposerAutreHoraire(appointmentId, nouvelHoraire, dureeMinutes, {
-                    prevenirClient: true,
-                  }),
+                  proposerAutreHoraire(
+                    appointmentId,
+                    nouvelHoraire,
+                    dureeMinutes,
+                    {
+                      prevenirClient: true,
+                    },
+                  ),
                 )
               }
             >

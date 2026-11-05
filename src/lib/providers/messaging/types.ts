@@ -38,7 +38,10 @@ export interface MessagingProvider {
 
   send(message: OutboundMessage): Promise<SendResult>;
 
-  verifyWebhook(params: { rawBody: string; headers: Record<string, string> }): boolean;
+  verifyWebhook(params: {
+    rawBody: string;
+    headers: Record<string, string>;
+  }): boolean;
 
   /** Accusés de réception et changements de statut. */
   parseStatusUpdate(rawBody: string): {

@@ -14,7 +14,8 @@ export const metadata = { title: "Horaires — Sophie IA" };
 
 export default async function HorairesReglagesPage() {
   const { activeOrganization } = await requireOrganization();
-  if (!can(activeOrganization.role, "organization:update")) redirect("/app/reglages");
+  if (!can(activeOrganization.role, "organization:update"))
+    redirect("/app/reglages");
 
   const supabase = await createServerSupabase();
   const orgId = activeOrganization.organization_id;
@@ -50,13 +51,16 @@ export default async function HorairesReglagesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/reglages" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/reglages"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Réglages
       </Link>
       <SectionTitle>Horaires</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Sophie ne proposera jamais un rendez-vous en dehors de ces plages. La marge est le
-        temps laissé entre deux interventions.
+        Sophie ne proposera jamais un rendez-vous en dehors de ces plages. La
+        marge est le temps laissé entre deux interventions.
       </p>
 
       {hours.error ? (
@@ -64,7 +68,9 @@ export default async function HorairesReglagesPage() {
       ) : (
         <HoursEditor
           initialHours={initial}
-          defaultAppointmentMinutes={profile.data?.default_appointment_minutes ?? 60}
+          defaultAppointmentMinutes={
+            profile.data?.default_appointment_minutes ?? 60
+          }
           bufferMinutes={profile.data?.buffer_minutes ?? 15}
           contexte="REGLAGES"
         />

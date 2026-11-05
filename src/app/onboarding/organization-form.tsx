@@ -10,7 +10,6 @@ const COUNTRIES = [
   { code: "FR", label: "France" },
 ];
 
-
 export function OrganizationForm() {
   const [state, action, pending] = useActionState<OnboardingState, FormData>(
     createOrganization,
@@ -20,7 +19,10 @@ export function OrganizationForm() {
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}
@@ -41,7 +43,11 @@ export function OrganizationForm() {
         />
       </Field>
 
-      <Field label="Pays" htmlFor="countryCode" error={state.fieldErrors?.countryCode}>
+      <Field
+        label="Pays"
+        htmlFor="countryCode"
+        error={state.fieldErrors?.countryCode}
+      >
         <select
           id="countryCode"
           name="countryCode"

@@ -10,7 +10,8 @@
  * qui se trompera d'abord sur l'ordre et les égalités de date.
  */
 
-export type GenreEvenement = "APPEL" | "MESSAGE_RECU" | "MESSAGE_ENVOYE" | "RENDEZ_VOUS" | "DEMANDE";
+export type GenreEvenement =
+  "APPEL" | "MESSAGE_RECU" | "MESSAGE_ENVOYE" | "RENDEZ_VOUS" | "DEMANDE";
 
 export interface EvenementFil {
   id: string;
@@ -23,9 +24,25 @@ export interface EvenementFil {
 }
 
 export interface SourcesFil {
-  appels: { id: string; started_at: string; duration_seconds: number | null; status: string }[];
-  messages: { id: string; body: string; created_at: string; direction: "INBOUND" | "OUTBOUND"; status?: string }[];
-  rendezVous: { id: string; title: string; starts_at: string; status: string }[];
+  appels: {
+    id: string;
+    started_at: string;
+    duration_seconds: number | null;
+    status: string;
+  }[];
+  messages: {
+    id: string;
+    body: string;
+    created_at: string;
+    direction: "INBOUND" | "OUTBOUND";
+    status?: string;
+  }[];
+  rendezVous: {
+    id: string;
+    title: string;
+    starts_at: string;
+    status: string;
+  }[];
   demandes: { id: string; title: string; created_at: string; status: string }[];
 }
 
@@ -88,10 +105,12 @@ export function construireFil(sources: SourcesFil): EvenementFil[] {
     });
   }
 
-  return evenements
-    .filter((e) => !Number.isNaN(new Date(e.quand).getTime()))
-    // Du plus récent au plus ancien : ce qu'on cherche sur une fiche client,
-    // c'est ce qui vient de se passer.
-    .sort((a, b) => new Date(b.quand).getTime() - new Date(a.quand).getTime())
-    .slice(0, 50);
+  return (
+    evenements
+      .filter((e) => !Number.isNaN(new Date(e.quand).getTime()))
+      // Du plus récent au plus ancien : ce qu'on cherche sur une fiche client,
+      // c'est ce qui vient de se passer.
+      .sort((a, b) => new Date(b.quand).getTime() - new Date(a.quand).getTime())
+      .slice(0, 50)
+  );
 }

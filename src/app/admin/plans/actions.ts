@@ -12,7 +12,13 @@ export interface PlanState {
 }
 
 const schema = z.object({
-  code: z.string().trim().regex(/^[A-Z][A-Z0-9_]{1,30}$/, "Code : majuscules, chiffres, tirets bas."),
+  code: z
+    .string()
+    .trim()
+    .regex(
+      /^[A-Z][A-Z0-9_]{1,30}$/,
+      "Code : majuscules, chiffres, tirets bas.",
+    ),
   label: z.string().trim().min(2).max(60),
   description: z.string().trim().max(300).optional(),
   // Un prix vide reste vide : le cahier des charges interdit d'inventer un
@@ -24,7 +30,10 @@ const schema = z.object({
   isPublic: z.boolean(),
 });
 
-export async function enregistrerPlan(_prev: PlanState, formData: FormData): Promise<PlanState> {
+export async function enregistrerPlan(
+  _prev: PlanState,
+  formData: FormData,
+): Promise<PlanState> {
   const { userId } = await requirePlatformAdmin();
 
   const parsed = schema.safeParse({
@@ -53,7 +62,10 @@ export async function enregistrerPlan(_prev: PlanState, formData: FormData): Pro
   const membres = parsed.data.membres?.trim();
   const maxMembres = membres && membres.length > 0 ? Number(membres) : null;
 
-  if (maxMembres !== null && (!Number.isInteger(maxMembres) || maxMembres < 1)) {
+  if (
+    maxMembres !== null &&
+    (!Number.isInteger(maxMembres) || maxMembres < 1)
+  ) {
     return { error: "Nombre de membres invalide." };
   }
 

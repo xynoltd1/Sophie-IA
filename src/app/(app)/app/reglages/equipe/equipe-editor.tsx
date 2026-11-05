@@ -42,7 +42,10 @@ export function EquipeEditor({
   invitations: LigneInvitation[];
   peutGerer: boolean;
 }) {
-  const [state, action, enCours] = useActionState<EquipeState, FormData>(inviterMembre, {});
+  const [state, action, enCours] = useActionState<EquipeState, FormData>(
+    inviterMembre,
+    {},
+  );
   const [pending, demarrer] = useTransition();
   const [erreur, setErreur] = useState<string | null>(null);
   const router = useRouter();
@@ -54,17 +57,25 @@ export function EquipeEditor({
       <ul className="flex flex-col gap-2">
         {membres.map((membre) => (
           <li key={membre.user_id}>
-            <Sheet className={membre.status === "SUSPENDED" ? "opacity-60" : undefined}>
+            <Sheet
+              className={
+                membre.status === "SUSPENDED" ? "opacity-60" : undefined
+              }
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-medium">{membre.nom ?? "Membre sans nom"}</p>
+                  <p className="font-medium">
+                    {membre.nom ?? "Membre sans nom"}
+                  </p>
                   <p className="text-sm text-ink-soft">
                     {ROLES[membre.role]}
                     {membre.status === "SUSPENDED" ? " · retiré" : ""}
                   </p>
                 </div>
 
-                {peutGerer && membre.role !== "OWNER" && membre.status !== "SUSPENDED" ? (
+                {peutGerer &&
+                membre.role !== "OWNER" &&
+                membre.status !== "SUSPENDED" ? (
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <select
                       value={membre.role}
@@ -72,8 +83,12 @@ export function EquipeEditor({
                       onChange={(e) =>
                         demarrer(async () => {
                           setErreur(null);
-                          const r = await changerRole(membre.user_id, e.target.value as MemberRole);
-                          if (!r.ok) setErreur(r.erreur ?? "Changement refusé.");
+                          const r = await changerRole(
+                            membre.user_id,
+                            e.target.value as MemberRole,
+                          );
+                          if (!r.ok)
+                            setErreur(r.erreur ?? "Changement refusé.");
                           router.refresh();
                         })
                       }
@@ -111,10 +126,17 @@ export function EquipeEditor({
           <ul className="flex flex-col gap-2">
             {invitations.map((invitation) => (
               <li key={invitation.id}>
-                <Sheet tone="attention" className="flex items-center justify-between gap-3">
+                <Sheet
+                  tone="attention"
+                  className="flex items-center justify-between gap-3"
+                >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{invitation.email}</p>
-                    <p className="text-sm text-ink-soft">{ROLES[invitation.role]}</p>
+                    <p className="truncate text-sm font-medium">
+                      {invitation.email}
+                    </p>
+                    <p className="text-sm text-ink-soft">
+                      {ROLES[invitation.role]}
+                    </p>
                   </div>
                   {peutGerer ? (
                     <button
@@ -171,17 +193,21 @@ export function EquipeEditor({
               </select>
             </div>
 
-            {state.error ? <p className="text-sm text-urgent">{state.error}</p> : null}
-            {state.success ? <p className="text-sm text-signal-deep">{state.success}</p> : null}
+            {state.error ? (
+              <p className="text-sm text-urgent">{state.error}</p>
+            ) : null}
+            {state.success ? (
+              <p className="text-sm text-signal-deep">{state.success}</p>
+            ) : null}
 
             {state.lien ? (
               <div className="rounded-control border border-line bg-paper p-3">
                 <p className="text-sm font-medium">Lien d’invitation</p>
                 <p className="mt-1 break-all font-mono text-sm">{state.lien}</p>
                 <p className="mt-2 text-sm text-ink-soft">
-                  Aucun e-mail n’est envoyé : il n’y a pas encore de service d’envoi
-                  configuré. Copiez ce lien et transmettez-le vous-même. Il ne sera plus
-                  affiché après avoir quitté cette page.
+                  Aucun e-mail n’est envoyé : il n’y a pas encore de service
+                  d’envoi configuré. Copiez ce lien et transmettez-le vous-même.
+                  Il ne sera plus affiché après avoir quitté cette page.
                 </p>
               </div>
             ) : null}

@@ -4,7 +4,11 @@ import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
-import { basculerPublication, enregistrerMetier, type MetierState } from "./actions";
+import {
+  basculerPublication,
+  enregistrerMetier,
+  type MetierState,
+} from "./actions";
 
 export interface LigneMetier {
   slug: string;
@@ -15,7 +19,10 @@ export interface LigneMetier {
 }
 
 export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
-  const [state, action, enCours] = useActionState<MetierState, FormData>(enregistrerMetier, {});
+  const [state, action, enCours] = useActionState<MetierState, FormData>(
+    enregistrerMetier,
+    {},
+  );
   const [pending, demarrer] = useTransition();
   const [ouvert, setOuvert] = useState(false);
   const router = useRouter();
@@ -29,7 +36,8 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
               <div className="min-w-0">
                 <p className="font-medium">{metier.label}</p>
                 <p className="text-sm text-ink-soft">
-                  {metier.slug} · {metier.services} service{metier.services > 1 ? "s" : ""} ·{" "}
+                  {metier.slug} · {metier.services} service
+                  {metier.services > 1 ? "s" : ""} ·{" "}
                   {metier.default_appointment_minutes} min par défaut
                 </p>
               </div>
@@ -38,13 +46,18 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
                 disabled={pending}
                 onClick={() =>
                   demarrer(async () => {
-                    await basculerPublication(metier.slug, !metier.is_published);
+                    await basculerPublication(
+                      metier.slug,
+                      !metier.is_published,
+                    );
                     router.refresh();
                   })
                 }
                 className="shrink-0 text-sm text-ink-soft underline underline-offset-4 disabled:opacity-60"
               >
-                {metier.is_published ? "Publié — retirer" : "Non publié — publier"}
+                {metier.is_published
+                  ? "Publié — retirer"
+                  : "Non publié — publier"}
               </button>
             </Sheet>
           </li>
@@ -52,7 +65,11 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
       </ul>
 
       {!ouvert ? (
-        <Button type="button" variant="secondary" onClick={() => setOuvert(true)}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setOuvert(true)}
+        >
           Ajouter ou modifier un métier
         </Button>
       ) : (
@@ -60,8 +77,9 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
           <Sheet className="flex flex-col gap-3">
             <p className="font-medium">Métier</p>
             <p className="text-sm text-ink-soft">
-              Un identifiant déjà existant met le métier à jour. Les entreprises déjà
-              inscrites ne sont pas modifiées : le modèle sert au moment de l’inscription.
+              Un identifiant déjà existant met le métier à jour. Les entreprises
+              déjà inscrites ne sont pas modifiées : le modèle sert au moment de
+              l’inscription.
             </p>
 
             <Champ nom="slug" libelle="Identifiant (ex. vitrier)" requis />
@@ -76,11 +94,14 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
                 name="services"
                 rows={5}
                 required
-                placeholder={"Remplacement de vitre | 90\nDépannage urgent | 60 | urgent"}
+                placeholder={
+                  "Remplacement de vitre | 90\nDépannage urgent | 60 | urgent"
+                }
                 className="rounded-control border border-line p-3 font-mono text-sm"
               />
               <p className="text-sm text-ink-soft">
-                Format : nom | durée en minutes | « urgent » si l’intervention est urgente.
+                Format : nom | durée en minutes | « urgent » si l’intervention
+                est urgente.
               </p>
             </div>
 
@@ -92,7 +113,9 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
                 id="questions"
                 name="questions"
                 rows={3}
-                placeholder={"La vitre est-elle brisée ou fissurée ?\nQuelle est la taille approximative ?"}
+                placeholder={
+                  "La vitre est-elle brisée ou fissurée ?\nQuelle est la taille approximative ?"
+                }
                 className="rounded-control border border-line p-3 text-sm"
               />
             </div>
@@ -111,8 +134,18 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
             </div>
 
             <div className="flex gap-3">
-              <Champ nom="defaultAppointmentMinutes" libelle="Durée par défaut (min)" type="number" defaut="60" />
-              <Champ nom="defaultBufferMinutes" libelle="Marge (min)" type="number" defaut="15" />
+              <Champ
+                nom="defaultAppointmentMinutes"
+                libelle="Durée par défaut (min)"
+                type="number"
+                defaut="60"
+              />
+              <Champ
+                nom="defaultBufferMinutes"
+                libelle="Marge (min)"
+                type="number"
+                defaut="15"
+              />
             </div>
 
             <label className="flex items-center gap-2 text-sm">
@@ -125,14 +158,22 @@ export function MetiersEditor({ metiers }: { metiers: LigneMetier[] }) {
               Publier : le métier apparaît dans l’inscription
             </label>
 
-            {state.error ? <p className="text-sm text-urgent">{state.error}</p> : null}
-            {state.success ? <p className="text-sm text-signal-deep">{state.success}</p> : null}
+            {state.error ? (
+              <p className="text-sm text-urgent">{state.error}</p>
+            ) : null}
+            {state.success ? (
+              <p className="text-sm text-signal-deep">{state.success}</p>
+            ) : null}
 
             <div className="flex gap-2">
               <Button type="submit" loading={enCours}>
                 Enregistrer
               </Button>
-              <Button type="button" variant="secondary" onClick={() => setOuvert(false)}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setOuvert(false)}
+              >
                 Fermer
               </Button>
             </div>

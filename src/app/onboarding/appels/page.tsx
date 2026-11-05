@@ -23,8 +23,13 @@ export default async function PhoneStep() {
       backHref="/onboarding/sophie"
     >
       <PhoneForm
-        answerMode={(data?.answer_mode as SophieAnswerMode | undefined) ?? "WHEN_UNAVAILABLE"}
-        transferNumber={(data?.transfer_number as string | null | undefined) ?? null}
+        answerMode={
+          (data?.answer_mode as SophieAnswerMode | undefined) ??
+          "WHEN_UNAVAILABLE"
+        }
+        transferNumber={
+          (data?.transfer_number as string | null | undefined) ?? null
+        }
       />
     </StepShell>
   );

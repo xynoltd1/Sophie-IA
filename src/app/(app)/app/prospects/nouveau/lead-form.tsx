@@ -14,13 +14,19 @@ const PRIORITES: { valeur: LeadPriority; label: string }[] = [
 ];
 
 export function LeadForm() {
-  const [state, action, pending] = useActionState<LeadFormState, FormData>(createLead, {});
+  const [state, action, pending] = useActionState<LeadFormState, FormData>(
+    createLead,
+    {},
+  );
   const [priorite, setPriorite] = useState<LeadPriority>("NORMAL");
 
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}
@@ -40,8 +46,17 @@ export function LeadForm() {
         />
       </Field>
 
-      <Field label="Nom du client" htmlFor="contactName" error={state.fieldErrors?.contactName}>
-        <Input id="contactName" name="contactName" autoComplete="off" placeholder="Jean Dupont" />
+      <Field
+        label="Nom du client"
+        htmlFor="contactName"
+        error={state.fieldErrors?.contactName}
+      >
+        <Input
+          id="contactName"
+          name="contactName"
+          autoComplete="off"
+          placeholder="Jean Dupont"
+        />
       </Field>
 
       <Field
@@ -49,7 +64,13 @@ export function LeadForm() {
         htmlFor="phone"
         hint="Si ce numéro est déjà connu, le prospect sera rattaché au bon client."
       >
-        <Input id="phone" name="phone" type="tel" inputMode="tel" placeholder="0470 12 34 56" />
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          placeholder="0470 12 34 56"
+        />
       </Field>
 
       <Field label="Ville" htmlFor="city">

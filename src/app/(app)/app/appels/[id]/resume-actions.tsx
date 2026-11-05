@@ -11,7 +11,13 @@ import { Button } from "@/components/ui/button";
  * d'erreur est pire que pas de bouton : il fait croire que le produit sait se
  * rattraper.
  */
-export function ResumeActions({ callId, libelle }: { callId: string; libelle: string }) {
+export function ResumeActions({
+  callId,
+  libelle,
+}: {
+  callId: string;
+  libelle: string;
+}) {
   const router = useRouter();
   const [enCours, demarrer] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -21,7 +27,9 @@ export function ResumeActions({ callId, libelle }: { callId: string; libelle: st
     setOccupe(true);
     setMessage(null);
     try {
-      const reponse = await fetch(`/api/calls/${callId}/summary`, { method: "POST" });
+      const reponse = await fetch(`/api/calls/${callId}/summary`, {
+        method: "POST",
+      });
       const corps = (await reponse.json()) as {
         ok?: boolean;
         simule?: boolean;

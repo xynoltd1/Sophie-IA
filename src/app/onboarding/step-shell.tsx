@@ -30,7 +30,10 @@ export function StepShell({
             Étape {STEP_NUMBER[step]} sur {TOTAL_STEPS}
           </p>
           {backHref ? (
-            <Link href={backHref} className="text-sm text-ink-soft underline underline-offset-4">
+            <Link
+              href={backHref}
+              className="text-sm text-ink-soft underline underline-offset-4"
+            >
               Retour
             </Link>
           ) : null}
@@ -44,7 +47,10 @@ export function StepShell({
           aria-valuemax={100}
           aria-label="Progression de la configuration"
         >
-          <div className="h-full rounded-full bg-signal" style={{ width: `${progress}%` }} />
+          <div
+            className="h-full rounded-full bg-signal"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
         <h1 className="mt-5 text-hero font-semibold">{title}</h1>

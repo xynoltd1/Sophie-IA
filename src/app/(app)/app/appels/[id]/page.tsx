@@ -12,7 +12,11 @@ import {
   formatPhone,
   sansSuite,
 } from "@/lib/crm/calls";
-import { APPOINTMENT_STATUS_LABELS, formatDay, formatTime } from "@/lib/crm/agenda";
+import {
+  APPOINTMENT_STATUS_LABELS,
+  formatDay,
+  formatTime,
+} from "@/lib/crm/agenda";
 import { LEAD_STATUS_LABELS } from "@/lib/crm/pipeline";
 import { champsExtraits } from "@/lib/crm/extraction";
 import { ResumeActions } from "./resume-actions";
@@ -54,7 +58,8 @@ export default async function FicheAppelPage({
     .eq("organization_id", activeOrganization.organization_id)
     .maybeSingle();
 
-  if (error) return <ErrorState description="Cet appel n’a pas pu être chargé." />;
+  if (error)
+    return <ErrorState description="Cet appel n’a pas pu être chargé." />;
   if (!data) notFound();
 
   const appel = data as unknown as CallRow & {
@@ -113,7 +118,10 @@ export default async function FicheAppelPage({
     "id" | "title" | "status" | "priority"
   >[];
 
-  const taches = (rappels.data ?? []) as Pick<TaskRow, "id" | "title" | "due_at" | "status">[];
+  const taches = (rappels.data ?? []) as Pick<
+    TaskRow,
+    "id" | "title" | "due_at" | "status"
+  >[];
 
   const extraits = champsExtraits(appel.structured_data);
 
@@ -138,7 +146,10 @@ export default async function FicheAppelPage({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <Link href="/app/appels" className="text-sm text-ink-soft underline underline-offset-4">
+        <Link
+          href="/app/appels"
+          className="text-sm text-ink-soft underline underline-offset-4"
+        >
           ← Tous les appels
         </Link>
       </div>
@@ -149,8 +160,9 @@ export default async function FicheAppelPage({
         <Sheet tone="attention">
           <p className="font-medium">Cet appel est à la corbeille</p>
           <p className="mt-1 text-sm text-ink-soft">
-            Il sera effacé définitivement, avec son enregistrement et sa transcription,
-            trente jours après sa suppression. D’ici là, il se restaure depuis la corbeille.
+            Il sera effacé définitivement, avec son enregistrement et sa
+            transcription, trente jours après sa suppression. D’ici là, il se
+            restaure depuis la corbeille.
           </p>
           <Link
             href="/app/appels?corbeille=1"
@@ -162,7 +174,9 @@ export default async function FicheAppelPage({
       ) : null}
 
       <Sheet className="flex flex-col gap-1">
-        <p className="text-sm text-ink-soft first-letter:uppercase">{formatCallMoment(appel.started_at)}</p>
+        <p className="text-sm text-ink-soft first-letter:uppercase">
+          {formatCallMoment(appel.started_at)}
+        </p>
         <p className="text-sm text-ink-soft">
           {formatPhone(appel.from_e164)} · {CALL_STATUS_LABELS[appel.status]} ·{" "}
           {formatDuration(appel.duration_seconds)}
@@ -189,7 +203,12 @@ export default async function FicheAppelPage({
             {/* Le fichier n'est jamais servi par une URL publique : la lecture
                 passera par une adresse signée, générée après vérification de
                 l'organisation (section 40). */}
-            <audio controls preload="none" className="w-full" src={`/api/calls/${appel.id}/audio`}>
+            <audio
+              controls
+              preload="none"
+              className="w-full"
+              src={`/api/calls/${appel.id}/audio`}
+            >
               Votre navigateur ne sait pas lire l’audio.
             </audio>
             <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -224,21 +243,27 @@ export default async function FicheAppelPage({
         <Sheet tone="attention">
           <p className="font-medium">Rien n’est sorti de cet appel</p>
           <p className="mt-1 text-sm text-ink-soft">
-            Sophie n’a noté ni demande, ni rendez-vous, ni rappel. Le client a peut-être
-            raccroché avant d’expliquer ce qu’il voulait.
+            Sophie n’a noté ni demande, ni rendez-vous, ni rappel. Le client a
+            peut-être raccroché avant d’expliquer ce qu’il voulait.
           </p>
         </Sheet>
       ) : null}
 
       <section>
         <SectionTitle>Résumé de Sophie</SectionTitle>
-        <Sheet tone={!appel.summary && appel.summary_status === "FAILED" ? "attention" : "neutral"}>
+        <Sheet
+          tone={
+            !appel.summary && appel.summary_status === "FAILED"
+              ? "attention"
+              : "neutral"
+          }
+        >
           {appel.summary ? (
             <>
               {appel.summary_source === "MOCK" ? (
                 <p className="mb-2 text-sm font-medium text-attention">
-                  Résumé simulé : aucun fournisseur d’intelligence artificielle n’est
-                  configuré. Ce texte ne décrit pas l’appel.
+                  Résumé simulé : aucun fournisseur d’intelligence artificielle
+                  n’est configuré. Ce texte ne décrit pas l’appel.
                 </p>
               ) : null}
               <p className="whitespace-pre-line text-sm">{appel.summary}</p>
@@ -254,7 +279,9 @@ export default async function FicheAppelPage({
                     : "Le résumé automatique arrive avec le traitement après appel."}
               </p>
               {appel.summary_error ? (
-                <p className="mt-1 text-sm text-ink-soft">Raison : {appel.summary_error}</p>
+                <p className="mt-1 text-sm text-ink-soft">
+                  Raison : {appel.summary_error}
+                </p>
               ) : null}
               <ResumeActions callId={appel.id} libelle="Réessayer" />
             </>
@@ -269,14 +296,16 @@ export default async function FicheAppelPage({
             <dl className="flex flex-col gap-2">
               {extraits.map((champ) => (
                 <div key={champ.cle} className="flex gap-3">
-                  <dt className="w-40 shrink-0 text-sm text-ink-soft">{champ.libelle}</dt>
+                  <dt className="w-40 shrink-0 text-sm text-ink-soft">
+                    {champ.libelle}
+                  </dt>
                   <dd className="min-w-0 text-sm">{champ.valeur}</dd>
                 </div>
               ))}
             </dl>
             <p className="mt-3 text-sm text-ink-soft">
-              Seuls les champs réellement entendus sont affichés. Un champ absent n’a pas
-              été dit pendant l’appel.
+              Seuls les champs réellement entendus sont affichés. Un champ
+              absent n’a pas été dit pendant l’appel.
             </p>
           </Sheet>
         </section>
@@ -300,16 +329,24 @@ export default async function FicheAppelPage({
                   <p className="text-sm font-medium">
                     {qui}
                     {instant ? (
-                      <span className="ml-2 font-normal text-ink-faint">{instant}</span>
+                      <span className="ml-2 font-normal text-ink-faint">
+                        {instant}
+                      </span>
                     ) : null}
                   </p>
-                  <p className="mt-0.5 whitespace-pre-line text-sm text-ink-soft">{tour.content}</p>
+                  <p className="mt-0.5 whitespace-pre-line text-sm text-ink-soft">
+                    {tour.content}
+                  </p>
                 </div>
               );
             })}
           </Sheet>
         ) : (
-          <Sheet tone={appel.transcription_status === "FAILED" ? "attention" : "neutral"}>
+          <Sheet
+            tone={
+              appel.transcription_status === "FAILED" ? "attention" : "neutral"
+            }
+          >
             <p className="text-sm text-ink-soft">
               {appel.transcription_status === "FAILED"
                 ? "Transcription indisponible pour cet appel."
@@ -322,10 +359,13 @@ export default async function FicheAppelPage({
       {rdv ? (
         <section>
           <SectionTitle>Rendez-vous issu de cet appel</SectionTitle>
-          <Sheet tone={rdv.status === "PENDING_APPROVAL" ? "attention" : "neutral"}>
+          <Sheet
+            tone={rdv.status === "PENDING_APPROVAL" ? "attention" : "neutral"}
+          >
             <p className="font-medium">{rdv.title}</p>
             <p className="text-sm text-ink-soft first-letter:uppercase">
-              {formatDay(rdv.starts_at)} · {formatTime(rdv.starts_at)} – {formatTime(rdv.ends_at)}
+              {formatDay(rdv.starts_at)} · {formatTime(rdv.starts_at)} –{" "}
+              {formatTime(rdv.ends_at)}
             </p>
             <p className="mt-1 text-sm text-ink-soft">
               {APPOINTMENT_STATUS_LABELS[rdv.status]}
@@ -347,7 +387,10 @@ export default async function FicheAppelPage({
             {leads.map((lead) => (
               <li key={lead.id}>
                 <Link href="/app/prospects" className="block">
-                  <Sheet interactive tone={lead.priority === "URGENT" ? "urgent" : "neutral"}>
+                  <Sheet
+                    interactive
+                    tone={lead.priority === "URGENT" ? "urgent" : "neutral"}
+                  >
                     <p className="font-medium">{lead.title}</p>
                     <p className="mt-1 text-sm text-ink-soft">
                       {lead.priority === "URGENT" ? "Urgent · " : ""}
@@ -380,7 +423,6 @@ export default async function FicheAppelPage({
           </ul>
         </section>
       ) : null}
-
     </div>
   );
 }

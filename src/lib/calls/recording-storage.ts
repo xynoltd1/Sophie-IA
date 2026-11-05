@@ -11,6 +11,7 @@ import {
   typeIndetermine,
 } from "./recording-path";
 import { signalerErreurFournisseur } from "@/lib/platform/errors";
+import { noterEchangeReussi } from "@/lib/platform/errors";
 
 /**
  * Rapatriement de l'enregistrement chez nous.
@@ -148,6 +149,8 @@ export async function rapatrierEnregistrement(params: {
     // deux mondes, et il faut le dire plutôt que d'annoncer un succès.
     return echec(`Fichier déposé mais non rattaché à l'appel : ${maj.message}`);
   }
+
+  await noterEchangeReussi("RECORDING", "rapatrierEnregistrement");
 
   return { ok: true };
 }

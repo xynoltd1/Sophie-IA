@@ -22,15 +22,22 @@ export function ProfessionPicker({
   currentTemplateId: string | null;
   currentCustomLabel: string | null;
 }) {
-  const [state, action, pending] = useActionState<StepState, FormData>(chooseProfession, {});
+  const [state, action, pending] = useActionState<StepState, FormData>(
+    chooseProfession,
+    {},
+  );
   const [selected, setSelected] = useState<string | null>(currentTemplateId);
 
-  const needsCustomLabel = templates.find((t) => t.id === selected)?.allows_custom_label ?? false;
+  const needsCustomLabel =
+    templates.find((t) => t.id === selected)?.allows_custom_label ?? false;
 
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}

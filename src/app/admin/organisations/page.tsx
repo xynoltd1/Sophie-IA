@@ -1,6 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/auth/platform";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Sheet, SectionTitle } from "@/components/ui/sheet";
+import { Sheet } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/states";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,9 @@ export default async function OrganisationsPage() {
 
   const { data } = await admin
     .from("organizations")
-    .select("id, name, country_code, onboarding_step, is_test_organization, created_at")
+    .select(
+      "id, name, country_code, onboarding_step, is_test_organization, created_at",
+    )
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(200);
@@ -42,10 +44,13 @@ export default async function OrganisationsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <SectionTitle>Entreprises</SectionTitle>
+      <h1 className="font-display text-2xl font-semibold tracking-tight">Entreprises</h1>
 
       {organisations.length === 0 ? (
-        <EmptyState title="Aucune entreprise" description="Les inscriptions apparaîtront ici." />
+        <EmptyState
+          title="Aucune entreprise"
+          description="Les inscriptions apparaîtront ici."
+        />
       ) : (
         <ul className="flex flex-col gap-2">
           {organisations.map((org) => (
@@ -66,7 +71,9 @@ export default async function OrganisationsPage() {
                   </p>
                 </div>
                 <span className="shrink-0 text-sm text-ink-soft">
-                  {org.onboarding_step === "DONE" ? "Configurée" : "Configuration en cours"}
+                  {org.onboarding_step === "DONE"
+                    ? "Configurée"
+                    : "Configuration en cours"}
                 </span>
               </Sheet>
             </li>

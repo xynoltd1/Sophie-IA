@@ -44,14 +44,32 @@
   --color-signal-tint: #f1f7f4;
   --color-ink-tint: #e8ece9;
 
+  /* Console d'administration -----------------------------------------------
+     Un autre lieu, donc une autre peau. L'application cliente est un carnet
+     de chantier : claire, lisible au soleil, une information par ecran. La
+     console est un poste de pilotage : on y reste assis, on y compare des
+     chiffres, et le vert profond du bandeau lateral separe franchement les
+     deux mondes. Se tromper d'espace quand on a acces aux donnees de toutes
+     les entreprises serait une faute, et la couleur l'empeche. */
+  --color-console: #0c211c;
+  --color-console-raised: #13302a;
+  --color-console-line: #1e433b;
+  --color-console-ink: #e8f0ed;
+  --color-console-ink-soft: #9db5ad;
+  /* Plus clair que --color-signal : sur fond sombre, le vert de camionnette
+     devient illisible. */
+  --color-console-accent: #4bc795;
+
   /* Fond des barres fixes. Legerement plus dense que le fond de page : la
      barre doit se detacher quand le contenu defile dessous, sans ombre
      portee qui salit l'ecran en plein soleil. */
   --color-paper-deep: #e7ebe6;
 
   /* Typographie ------------------------------------------------------------ */
-  --font-display: "Bricolage Grotesque Variable", "Inter Variable", system-ui, sans-serif;
-  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    "Bricolage Grotesque Variable", "Inter Variable", system-ui, sans-serif;
+  --font-sans:
+    "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --text-hero: 1.875rem;
   --text-hero--line-height: 1.15;
@@ -76,8 +94,10 @@
      doit poser le bloc sur le fond, pas le faire flotter. Les ombres
      spectaculaires se voient en capture d'ecran et genent sur un vrai ecran,
      en exterieur, avec des reflets. */
-  --shadow-sheet: 0 1px 2px rgba(14, 28, 24, 0.04), 0 1px 1px rgba(14, 28, 24, 0.03);
-  --shadow-raised: 0 4px 16px rgba(14, 28, 24, 0.08), 0 1px 2px rgba(14, 28, 24, 0.04);
+  --shadow-sheet:
+    0 1px 2px rgba(14, 28, 24, 0.04), 0 1px 1px rgba(14, 28, 24, 0.03);
+  --shadow-raised:
+    0 4px 16px rgba(14, 28, 24, 0.08), 0 1px 2px rgba(14, 28, 24, 0.04);
 
   --spacing-navbar: 5rem;
 }
@@ -146,6 +166,42 @@ h3 {
 
 .pressable:active {
   transform: scale(0.995);
+}
+
+/* Graphiques.
+   Traces a la main en SVG plutot qu'avec une bibliotheque : trois courbes et
+   deux histogrammes ne valent pas cent kilo-octets de javascript, et une
+   bibliotheque de graphiques impose sa propre palette, qu'il faut ensuite
+   combattre. */
+.serie-ligne {
+  fill: none;
+  stroke: var(--color-signal);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.serie-aire {
+  fill: var(--color-signal);
+  opacity: 0.09;
+}
+
+.serie-barre {
+  fill: var(--color-signal);
+}
+
+/* Lu par les lecteurs d'ecran, invisible a l'oeil. Un graphique sans
+   equivalent textuel n'est pas une information pour tout le monde. */
+.lecteur-seul {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* Troncature a deux lignes, pour les resumes dans une liste. */

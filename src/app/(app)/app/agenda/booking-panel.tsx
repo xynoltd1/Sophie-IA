@@ -23,9 +23,13 @@ export function BookingPanel({
   const [slots, setSlots] = useState<string[]>([]);
   const [slotChoisi, setSlotChoisi] = useState<string | null>(null);
   const [erreurSlots, setErreurSlots] = useState<string | null>(null);
-  const [confiance, setConfiance] = useState<CalendarConfidence>("NOT_CONNECTED");
+  const [confiance, setConfiance] =
+    useState<CalendarConfidence>("NOT_CONNECTED");
   const [chargement, startTransition] = useTransition();
-  const [state, action, pending] = useActionState<AgendaState, FormData>(bookAppointment, {});
+  const [state, action, pending] = useActionState<AgendaState, FormData>(
+    bookAppointment,
+    {},
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -59,13 +63,21 @@ export function BookingPanel({
     <Sheet>
       <form action={action} className="flex flex-col gap-4">
         {state.error ? (
-          <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+          <p
+            role="alert"
+            className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+          >
             {state.error}
           </p>
         ) : null}
 
         <Field label="Intitulé" htmlFor="title">
-          <Input id="title" name="title" required placeholder="Dépannage chaudière" />
+          <Input
+            id="title"
+            name="title"
+            required
+            placeholder="Dépannage chaudière"
+          />
         </Field>
 
         <div className="flex gap-3">
@@ -115,8 +127,8 @@ export function BookingPanel({
             </p>
           ) : slots.length === 0 ? (
             <p className="text-sm text-ink-soft">
-              Aucun créneau ce jour-là. Vérifiez vos horaires d’ouverture ou choisissez un
-              autre jour.
+              Aucun créneau ce jour-là. Vérifiez vos horaires d’ouverture ou
+              choisissez un autre jour.
             </p>
           ) : (
             <ul className="flex flex-wrap gap-2">
@@ -145,7 +157,11 @@ export function BookingPanel({
           <Button type="submit" loading={pending} disabled={!slotChoisi}>
             Réserver
           </Button>
-          <Button type="button" variant="quiet" onClick={() => setOuvert(false)}>
+          <Button
+            type="button"
+            variant="quiet"
+            onClick={() => setOuvert(false)}
+          >
             Annuler
           </Button>
         </div>

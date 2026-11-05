@@ -151,6 +151,12 @@ export async function expedier(messageId: string): Promise<ResultatFile> {
   if (reussi) {
     await refleterDansLeFil(messageId);
 
+    // Un envoi simule ne prouve rien : seul un vrai depart compte.
+    if (!fournisseur.isMock) {
+      const { noterEchangeReussi } = await import("@/lib/platform/errors");
+      await noterEchangeReussi(fournisseur.name, "send_sms");
+    }
+
     const { enregistrerUsage } = await import("@/lib/platform/usage");
     const { data: orgRow } = await admin
       .from("outbound_messages")

@@ -18,12 +18,7 @@ import { BUCKET_ENREGISTREMENTS } from "@/lib/calls/recording-path";
  */
 
 export type GenrePurge =
-  | "AUDIO"
-  | "TRANSCRIPT"
-  | "SUMMARY"
-  | "CALL_EVENT"
-  | "MESSAGE"
-  | "CALL_TRASH";
+  "AUDIO" | "TRANSCRIPT" | "SUMMARY" | "CALL_EVENT" | "MESSAGE" | "CALL_TRASH";
 
 export interface RapportPurge {
   genre: GenrePurge;
@@ -72,10 +67,15 @@ export async function executerPurges(): Promise<RapportPurge[]> {
   return [
     // 1. Enregistrements arrivés à échéance (ADR-013, 30 jours au plus).
     await executer("AUDIO", async () => {
-      const { data, error } = await admin.rpc("expired_recordings", { limite: 100 });
+      const { data, error } = await admin.rpc("expired_recordings", {
+        limite: 100,
+      });
       if (error) throw new Error(error.message);
 
-      const lignes = (data ?? []) as { call_id: string; recording_path: string }[];
+      const lignes = (data ?? []) as {
+        call_id: string;
+        recording_path: string;
+      }[];
       if (lignes.length === 0) return 0;
 
       const { error: suppression } = await admin.storage
@@ -102,10 +102,15 @@ export async function executerPurges(): Promise<RapportPurge[]> {
 
     // 2. La corbeille des appels, passé trente jours.
     await executer("CALL_TRASH", async () => {
-      const { data, error } = await admin.rpc("calls_to_purge", { limite: 100 });
+      const { data, error } = await admin.rpc("calls_to_purge", {
+        limite: 100,
+      });
       if (error) throw new Error(error.message);
 
-      const lignes = (data ?? []) as { call_id: string; recording_path: string | null }[];
+      const lignes = (data ?? []) as {
+        call_id: string;
+        recording_path: string | null;
+      }[];
       if (lignes.length === 0) return 0;
 
       const fichiers = lignes
@@ -133,14 +138,18 @@ export async function executerPurges(): Promise<RapportPurge[]> {
 
     // 3. Transcriptions.
     await executer("TRANSCRIPT", async () => {
-      const { data, error } = await admin.rpc("purge_expired_transcripts", { limite: 500 });
+      const { data, error } = await admin.rpc("purge_expired_transcripts", {
+        limite: 500,
+      });
       if (error) throw new Error(error.message);
       return typeof data === "number" ? data : 0;
     }),
 
     // 4. Résumés et données extraites.
     await executer("SUMMARY", async () => {
-      const { data, error } = await admin.rpc("purge_expired_summaries", { limite: 500 });
+      const { data, error } = await admin.rpc("purge_expired_summaries", {
+        limite: 500,
+      });
       if (error) throw new Error(error.message);
       return typeof data === "number" ? data : 0;
     }),
@@ -154,7 +163,9 @@ export async function executerPurges(): Promise<RapportPurge[]> {
 
     // 6. Messages, dans les deux tables à la fois.
     await executer("MESSAGE", async () => {
-      const { data, error } = await admin.rpc("purge_expired_messages", { limite: 500 });
+      const { data, error } = await admin.rpc("purge_expired_messages", {
+        limite: 500,
+      });
       if (error) throw new Error(error.message);
       return typeof data === "number" ? data : 0;
     }),

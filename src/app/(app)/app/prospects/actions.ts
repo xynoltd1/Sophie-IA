@@ -17,7 +17,11 @@ const schema = z.object({
   contactName: z.string().trim().max(120).optional(),
   phone: z.string().trim().max(30).optional(),
   city: z.string().trim().max(120).optional(),
-  title: z.string().trim().min(2, "Décrivez la demande en quelques mots").max(200),
+  title: z
+    .string()
+    .trim()
+    .min(2, "Décrivez la demande en quelques mots")
+    .max(200),
   description: z.string().trim().max(2000).optional(),
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]),
 });
@@ -45,13 +49,23 @@ export async function createLead(
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return { fieldErrors: { [String(issue?.path[0] ?? "title")]: issue?.message ?? "Formulaire invalide" } };
+    return {
+      fieldErrors: {
+        [String(issue?.path[0] ?? "title")]:
+          issue?.message ?? "Formulaire invalide",
+      },
+    };
   }
 
-  const { contactName, phone, city, title, description, priority } = parsed.data;
+  const { contactName, phone, city, title, description, priority } =
+    parsed.data;
 
   if (!contactName && !phone) {
-    return { fieldErrors: { contactName: "Indiquez au moins un nom ou un numéro de téléphone." } };
+    return {
+      fieldErrors: {
+        contactName: "Indiquez au moins un nom ou un numéro de téléphone.",
+      },
+    };
   }
 
   const { activeOrganization } = await requireOrganization();
@@ -82,7 +96,10 @@ export async function createLead(
       .single();
 
     if (error || !data) {
-      return { error: "Le contact n’a pas pu être créé. Vérifiez le numéro et réessayez." };
+      return {
+        error:
+          "Le contact n’a pas pu être créé. Vérifiez le numéro et réessayez.",
+      };
     }
     contactId = data.id;
   } else if (contactName) {

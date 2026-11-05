@@ -25,7 +25,9 @@ export type ResultatInvitation =
  * être celle de l'invitation. Sans lui, un lien transféré ferait entrer
  * n'importe qui.
  */
-export async function accepterInvitation(jeton: string): Promise<ResultatInvitation> {
+export async function accepterInvitation(
+  jeton: string,
+): Promise<ResultatInvitation> {
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -38,13 +40,16 @@ export async function accepterInvitation(jeton: string): Promise<ResultatInvitat
 
   const { data: invitation } = await admin
     .from("organization_invitations")
-    .select("id, organization_id, email, role, expires_at, accepted_at, revoked_at")
+    .select(
+      "id, organization_id, email, role, expires_at, accepted_at, revoked_at",
+    )
     .eq("token_hash", empreinte)
     .maybeSingle();
 
   if (!invitation || invitation.revoked_at) return "INTROUVABLE";
   if (invitation.accepted_at) return "DEJA_ACCEPTEE";
-  if (new Date(invitation.expires_at as string).getTime() < Date.now()) return "EXPIREE";
+  if (new Date(invitation.expires_at as string).getTime() < Date.now())
+    return "EXPIREE";
 
   const attendue = (invitation.email as string).trim().toLowerCase();
   const connecte = (user.email ?? "").trim().toLowerCase();

@@ -39,11 +39,16 @@ export interface ChampExtrait {
   valeur: string;
 }
 
-export function champsExtraits(donnees: Record<string, unknown> | null): ChampExtrait[] {
+export function champsExtraits(
+  donnees: Record<string, unknown> | null,
+): ChampExtrait[] {
   if (!donnees) return [];
 
   const presentes = Object.keys(donnees);
-  const cles = [...ORDRE.filter((c) => presentes.includes(c)), ...presentes.filter((c) => !ORDRE.includes(c))];
+  const cles = [
+    ...ORDRE.filter((c) => presentes.includes(c)),
+    ...presentes.filter((c) => !ORDRE.includes(c)),
+  ];
 
   const champs: ChampExtrait[] = [];
 

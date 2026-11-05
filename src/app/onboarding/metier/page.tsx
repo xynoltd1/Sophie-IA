@@ -44,10 +44,12 @@ export default async function ProfessionStep() {
       backHref="/onboarding"
     >
       <ProfessionPicker
-        templates={(templates.data ?? []) as Pick<
-          ProfessionTemplateRow,
-          "id" | "slug" | "label" | "allows_custom_label" | "sort_order"
-        >[]}
+        templates={
+          (templates.data ?? []) as Pick<
+            ProfessionTemplateRow,
+            "id" | "slug" | "label" | "allows_custom_label" | "sort_order"
+          >[]
+        }
         currentTemplateId={profile.data?.profession_template_id ?? null}
         currentCustomLabel={profile.data?.custom_profession_label ?? null}
       />

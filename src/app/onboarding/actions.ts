@@ -7,12 +7,19 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/session";
 
 const schema = z.object({
-  name: z.string().trim().min(2, "Indiquez le nom de votre entreprise").max(120),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Indiquez le nom de votre entreprise")
+    .max(120),
   countryCode: z.string().regex(/^[A-Z]{2}$/, "Pays invalide"),
   timezone: z.string().min(3),
 });
 
-const COUNTRIES: Record<string, { callingCode: string; timezone: string; label: string }> = {
+const COUNTRIES: Record<
+  string,
+  { callingCode: string; timezone: string; label: string }
+> = {
   BE: { callingCode: "32", timezone: "Europe/Brussels", label: "Belgique" },
   FR: { callingCode: "33", timezone: "Europe/Paris", label: "France" },
 };
@@ -35,7 +42,9 @@ export async function createOrganization(
   const country = COUNTRIES[countryCode];
 
   if (!country) {
-    return { fieldErrors: { countryCode: "Ce pays n'est pas encore pris en charge." } };
+    return {
+      fieldErrors: { countryCode: "Ce pays n'est pas encore pris en charge." },
+    };
   }
 
   const parsed = schema.safeParse({

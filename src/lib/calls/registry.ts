@@ -1,7 +1,12 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { CallRow, CallStatus, NumberOwnerRow, ProcessingStatus } from "@/types/database";
+import type {
+  CallRow,
+  CallStatus,
+  NumberOwnerRow,
+  ProcessingStatus,
+} from "@/types/database";
 
 /**
  * Enregistrement des appels.
@@ -49,7 +54,9 @@ export interface CallRecord {
  * appel attribué à la mauvaise entreprise serait bien pire qu'un appel refusé,
  * parce qu'il exposerait les données d'un artisan à un autre.
  */
-export async function ownerOfNumber(numero: string): Promise<NumberOwnerRow | null> {
+export async function ownerOfNumber(
+  numero: string,
+): Promise<NumberOwnerRow | null> {
   const admin = createAdminClient();
   const { data } = await admin.rpc("organization_for_number", { numero });
 
@@ -66,7 +73,9 @@ export async function ownerOfNumber(numero: string): Promise<NumberOwnerRow | nu
  * quoi faire — en général, laisser le fournisseur jouer un message et
  * raccrocher, plutôt que de faire parler Sophie au nom de personne.
  */
-export async function openCall(incoming: IncomingCall): Promise<CallRecord | null> {
+export async function openCall(
+  incoming: IncomingCall,
+): Promise<CallRecord | null> {
   const proprietaire = await ownerOfNumber(incoming.toNumber);
   if (!proprietaire) return null;
 
@@ -181,9 +190,12 @@ export async function closeCall(
     .maybeSingle();
 
   if (!actuel) return null;
-  if (!transitionAllowed(actuel.status as CallStatus, closure.status)) return null;
+  if (!transitionAllowed(actuel.status as CallStatus, closure.status))
+    return null;
 
-  const terminal = ["COMPLETED", "MISSED", "FAILED", "TRANSFERRED"].includes(closure.status);
+  const terminal = ["COMPLETED", "MISSED", "FAILED", "TRANSFERRED"].includes(
+    closure.status,
+  );
 
   const { data, error } = await admin
     .from("calls")
@@ -192,7 +204,9 @@ export async function closeCall(
       // La contrainte `calls_terminal_has_end` exige une fin pour tout état
       // terminal. On la respecte ici plutôt que de laisser la base refuser.
       ended_at: terminal ? (closure.endedAt ?? new Date()).toISOString() : null,
-      answered_at: closure.answeredAt ? closure.answeredAt.toISOString() : undefined,
+      answered_at: closure.answeredAt
+        ? closure.answeredAt.toISOString()
+        : undefined,
       duration_seconds: dureeEnSecondes(closure.durationSeconds),
       ended_reason: closure.endedReason ?? null,
     })
@@ -206,7 +220,12 @@ export async function closeCall(
     // entiers, PostgreSQL refusait toute la mise à jour, et l'appel restait
     // « en cours » pour toujours. Comme l'écriture suivante réussissait, la
     // fiche affichait un état impossible sans que rien ne le signale.
-    console.error("[calls] fermeture refusée", callId, closure.status, error.message);
+    console.error(
+      "[calls] fermeture refusée",
+      callId,
+      closure.status,
+      error.message,
+    );
     return null;
   }
 
@@ -223,8 +242,11 @@ export async function closeCall(
  * Une durée négative ou absurde vaut mieux absente : une valeur fausse dans une
  * statistique est plus difficile à repérer qu'un trou.
  */
-export function dureeEnSecondes(valeur: number | null | undefined): number | null {
-  if (typeof valeur !== "number" || !Number.isFinite(valeur) || valeur < 0) return null;
+export function dureeEnSecondes(
+  valeur: number | null | undefined,
+): number | null {
+  if (typeof valeur !== "number" || !Number.isFinite(valeur) || valeur < 0)
+    return null;
   return Math.round(valeur);
 }
 

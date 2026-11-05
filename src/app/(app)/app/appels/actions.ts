@@ -22,14 +22,20 @@ export interface ResultatCorbeille {
  * protège vraiment. Celui-ci sert à donner un message clair plutôt qu'une
  * erreur SQL.
  */
-export async function mettreALaCorbeille(ids: string[]): Promise<ResultatCorbeille> {
+export async function mettreALaCorbeille(
+  ids: string[],
+): Promise<ResultatCorbeille> {
   if (ids.length === 0) return { ok: true, nombre: 0 };
-  if (ids.length > 100) return { ok: false, erreur: "Trop d’appels d’un coup (100 au maximum)." };
+  if (ids.length > 100)
+    return { ok: false, erreur: "Trop d’appels d’un coup (100 au maximum)." };
 
   const { activeOrganization } = await requireOrganization();
 
   if (!can(activeOrganization.role, "organization:update")) {
-    return { ok: false, erreur: "Seul un responsable peut supprimer des appels." };
+    return {
+      ok: false,
+      erreur: "Seul un responsable peut supprimer des appels.",
+    };
   }
 
   const supabase = await createServerSupabase();
@@ -54,7 +60,9 @@ export async function mettreALaCorbeille(ids: string[]): Promise<ResultatCorbeil
 }
 
 /** Sortir des appels de la corbeille, tant que la purge n'est pas passée. */
-export async function restaurerAppels(ids: string[]): Promise<ResultatCorbeille> {
+export async function restaurerAppels(
+  ids: string[],
+): Promise<ResultatCorbeille> {
   if (ids.length === 0) return { ok: true, nombre: 0 };
 
   const { activeOrganization } = await requireOrganization();

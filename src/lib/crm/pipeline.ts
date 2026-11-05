@@ -63,7 +63,10 @@ export function nextStatuses(from: LeadStatus): readonly LeadStatus[] {
 }
 
 /** Une tâche est en retard si son échéance est passée et qu'elle est ouverte. */
-export function isOverdue(task: Pick<TaskRow, "status" | "due_at">, now = new Date()): boolean {
+export function isOverdue(
+  task: Pick<TaskRow, "status" | "due_at">,
+  now = new Date(),
+): boolean {
   if (task.status !== "OPEN" || !task.due_at) return false;
   return new Date(task.due_at) < now;
 }

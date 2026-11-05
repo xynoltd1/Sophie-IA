@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import type { CalendarState } from "@/lib/crm/calendar-state";
-import { disconnectCalendarAction, syncCalendarAction } from "./calendar-actions";
+import {
+  disconnectCalendarAction,
+  syncCalendarAction,
+} from "./calendar-actions";
 
 const MESSAGES: Record<string, string> = {
   connecte: "Agenda Google connecté.",
@@ -17,11 +20,14 @@ const MESSAGES: Record<string, string> = {
     "Google n'a pas donné d'autorisation durable. Dans votre compte Google, retirez l'accès à cette application, puis reconnectez-la ici.",
   echec_enregistrement:
     "Google a bien autorisé l'accès, mais l'enregistrement a échoué de notre côté. Votre agenda n'est pas connecté. Réessayez ; si cela se reproduit, le détail est consigné dans le journal technique.",
-  etat_invalide: "Le retour de Google n'a pas pu être vérifié. Recommencez la connexion.",
+  etat_invalide:
+    "Le retour de Google n'a pas pu être vérifié. Recommencez la connexion.",
   etat_expire: "La demande a expiré. Recommencez la connexion.",
-  session_differente: "La session a changé pendant l'autorisation. Recommencez.",
+  session_differente:
+    "La session a changé pendant l'autorisation. Recommencez.",
   reponse_incomplete: "Google a renvoyé une réponse incomplète. Réessayez.",
-  droits_insuffisants: "Seul un propriétaire ou un administrateur peut connecter l'agenda.",
+  droits_insuffisants:
+    "Seul un propriétaire ou un administrateur peut connecter l'agenda.",
   non_configure:
     "L'application n'a pas encore ses identifiants Google. Cette connexion sera disponible une fois la configuration faite.",
 };
@@ -39,7 +45,12 @@ export function CalendarPanel({
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
 
-  const ton = state.confidence === "FRESH" ? "done" : state.connected ? "attention" : "neutral";
+  const ton =
+    state.confidence === "FRESH"
+      ? "done"
+      : state.connected
+        ? "attention"
+        : "neutral";
 
   return (
     <div className="flex flex-col gap-2">
@@ -54,7 +65,9 @@ export function CalendarPanel({
 
       <Sheet tone={ton} className="flex flex-col gap-2">
         <p className="font-medium">
-          {state.connected ? "Agenda Google connecté" : "Agenda Google non connecté"}
+          {state.connected
+            ? "Agenda Google connecté"
+            : "Agenda Google non connecté"}
         </p>
 
         {state.account ? (

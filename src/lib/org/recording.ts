@@ -80,7 +80,10 @@ export const PLACEHOLDER_NOTICE_TEXT =
  *
  * Reproduit `call_is_test()` en base, qui reste la garantie.
  */
-export function callIsTest(policy: RecordingPolicy, requestedTest: boolean): boolean {
+export function callIsTest(
+  policy: RecordingPolicy,
+  requestedTest: boolean,
+): boolean {
   return requestedTest && policy.is_test_organization;
 }
 
@@ -107,15 +110,22 @@ export function recordingBlockers(
 ): string[] {
   const blockers: string[] = [];
   if (policy.is_test_organization) {
-    return ["Organisation d'essai : aucun appel de tiers réel ne doit y transiter."];
+    return [
+      "Organisation d'essai : aucun appel de tiers réel ne doit y transiter.",
+    ];
   }
   if (!policy.recording_policy_accepted_at) {
-    blockers.push("La charte de traitement des enregistrements n'a pas été acceptée.");
+    blockers.push(
+      "La charte de traitement des enregistrements n'a pas été acceptée.",
+    );
   }
   if (!policy.recording_enabled) {
     blockers.push("L'enregistrement est désactivé pour cette entreprise.");
   }
-  if (policy.recording_notice_required && (notice === null || !notice.isLegallyValidated)) {
+  if (
+    policy.recording_notice_required &&
+    (notice === null || !notice.isLegallyValidated)
+  ) {
     blockers.push(
       `Le texte d'annonce applicable est un placeholder ${UNVALIDATED_NOTICE_WARNING}.`,
     );

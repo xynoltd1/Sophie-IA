@@ -14,7 +14,10 @@ import { createServerSupabase } from "@/lib/supabase/server";
  * peut lire que son propre profil, et il ne peut pas s'y promouvoir : la
  * colonne n'est pas modifiable depuis l'application.
  */
-export async function requirePlatformAdmin(): Promise<{ userId: string; email: string | null }> {
+export async function requirePlatformAdmin(): Promise<{
+  userId: string;
+  email: string | null;
+}> {
   const supabase = await createServerSupabase();
 
   const {

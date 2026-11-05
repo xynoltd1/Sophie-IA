@@ -49,7 +49,10 @@ export default async function SophiePage() {
         <ul className="flex flex-col gap-2">
           <li>
             <Link href="/app/sophie/ligne" className="block">
-              <Sheet interactive className="flex items-center justify-between gap-3">
+              <Sheet
+                interactive
+                className="flex items-center justify-between gap-3"
+              >
                 <div className="min-w-0">
                   <p className="font-medium">Ligne téléphonique</p>
                   <p className="text-sm text-ink-soft">
@@ -58,13 +61,18 @@ export default async function SophiePage() {
                       : "Aucun numéro déclaré : tout appel est un essai."}
                   </p>
                 </div>
-                <span aria-hidden className="shrink-0 text-ink-soft">→</span>
+                <span aria-hidden className="shrink-0 text-ink-soft">
+                  →
+                </span>
               </Sheet>
             </Link>
           </li>
           <li>
             <Link href="/app/sophie/enregistrement" className="block">
-              <Sheet interactive className="flex items-center justify-between gap-3">
+              <Sheet
+                interactive
+                className="flex items-center justify-between gap-3"
+              >
                 <div className="min-w-0">
                   <p className="font-medium">Enregistrement des appels</p>
                   <p className="text-sm text-ink-soft">
@@ -73,7 +81,9 @@ export default async function SophiePage() {
                       : "Aucune copie n’est conservée chez vous."}
                   </p>
                 </div>
-                <span aria-hidden className="shrink-0 text-ink-soft">→</span>
+                <span aria-hidden className="shrink-0 text-ink-soft">
+                  →
+                </span>
               </Sheet>
             </Link>
           </li>

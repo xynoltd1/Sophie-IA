@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { MAX_AUDIO_RETENTION_DAYS, clampRetentionDays } from "@/lib/org/recording";
+import {
+  MAX_AUDIO_RETENTION_DAYS,
+  clampRetentionDays,
+} from "@/lib/org/recording";
 
 const schema = z.object({
   accepte: z.boolean(),
@@ -46,8 +49,13 @@ export async function saveRecordingPolicy(
 
   const { activeOrganization } = await requireOrganization();
 
-  if (activeOrganization.role !== "OWNER" && activeOrganization.role !== "ADMIN") {
-    return { error: "Seul le responsable de l'entreprise peut modifier ce réglage." };
+  if (
+    activeOrganization.role !== "OWNER" &&
+    activeOrganization.role !== "ADMIN"
+  ) {
+    return {
+      error: "Seul le responsable de l'entreprise peut modifier ce réglage.",
+    };
   }
 
   const { accepte, retention } = parsed.data;
@@ -64,7 +72,8 @@ export async function saveRecordingPolicy(
       // à chaque enregistrement du formulaire : c'est une date de consentement,
       // pas une date de dernière modification.
       recording_policy_accepted_at: accepte
-        ? (activeOrganization.recording_policy_accepted_at ?? new Date().toISOString())
+        ? (activeOrganization.recording_policy_accepted_at ??
+          new Date().toISOString())
         : null,
     })
     .eq("id", activeOrganization.organization_id);

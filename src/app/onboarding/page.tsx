@@ -21,7 +21,9 @@ export default async function OnboardingPage() {
   // enregistree est encore ORGANIZATION, sa route est cette page meme, et la
   // rediriger vers elle-meme provoque une boucle infinie que Next transforme en
   // « Application error ». Une page ne se redirige jamais vers elle-meme.
-  const destination = activeOrganization ? STEP_ROUTES[activeOrganization.onboarding_step] : null;
+  const destination = activeOrganization
+    ? STEP_ROUTES[activeOrganization.onboarding_step]
+    : null;
   if (destination && destination !== "/onboarding") {
     redirect(destination);
   }
@@ -32,7 +34,8 @@ export default async function OnboardingPage() {
         <p className="text-sm font-medium text-signal">Étape 1 sur 7</p>
         <h1 className="mt-1 text-hero font-semibold">Votre entreprise</h1>
         <p className="mt-2 text-ink-soft">
-          Sophie a besoin de savoir pour qui elle répond. Vous pourrez tout modifier ensuite.
+          Sophie a besoin de savoir pour qui elle répond. Vous pourrez tout
+          modifier ensuite.
         </p>
       </div>
       <OrganizationForm />

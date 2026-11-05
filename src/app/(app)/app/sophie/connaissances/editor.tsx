@@ -25,7 +25,11 @@ const GENRES: Record<string, string> = {
   FACT: "Information",
 };
 
-export function ConnaissancesEditor({ entrees }: { entrees: LigneConnaissance[] }) {
+export function ConnaissancesEditor({
+  entrees,
+}: {
+  entrees: LigneConnaissance[];
+}) {
   const [state, action, enCours] = useActionState<ConnaissanceState, FormData>(
     ajouterConnaissance,
     {},
@@ -40,9 +44,15 @@ export function ConnaissancesEditor({ entrees }: { entrees: LigneConnaissance[] 
           {entrees.map((entree) => (
             <li key={entree.id}>
               <Sheet className={entree.is_active ? undefined : "opacity-60"}>
-                <p className="text-sm text-ink-soft">{GENRES[entree.kind] ?? entree.kind}</p>
-                {entree.question ? <p className="font-medium">{entree.question}</p> : null}
-                <p className="mt-1 whitespace-pre-line text-sm">{entree.answer}</p>
+                <p className="text-sm text-ink-soft">
+                  {GENRES[entree.kind] ?? entree.kind}
+                </p>
+                {entree.question ? (
+                  <p className="font-medium">{entree.question}</p>
+                ) : null}
+                <p className="mt-1 whitespace-pre-line text-sm">
+                  {entree.answer}
+                </p>
 
                 <div className="mt-2 flex gap-4">
                   <button
@@ -50,7 +60,10 @@ export function ConnaissancesEditor({ entrees }: { entrees: LigneConnaissance[] 
                     disabled={pending}
                     onClick={() =>
                       demarrer(async () => {
-                        await basculerConnaissance(entree.id, !entree.is_active);
+                        await basculerConnaissance(
+                          entree.id,
+                          !entree.is_active,
+                        );
                         router.refresh();
                       })
                     }
@@ -79,8 +92,9 @@ export function ConnaissancesEditor({ entrees }: { entrees: LigneConnaissance[] 
       ) : (
         <Sheet>
           <p className="text-sm text-ink-soft">
-            Sophie ne connaît pour l’instant que votre entreprise, vos services et vos
-            horaires. Ajoutez ici ce qu’elle doit pouvoir répondre d’autre.
+            Sophie ne connaît pour l’instant que votre entreprise, vos services
+            et vos horaires. Ajoutez ici ce qu’elle doit pouvoir répondre
+            d’autre.
           </p>
         </Sheet>
       )}
@@ -133,8 +147,12 @@ export function ConnaissancesEditor({ entrees }: { entrees: LigneConnaissance[] 
             />
           </div>
 
-          {state.error ? <p className="text-sm text-urgent">{state.error}</p> : null}
-          {state.success ? <p className="text-sm text-signal-deep">{state.success}</p> : null}
+          {state.error ? (
+            <p className="text-sm text-urgent">{state.error}</p>
+          ) : null}
+          {state.success ? (
+            <p className="text-sm text-signal-deep">{state.success}</p>
+          ) : null}
 
           <Button type="submit" loading={enCours}>
             Ajouter

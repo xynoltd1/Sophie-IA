@@ -56,7 +56,11 @@ export async function ajouterAbsence(
   const debut = instantDepuisHeureLocale(parsed.data.debut, "00:00", fuseau);
   const finJour = new Date(`${parsed.data.fin}T00:00:00Z`);
   finJour.setUTCDate(finJour.getUTCDate() + 1);
-  const fin = instantDepuisHeureLocale(finJour.toISOString().slice(0, 10), "00:00", fuseau);
+  const fin = instantDepuisHeureLocale(
+    finJour.toISOString().slice(0, 10),
+    "00:00",
+    fuseau,
+  );
 
   if (!debut || !fin) return { error: "Dates incompréhensibles." };
   if (fin.getTime() <= debut.getTime()) {
@@ -77,10 +81,14 @@ export async function ajouterAbsence(
 
   revalidatePath("/app/reglages/absences");
   revalidatePath("/app/agenda");
-  return { success: "Absence enregistrée. Sophie ne proposera plus ces jours-là." };
+  return {
+    success: "Absence enregistrée. Sophie ne proposera plus ces jours-là.",
+  };
 }
 
-export async function supprimerAbsence(absenceId: string): Promise<{ ok: boolean }> {
+export async function supprimerAbsence(
+  absenceId: string,
+): Promise<{ ok: boolean }> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 

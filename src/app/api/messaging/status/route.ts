@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
     .from("outbound_messages")
     .update({
       status: miseAJour.status,
-      last_error: miseAJour.status === "FAILED" ? "Non remis par l'opérateur." : null,
+      last_error:
+        miseAJour.status === "FAILED" ? "Non remis par l'opérateur." : null,
     })
     .eq("provider_message_id", miseAJour.providerMessageId);
 

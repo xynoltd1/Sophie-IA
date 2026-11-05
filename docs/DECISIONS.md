@@ -1208,3 +1208,138 @@ configuration qu on pourrait ecrire.
 
 Tant qu elle est nulle, l ecran dit que la ligne n a jamais recu d appel. Il ne dit pas
 qu elle ne fonctionne pas : il dit qu on ne sait pas.
+
+---
+
+## ADR-038 — La sante d une integration se lit au present, jamais au passe
+
+**2026-11-04** · Accepte
+
+### Le symptome
+
+L ecran de sante affichait, sur la meme carte :
+
+> Sophie Voice (conversation temps reel) — **Teste en conditions reelles**
+> Variables manquantes : VOICE_PROVIDER
+
+Les deux affirmations etaient exactes. La premiere venait d un registre ecrit a la main
+dans `src/lib/providers/status.ts`, mis a jour le jour ou un humain avait reussi un
+appel. La seconde venait de `process.env`, lu au moment de l affichage.
+
+### Le vrai defaut
+
+Pas l affichage : le modele. **Un seul mot — le statut — portait trois questions
+differentes**, qui ne changent ni au meme rythme ni pour les memes raisons.
+
+1. Le code sait-il le faire ? Ne change qu avec une livraison.
+2. La configuration le permet-elle ? Change des qu on touche Vercel.
+3. Un echange reel a-t-il reussi, et quand ? Ne se sait qu apres coup.
+
+Les fusionner obligeait a mentir sur deux des trois.
+
+### La decision
+
+Trois sources, quatre etats derives.
+
+| Source | Question |
+|---|---|
+| `providers/status.ts` | ce que le code sait faire |
+| `process.env` | ce que la configuration permet maintenant |
+| `integration_checks` | quand un echange reel a reussi pour la derniere fois |
+
+Etats : `OPERATIONNEL`, `EN_PANNE`, `NON_CONFIGURE`, `JAMAIS_EXERCE`.
+
+### La regle d arbitrage
+
+**Le present l emporte.** Une integration dont la configuration est incomplete est
+`NON_CONFIGURE`, meme si elle a fonctionne pendant six mois. Un test reussi le 23 octobre
+ne prouve rien sur aujourd hui ; il reste affiche comme contexte, jamais comme preuve.
+
+### Qui remplit la preuve
+
+Personne a la main. Chaque echange reel reussi ecrit `OK` depuis le code serveur, chaque
+panne consignee ecrit `FAIL`. **Les operations simulees n ecrivent rien** : un resume
+simule ne prouve pas qu un modele repond, et un SMS simule ne prouve pas qu un operateur
+existe.
+
+---
+
+## ADR-039 — La frequentation se mesure chez nous, sans cookie et avec trois verdicts
+
+**2026-11-04** · Accepte
+
+### Pourquoi pas un outil tiers
+
+Un outil d analyse tiers pose un cookie. Un cookie demande un consentement. Un
+consentement demande une banniere, une politique, et une validation juridique — avant
+meme le premier client. Et les refus faussent la mesure que la banniere sert a autoriser.
+
+### Ce qui est stocke, et ce qui ne l est pas
+
+Stocke : horodatage, evenement, chemin, **domaine** du referent, parametres de campagne,
+empreinte de session, classification, raison, environnement.
+
+Jamais stocke : adresse IP, agent utilisateur, adresse de provenance complete. Les deux
+premiers servent a classer puis disparaissent dans un hachage. La troisieme peut contenir
+une requete de recherche, donc des donnees personnelles.
+
+### L empreinte tourne chaque jour
+
+`sha256(jour + graine + IP + agent + langue)`. Elle regroupe les pages d une meme visite
+et rien de plus.
+
+**Ce que cela coute, et c est assume** : le visiteur unique sur plusieurs jours n existe
+pas. Quelqu un qui revient trois jours compte trois fois. L ecran le dit, parce qu un
+chiffre dont on ignore le biais est pire qu un chiffre absent.
+
+### Trois verdicts, pas deux
+
+`HUMAN`, `BOT`, `UNKNOWN`.
+
+Aucune detection de robots n est sure : un robot bien ecrit envoie exactement les memes
+requetes qu un navigateur. Ne proposer que deux cases obligerait a ranger l incertain
+dans l un des deux, et personne ne saurait lequel.
+
+`UNKNOWN` est donc un verdict a part entiere, compte et affiche separement. Un chiffre de
+visiteurs qui aurait absorbe l incertitude serait faux sans qu on puisse le savoir.
+
+### Aucun robot n est bloque
+
+Les exclure du comptage est une decision de mesure, pas de securite. Googlebot doit
+parcourir le site : c est l objet meme du referencement. Confondre les deux couterait le
+referencement pour ameliorer une statistique.
+
+---
+
+## ADR-040 — Le site public ne promet que ce qui existe
+
+**2026-11-04** · Accepte
+
+### La situation
+
+Le site n avait aucune page publique : `/` redirigeait vers la connexion. Il a donc fallu
+en ecrire une, et decider ce qu elle dit.
+
+### Ce qu elle ne dit pas
+
+Aucun chiffre d adoption, aucun temoignage, aucun logo de client, aucune note. Le produit
+n a pas encore de client : l ecrire serait un mensonge, et un mensonge verifiable. Aucun
+prix non plus — ils ne sont pas fixes (section 38).
+
+Les donnees structurees suivent la meme regle : `SoftwareApplication` sans `offers` ni
+`aggregateRating`. Un test refuse qu on les ajoute.
+
+### Ce qu elle dit a la place
+
+Les limites. La section « ce que Sophie ne fera jamais » — elle n invente pas de tarif,
+pas de disponibilite, ne confirme rien seule, ne donne pas de conseil technique.
+
+C est un choix commercial autant qu honnete : un artisan mefiant des outils automatiques
+cherche exactement cette information, et aucun concurrent ne l ecrit. La contrainte
+d honnetete produit ici le meilleur argument disponible.
+
+### La consequence pour la suite
+
+Le jour ou il y aura des clients, des prix et des avis, ils pourront etre affiches — parce
+qu ils existeront. Rien dans le code ne les bloque ; les tests bloquent seulement de les
+declarer avant.

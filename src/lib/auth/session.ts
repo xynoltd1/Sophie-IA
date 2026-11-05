@@ -38,14 +38,17 @@ export async function getSessionContext(): Promise<SessionContext | null> {
   if (!user) return null;
 
   const { data, error } = await supabase.rpc("my_organizations");
-  if (error) throw new Error(`Lecture des organisations impossible : ${error.message}`);
+  if (error)
+    throw new Error(`Lecture des organisations impossible : ${error.message}`);
 
   const organizations = (data ?? []) as MyOrganizationRow[];
   const cookieStore = await cookies();
   const requested = cookieStore.get(ACTIVE_ORG_COOKIE)?.value;
 
   const activeOrganization =
-    organizations.find((o) => o.organization_id === requested) ?? organizations[0] ?? null;
+    organizations.find((o) => o.organization_id === requested) ??
+    organizations[0] ??
+    null;
 
   return { user, organizations, activeOrganization };
 }

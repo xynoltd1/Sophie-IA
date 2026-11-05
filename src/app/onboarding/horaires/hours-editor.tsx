@@ -28,14 +28,19 @@ export function HoursEditor({
 
   function update(weekday: number, patch: Partial<HourInput>) {
     setHours((current) =>
-      current.map((hour) => (hour.weekday === weekday ? { ...hour, ...patch } : hour)),
+      current.map((hour) =>
+        hour.weekday === weekday ? { ...hour, ...patch } : hour,
+      ),
     );
   }
 
   return (
     <div className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}
@@ -47,7 +52,12 @@ export function HoursEditor({
 
           return (
             <li key={hour.weekday}>
-              <Sheet className={cn("flex flex-col gap-3", dayError && "border-urgent")}>
+              <Sheet
+                className={cn(
+                  "flex flex-col gap-3",
+                  dayError && "border-urgent",
+                )}
+              >
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-medium">{day?.label}</span>
                   <button
@@ -55,7 +65,9 @@ export function HoursEditor({
                     role="switch"
                     aria-checked={hour.is_open}
                     aria-label={`${day?.label} : ${hour.is_open ? "ouvert" : "fermé"}`}
-                    onClick={() => update(hour.weekday, { is_open: !hour.is_open })}
+                    onClick={() =>
+                      update(hour.weekday, { is_open: !hour.is_open })
+                    }
                     className={cn(
                       "relative h-8 w-14 shrink-0 rounded-full transition-colors",
                       hour.is_open ? "bg-signal" : "bg-line",
@@ -76,7 +88,9 @@ export function HoursEditor({
                     <input
                       type="time"
                       value={hour.opens_at}
-                      onChange={(e) => update(hour.weekday, { opens_at: e.target.value })}
+                      onChange={(e) =>
+                        update(hour.weekday, { opens_at: e.target.value })
+                      }
                       aria-label={`Ouverture ${day?.label}`}
                       className="min-h-12 flex-1 rounded-control border border-line bg-surface px-3 text-base tabular"
                     />
@@ -86,7 +100,9 @@ export function HoursEditor({
                     <input
                       type="time"
                       value={hour.closes_at}
-                      onChange={(e) => update(hour.weekday, { closes_at: e.target.value })}
+                      onChange={(e) =>
+                        update(hour.weekday, { closes_at: e.target.value })
+                      }
                       aria-label={`Fermeture ${day?.label}`}
                       className="min-h-12 flex-1 rounded-control border border-line bg-surface px-3 text-base tabular"
                     />

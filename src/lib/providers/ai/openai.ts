@@ -1,4 +1,8 @@
-import type { AICompletionRequest, AICompletionResult, AIProvider } from "./types";
+import type {
+  AICompletionRequest,
+  AICompletionResult,
+  AIProvider,
+} from "./types";
 
 /**
  * Adaptateur pour les interfaces compatibles OpenAI.
@@ -51,15 +55,18 @@ export class OpenAICompatibleProvider implements AIProvider {
 
     let reponse: Response;
     try {
-      reponse = await fetch(`${this.baseUrl.replace(/\/$/, "")}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${this.apiKey}`,
+      reponse = await fetch(
+        `${this.baseUrl.replace(/\/$/, "")}/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify(corps),
+          signal: AbortSignal.timeout(45_000),
         },
-        body: JSON.stringify(corps),
-        signal: AbortSignal.timeout(45_000),
-      });
+      );
     } catch (cause) {
       return {
         text: null,
@@ -88,12 +95,22 @@ export class OpenAICompatibleProvider implements AIProvider {
     try {
       charge = await reponse.json();
     } catch {
-      return { text: null, json: null, error: "Réponse illisible.", retryable: true };
+      return {
+        text: null,
+        json: null,
+        error: "Réponse illisible.",
+        retryable: true,
+      };
     }
 
     const contenu = lireContenu(charge);
     if (contenu === null) {
-      return { text: null, json: null, error: "Réponse vide.", retryable: true };
+      return {
+        text: null,
+        json: null,
+        error: "Réponse vide.",
+        retryable: true,
+      };
     }
 
     if (!request.json) {
@@ -115,18 +132,25 @@ export class OpenAICompatibleProvider implements AIProvider {
 }
 
 function lireContenu(charge: unknown): string | null {
-  const choix = (charge as { choices?: { message?: { content?: unknown } }[] })?.choices;
+  const choix = (charge as { choices?: { message?: { content?: unknown } }[] })
+    ?.choices;
   const contenu = choix?.[0]?.message?.content;
   if (typeof contenu !== "string") return null;
   const propre = contenu.trim();
   return propre.length > 0 ? propre : null;
 }
 
-function lireUsage(charge: unknown): { inputTokens?: number; outputTokens?: number } | undefined {
-  const usage = (charge as { usage?: { prompt_tokens?: number; completion_tokens?: number } })
-    ?.usage;
+function lireUsage(
+  charge: unknown,
+): { inputTokens?: number; outputTokens?: number } | undefined {
+  const usage = (
+    charge as { usage?: { prompt_tokens?: number; completion_tokens?: number } }
+  )?.usage;
   if (!usage) return undefined;
-  return { inputTokens: usage.prompt_tokens, outputTokens: usage.completion_tokens };
+  return {
+    inputTokens: usage.prompt_tokens,
+    outputTokens: usage.completion_tokens,
+  };
 }
 
 /**
@@ -137,7 +161,9 @@ function lireUsage(charge: unknown): { inputTokens?: number; outputTokens?: numb
 export function lireJson(contenu: string): Record<string, unknown> | null {
   const essais = [contenu];
 
-  const sansBalises = contenu.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  const sansBalises = contenu
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/, "");
   if (sansBalises !== contenu) essais.push(sansBalises);
 
   const debut = contenu.indexOf("{");

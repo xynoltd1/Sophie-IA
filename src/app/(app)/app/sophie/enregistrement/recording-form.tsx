@@ -42,9 +42,9 @@ export function RecordingForm({
             className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-signal)]"
           />
           <span className="text-sm">
-            J’ai lu ce qui précède. J’accepte d’être responsable des enregistrements
-            conservés par mon entreprise, et de pouvoir les supprimer sur demande d’un
-            client.
+            J’ai lu ce qui précède. J’accepte d’être responsable des
+            enregistrements conservés par mon entreprise, et de pouvoir les
+            supprimer sur demande d’un client.
           </span>
         </label>
 
@@ -85,8 +85,9 @@ export function RecordingForm({
             <span className="text-sm text-ink-soft">jours (30 au maximum)</span>
           </div>
           <p className="mt-1 text-sm text-ink-soft">
-            Passé ce délai, l’enregistrement est supprimé. La transcription et le résumé
-            ont leur propre durée, réglable dans « Conservation des données ».
+            Passé ce délai, l’enregistrement est supprimé. La transcription et
+            le résumé ont leur propre durée, réglable dans « Conservation des
+            données ».
           </p>
         </div>
       </Sheet>

@@ -11,7 +11,10 @@ import { rapatrierEnregistrement } from "@/lib/calls/recording-storage";
 import { genererIntelligenceAppel } from "@/lib/calls/intelligence";
 import { enregistrerUsage } from "@/lib/platform/usage";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { signalerErreurFournisseur } from "@/lib/platform/errors";
+import {
+  noterEchangeReussi,
+  signalerErreurFournisseur,
+} from "@/lib/platform/errors";
 
 export const dynamic = "force-dynamic";
 // 60 secondes, et non 30 : ce webhook rapatrie maintenant le fichier audio,
@@ -89,6 +92,10 @@ export async function POST(request: NextRequest) {
         // tard pour l'affichage en direct, sans intérêt aujourd'hui.
         break;
     }
+
+    // L'événement a été traité sans erreur : le fournisseur de voix nous parle
+    // et nous le comprenons. C'est la définition d'un échange réussi.
+    await noterEchangeReussi("VOICE", `events:${evenement.type}`);
   } catch (cause) {
     // On consigne et on acquitte quand même. Faire réessayer le fournisseur
     // sur une erreur de notre côté ne répare rien et multiplie les livraisons.

@@ -65,7 +65,10 @@ export function formatPhone(e164: string | null): string {
   return e164;
 }
 
-export function formatCallMoment(iso: string, timezone = "Europe/Brussels"): string {
+export function formatCallMoment(
+  iso: string,
+  timezone = "Europe/Brussels",
+): string {
   return new Date(iso).toLocaleString("fr-BE", {
     weekday: "long",
     day: "numeric",
@@ -166,18 +169,25 @@ export function sansSuite(
 ): boolean {
   if (appel.status !== "COMPLETED") return false;
   if (appel.is_test) return false;
-  if (suites.leads > 0 || suites.appointments > 0 || suites.tasks > 0) return false;
+  if (suites.leads > 0 || suites.appointments > 0 || suites.tasks > 0)
+    return false;
 
-  if (appel.duration_seconds !== null && appel.duration_seconds < SANS_SUITE.DUREE_MINIMUM_SECONDES) {
+  if (
+    appel.duration_seconds !== null &&
+    appel.duration_seconds < SANS_SUITE.DUREE_MINIMUM_SECONDES
+  ) {
     return false;
   }
 
-  const limite = maintenant.getTime() - SANS_SUITE.FENETRE_JOURS * 24 * 60 * 60 * 1000;
+  const limite =
+    maintenant.getTime() - SANS_SUITE.FENETRE_JOURS * 24 * 60 * 60 * 1000;
   return new Date(appel.started_at).getTime() > limite;
 }
 
 /** Les appels que Sophie n'a pas pu prendre. Un client a entendu sonner dans le vide. */
-export function appelEchoue(appel: Pick<AppelPourSuite, "status" | "is_test">): boolean {
+export function appelEchoue(
+  appel: Pick<AppelPourSuite, "status" | "is_test">,
+): boolean {
   return !appel.is_test && needsAttention(appel.status);
 }
 

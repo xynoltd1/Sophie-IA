@@ -32,7 +32,9 @@ export interface CalendarState {
   lastError: string | null;
 }
 
-export async function getCalendarState(organizationId: string): Promise<CalendarState> {
+export async function getCalendarState(
+  organizationId: string,
+): Promise<CalendarState> {
   const supabase = await createServerSupabase();
 
   const [statut, syncState] = await Promise.all([
@@ -44,16 +46,21 @@ export async function getCalendarState(organizationId: string): Promise<Calendar
     supabase.rpc("calendar_sync_state", { org_id: organizationId }),
   ]);
 
-  const ligne = Array.isArray(syncState.data) ? syncState.data[0] : syncState.data;
+  const ligne = Array.isArray(syncState.data)
+    ? syncState.data[0]
+    : syncState.data;
   const connected = Boolean(ligne?.connected ?? statut.data?.is_active);
   const isFresh = Boolean(ligne?.is_fresh);
 
-  const erreur = (ligne?.last_error as string | null) ?? statut.data?.last_error ?? null;
+  const erreur =
+    (ligne?.last_error as string | null) ?? statut.data?.last_error ?? null;
 
   // Une autorisation expirée ne se distingue pas d'un simple retard dans les
   // données, mais appelle une action complètement différente : attendre ne
   // sert à rien, il faut reconnecter.
-  const expire = Boolean(erreur && /expir|révoqu|revoqu|invalid_grant/i.test(erreur));
+  const expire = Boolean(
+    erreur && /expir|révoqu|revoqu|invalid_grant/i.test(erreur),
+  );
 
   return {
     confidence: !connected

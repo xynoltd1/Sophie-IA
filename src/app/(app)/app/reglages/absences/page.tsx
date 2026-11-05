@@ -12,7 +12,8 @@ export const metadata = { title: "Absences — Sophie IA" };
 
 export default async function AbsencesPage() {
   const { activeOrganization } = await requireOrganization();
-  if (!can(activeOrganization.role, "organization:update")) redirect("/app/reglages");
+  if (!can(activeOrganization.role, "organization:update"))
+    redirect("/app/reglages");
 
   const supabase = await createServerSupabase();
   const orgId = activeOrganization.organization_id;
@@ -24,18 +25,25 @@ export default async function AbsencesPage() {
       .eq("organization_id", orgId)
       .gte("ends_at", new Date().toISOString())
       .order("starts_at"),
-    supabase.from("organizations").select("timezone").eq("id", orgId).maybeSingle(),
+    supabase
+      .from("organizations")
+      .select("timezone")
+      .eq("id", orgId)
+      .maybeSingle(),
   ]);
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/reglages" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/reglages"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Réglages
       </Link>
       <SectionTitle>Absences et vacances</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Pendant ces périodes, Sophie ne proposera aucun créneau. Les rendez-vous déjà
-        confirmés ne sont pas touchés : à vous de prévenir ces clients.
+        Pendant ces périodes, Sophie ne proposera aucun créneau. Les rendez-vous
+        déjà confirmés ne sont pas touchés : à vous de prévenir ces clients.
       </p>
 
       {absences.error ? (
@@ -43,7 +51,9 @@ export default async function AbsencesPage() {
       ) : (
         <AbsencesEditor
           absences={(absences.data ?? []) as LigneAbsence[]}
-          timezone={(org.data?.timezone as string | undefined) ?? "Europe/Brussels"}
+          timezone={
+            (org.data?.timezone as string | undefined) ?? "Europe/Brussels"
+          }
         />
       )}
     </div>

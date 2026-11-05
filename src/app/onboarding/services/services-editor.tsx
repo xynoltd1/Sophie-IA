@@ -22,7 +22,10 @@ export function ServicesEditor({
   /** Hors inscription, il n'y a pas d'etape suivante : le bouton disparait. */
   contexte?: "ONBOARDING" | "REGLAGES";
 }) {
-  const [state, action, adding] = useActionState<ServicesState, FormData>(addService, {});
+  const [state, action, adding] = useActionState<ServicesState, FormData>(
+    addService,
+    {},
+  );
   const [showForm, setShowForm] = useState(false);
   const [pending, startTransition] = useTransition();
   const [continueError, setContinueError] = useState<string | null>(null);
@@ -44,7 +47,9 @@ export function ServicesEditor({
                 <div className="min-w-0">
                   <p className="font-medium">{service.name}</p>
                   {service.is_urgent ? (
-                    <p className="mt-0.5 text-sm text-urgent">Traité comme une urgence</p>
+                    <p className="mt-0.5 text-sm text-urgent">
+                      Traité comme une urgence
+                    </p>
                   ) : null}
                 </div>
 
@@ -54,7 +59,9 @@ export function ServicesEditor({
                   aria-checked={service.is_active}
                   aria-label={`${service.is_active ? "Désactiver" : "Activer"} ${service.name}`}
                   onClick={() =>
-                    startTransition(() => toggleService(service.id, !service.is_active))
+                    startTransition(() =>
+                      toggleService(service.id, !service.is_active),
+                    )
                   }
                   className={cn(
                     "relative h-8 w-14 shrink-0 rounded-full transition-colors",
@@ -106,7 +113,12 @@ export function ServicesEditor({
             ) : null}
 
             <Field label="Nom du service" htmlFor="name">
-              <Input id="name" name="name" required placeholder="Détartrage de chaudière" />
+              <Input
+                id="name"
+                name="name"
+                required
+                placeholder="Détartrage de chaudière"
+              />
             </Field>
 
             <Field label="Durée en minutes" htmlFor="durationMinutes">
@@ -135,7 +147,11 @@ export function ServicesEditor({
             </Field>
 
             <label className="flex min-h-12 items-center gap-3 text-base">
-              <input type="checkbox" name="isUrgent" className="h-5 w-5 accent-[var(--color-signal)]" />
+              <input
+                type="checkbox"
+                name="isUrgent"
+                className="h-5 w-5 accent-[var(--color-signal)]"
+              />
               Traiter ce service comme une urgence
             </label>
 
@@ -143,14 +159,22 @@ export function ServicesEditor({
               <Button type="submit" loading={adding}>
                 Ajouter
               </Button>
-              <Button type="button" variant="quiet" onClick={() => setShowForm(false)}>
+              <Button
+                type="button"
+                variant="quiet"
+                onClick={() => setShowForm(false)}
+              >
                 Annuler
               </Button>
             </div>
           </form>
         </Sheet>
       ) : (
-        <Button type="button" variant="secondary" onClick={() => setShowForm(true)}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setShowForm(true)}
+        >
           Ajouter un service
         </Button>
       )}
@@ -168,7 +192,8 @@ export function ServicesEditor({
           </p>
         ) : null}
         <p className="text-sm text-ink-soft">
-          {activeCount} service{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""}.
+          {activeCount} service{activeCount > 1 ? "s" : ""} actif
+          {activeCount > 1 ? "s" : ""}.
         </p>
         {contexte === "ONBOARDING" ? (
           <Button

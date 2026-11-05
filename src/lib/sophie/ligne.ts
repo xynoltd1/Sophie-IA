@@ -48,16 +48,23 @@ export function diagnostiquerLigne(
   const reels = actifs.filter((n) => !n.is_test);
   const numero = (reels[0] ?? actifs[0])?.e164 ?? null;
 
-  if (actifs.length === 0) return { repond: false, raison: "AUCUN_NUMERO", numero: null };
-  if (reels.length === 0) return { repond: false, raison: "LIGNE_ESSAI", numero };
-  if (!configuration?.is_active) return { repond: false, raison: "CONFIG_INACTIVE", numero };
-  if (configuration.answer_mode === "OFF") return { repond: false, raison: "MODE_OFF", numero };
+  if (actifs.length === 0)
+    return { repond: false, raison: "AUCUN_NUMERO", numero: null };
+  if (reels.length === 0)
+    return { repond: false, raison: "LIGNE_ESSAI", numero };
+  if (!configuration?.is_active)
+    return { repond: false, raison: "CONFIG_INACTIVE", numero };
+  if (configuration.answer_mode === "OFF")
+    return { repond: false, raison: "MODE_OFF", numero };
 
   return { repond: true, raison: null, numero };
 }
 
 /** Ce qu'on dit au professionnel, et ce qu'il doit faire ensuite. */
-export const MESSAGE_SILENCE: Record<RaisonSilence, { titre: string; detail: string }> = {
+export const MESSAGE_SILENCE: Record<
+  RaisonSilence,
+  { titre: string; detail: string }
+> = {
   AUCUN_NUMERO: {
     titre: "Sophie n’a pas encore de numéro",
     detail:
@@ -73,7 +80,8 @@ export const MESSAGE_SILENCE: Record<RaisonSilence, { titre: string; detail: str
   },
   CONFIG_INACTIVE: {
     titre: "Sophie n’est pas activée",
-    detail: "Votre numéro est relié, mais Sophie ne décroche pas tant qu’elle n’est pas activée.",
+    detail:
+      "Votre numéro est relié, mais Sophie ne décroche pas tant qu’elle n’est pas activée.",
   },
   MODE_OFF: {
     titre: "Sophie est réglée pour ne jamais décrocher",

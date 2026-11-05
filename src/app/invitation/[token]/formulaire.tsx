@@ -33,12 +33,16 @@ export function FormulaireInvitation({ token }: { token: string }) {
 
   return (
     <div className="mt-5 flex flex-col gap-3">
-      {resultat ? <p className="text-sm text-attention">{MESSAGES[resultat]}</p> : null}
+      {resultat ? (
+        <p className="text-sm text-attention">{MESSAGES[resultat]}</p>
+      ) : null}
       <Button
         type="button"
         size="lg"
         loading={enCours}
-        onClick={() => demarrer(async () => setResultat(await accepterInvitation(token)))}
+        onClick={() =>
+          demarrer(async () => setResultat(await accepterInvitation(token)))
+        }
       >
         Rejoindre l’entreprise
       </Button>

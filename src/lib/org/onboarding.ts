@@ -33,5 +33,7 @@ export function onboardingProgress(step: OnboardingStep): number {
 
 export function nextStep(step: OnboardingStep): OnboardingStep {
   const index = ONBOARDING_STEPS.indexOf(step);
-  return ONBOARDING_STEPS[Math.min(index + 1, ONBOARDING_STEPS.length - 1)] ?? "DONE";
+  return (
+    ONBOARDING_STEPS[Math.min(index + 1, ONBOARDING_STEPS.length - 1)] ?? "DONE"
+  );
 }

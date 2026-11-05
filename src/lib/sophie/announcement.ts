@@ -74,16 +74,22 @@ export async function buildAnnouncement(params: {
 
   const enregistre = Boolean(autorise);
 
-  const presentation =
-    `Bonjour, ici ${params.assistantName}, pour ${params.organizationName}. ${AI_DISCLOSURE}`;
+  const presentation = `Bonjour, ici ${params.assistantName}, pour ${params.organizationName}. ${AI_DISCLOSURE}`;
 
   if (!enregistre) {
     // Pas d'enregistrement : on ne prétend pas le contraire, et l'obligation
     // de transparence sur l'IA reste due.
-    return { text: presentation, mentionsRecording: false, legallyValidated: true };
+    return {
+      text: presentation,
+      mentionsRecording: false,
+      legallyValidated: true,
+    };
   }
 
-  const modele = await noticeTemplate(params.countryCode ?? null, params.locale ?? "fr");
+  const modele = await noticeTemplate(
+    params.countryCode ?? null,
+    params.locale ?? "fr",
+  );
 
   const corps = (modele?.body ?? FALLBACK_RECORDING_NOTICE).replace(
     /\{\{organization\}\}/g,
@@ -130,7 +136,9 @@ async function noticeTemplate(
     .eq("is_active", true)
     .maybeSingle();
 
-  return (data as { body: string; is_legally_validated: boolean } | null) ?? null;
+  return (
+    (data as { body: string; is_legally_validated: boolean } | null) ?? null
+  );
 }
 
 /**
@@ -141,10 +149,7 @@ async function noticeTemplate(
  * sur le texte que NOUS imposons, pas sur ce que le modèle improvisera.
  */
 export function disclosesAI(text: string): boolean {
-  const normalise = text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+  const normalise = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
   const marqueurs = [
     "assistant virtuel",

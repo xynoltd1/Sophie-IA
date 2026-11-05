@@ -2,7 +2,10 @@
 
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getCalendarState, type CalendarConfidence } from "@/lib/crm/calendar-state";
+import {
+  getCalendarState,
+  type CalendarConfidence,
+} from "@/lib/crm/calendar-state";
 
 /**
  * Créneaux réellement disponibles pour un jour.
@@ -18,7 +21,11 @@ import { getCalendarState, type CalendarConfidence } from "@/lib/crm/calendar-st
 export async function fetchSlots(
   jour: string,
   dureeMinutes: number,
-): Promise<{ slots: string[]; confidence: CalendarConfidence; error?: string }> {
+): Promise<{
+  slots: string[];
+  confidence: CalendarConfidence;
+  error?: string;
+}> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 

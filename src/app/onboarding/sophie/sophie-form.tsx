@@ -41,14 +41,20 @@ export function SophieForm({
   behaviorNotes: string | null;
   discloseAi: boolean;
 }) {
-  const [state, action, pending] = useActionState<SophieState, FormData>(saveSophie, {});
+  const [state, action, pending] = useActionState<SophieState, FormData>(
+    saveSophie,
+    {},
+  );
   const [name, setName] = useState(assistantName);
   const [selectedStyle, setSelectedStyle] = useState(style);
 
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}
@@ -82,7 +88,9 @@ export function SophieForm({
               aria-pressed={active}
               className={cn(
                 "flex min-h-16 flex-col justify-center gap-0.5 rounded-control border px-4 py-2 text-left",
-                active ? "border-signal bg-signal-soft" : "border-line bg-surface",
+                active
+                  ? "border-signal bg-signal-soft"
+                  : "border-line bg-surface",
               )}
             >
               <span className={cn("font-medium", active && "text-signal-deep")}>
@@ -133,8 +141,8 @@ export function SophieForm({
           <span>
             Sophie précise qu&apos;elle est une assistante virtuelle
             <span className="mt-1 block text-sm text-ink-soft">
-              Recommandé, et attendu en France comme en Belgique. Décocher cette case est
-              un choix à valider avec votre juriste.
+              Recommandé, et attendu en France comme en Belgique. Décocher cette
+              case est un choix à valider avec votre juriste.
             </span>
           </span>
         </label>

@@ -12,22 +12,26 @@ const MODES: { value: SophieAnswerMode; label: string; detail: string }[] = [
   {
     value: "WHEN_UNAVAILABLE",
     label: "Quand je ne réponds pas",
-    detail: "Le téléphone sonne chez vous d'abord. Sophie prend le relais après quelques sonneries.",
+    detail:
+      "Le téléphone sonne chez vous d'abord. Sophie prend le relais après quelques sonneries.",
   },
   {
     value: "ALWAYS",
     label: "Toujours",
-    detail: "Sophie décroche tous les appels. Utile quand vous êtes sur un chantier toute la journée.",
+    detail:
+      "Sophie décroche tous les appels. Utile quand vous êtes sur un chantier toute la journée.",
   },
   {
     value: "SCHEDULE",
     label: "Selon des horaires",
-    detail: "Sophie répond en dehors de vos heures de travail. Les plages se règlent ensuite.",
+    detail:
+      "Sophie répond en dehors de vos heures de travail. Les plages se règlent ensuite.",
   },
   {
     value: "OFF",
     label: "Jamais pour l'instant",
-    detail: "Vous configurez tout maintenant et vous activerez Sophie quand vous serez prêt.",
+    detail:
+      "Vous configurez tout maintenant et vous activerez Sophie quand vous serez prêt.",
   },
 ];
 
@@ -38,13 +42,19 @@ export function PhoneForm({
   answerMode: SophieAnswerMode;
   transferNumber: string | null;
 }) {
-  const [state, action, pending] = useActionState<PhoneState, FormData>(savePhoneRules, {});
+  const [state, action, pending] = useActionState<PhoneState, FormData>(
+    savePhoneRules,
+    {},
+  );
   const [mode, setMode] = useState(answerMode);
 
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
-        <p role="alert" className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink">
+        <p
+          role="alert"
+          className="rounded-control bg-urgent-soft px-4 py-3 text-sm text-ink"
+        >
           {state.error}
         </p>
       ) : null}
@@ -63,7 +73,9 @@ export function PhoneForm({
               aria-pressed={active}
               className={cn(
                 "flex min-h-16 flex-col justify-center gap-0.5 rounded-control border px-4 py-3 text-left",
-                active ? "border-signal bg-signal-soft" : "border-line bg-surface",
+                active
+                  ? "border-signal bg-signal-soft"
+                  : "border-line bg-surface",
               )}
             >
               <span className={cn("font-medium", active && "text-signal-deep")}>
@@ -98,9 +110,9 @@ export function PhoneForm({
       <Sheet className="flex flex-col gap-2 border-attention bg-attention-soft">
         <p className="font-semibold">Sophie ne décroche pas encore</p>
         <p className="text-sm text-ink-soft">
-          La prise d&apos;appel réelle demande un numéro de téléphone et une intégration
-          téléphonique, en cours de construction. Vos réglages sont enregistrés et
-          s&apos;appliqueront dès qu&apos;elle sera active.
+          La prise d&apos;appel réelle demande un numéro de téléphone et une
+          intégration téléphonique, en cours de construction. Vos réglages sont
+          enregistrés et s&apos;appliqueront dès qu&apos;elle sera active.
         </p>
       </Sheet>
 

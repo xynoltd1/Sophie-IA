@@ -3,6 +3,113 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.17.0] — 2026-11-04 — Une console, un site public, et de quoi les mesurer
+
+Trois chantiers d'un coup, parce qu'ils se tiennent : on ne pilote pas ce qu'on ne mesure
+pas, et on ne mesure pas un site qui n'existe pas.
+
+### Le site public n'existait pas
+
+`/` redirigeait vers la page de connexion. Le site n'avait **aucune page indexable** :
+tout travail de référencement aurait porté sur rien.
+
+Une vraie page d'accueil existe : ce que fait Sophie, comment un appel se déroule, ce
+qu'elle refuse de faire, les questions fréquentes. Aucun chiffre inventé, aucun
+témoignage, aucun logo de client — le produit n'a pas de client, et l'écrire serait un
+mensonge vérifiable. L'argument, ce sont les limites : « elle n'invente pas un tarif »,
+« elle ne confirme rien toute seule ». Un artisan méfiant des outils automatiques cherche
+exactement cette information, et personne ne l'écrit (ADR-040).
+
+### Référencement technique
+
+- `robots.txt` et `sitemap.xml` générés, **muets hors production** : une préversion
+  indexée fait concurrence au vrai site sur ses propres mots.
+- Liste des pages publiques écrite à la main, jamais déduite des dossiers. Un plan du site
+  est l'endroit où un moteur va chercher ce qu'il ne connaît pas ; un test refuse qu'une
+  page privée y entre.
+- Adresse de base, canonique, Open Graph, carte Twitter, langue.
+- `noindex` sur `/app` et `/admin` — `robots.txt` n'est pas une protection, il publie même
+  la liste des chemins qu'il prétend cacher.
+- Données structurées : Organization, SoftwareApplication, FAQPage. **Ni prix ni note** :
+  les déclarer sans les avoir est trompeur, et un test l'interdit.
+- Vraie page 404, avec le bon code HTTP.
+- La balise de propriété Search Console s'émet dès que `GOOGLE_SITE_VERIFICATION` existe —
+  et seulement alors : une balise vide se lit comme une tentative ratée.
+
+### Mesure de la fréquentation, sans cookie
+
+Collecte maison, côté serveur. Ni adresse IP, ni agent utilisateur en base : ils servent à
+classer puis disparaissent dans un hachage. Seul le domaine du référent est gardé — une
+adresse de provenance peut contenir une requête de recherche.
+
+L'empreinte de session **change chaque jour**. Le visiteur unique sur plusieurs jours est
+donc perdu, et l'écran le dit : un chiffre dont on ignore le biais est pire qu'un chiffre
+absent. En échange, pas de traceur, donc pas de bannière.
+
+**Trois verdicts et non deux** : humain, robot, incertain. Aucune détection de robots
+n'est sûre ; `UNKNOWN` porte l'incertitude au lieu de la cacher dans l'une des deux
+certitudes. Huit couches de filtrage, de l'agent déclaré à la déduplication en base.
+
+Aucun robot n'est bloqué : les exclure du comptage est une décision de mesure, pas de
+sécurité. Googlebot doit parcourir le site (ADR-039).
+
+### La console d'administration, refaite
+
+Panneau vertical à gauche, dix rubriques en trois groupes, fixe sur ordinateur,
+rétractable sur téléphone. Bloc compte en bas, avec une déconnexion qui **termine vraiment
+la session Supabase** — un bouton qui viderait l'état du navigateur laisserait la personne
+connectée sans le savoir.
+
+Le panneau est vert profond quand l'application est claire. Quelqu'un qui a sous les yeux
+les données de toutes les entreprises doit savoir d'un coup d'œil qu'il n'est plus chez
+lui.
+
+Nouveaux écrans : Statistiques, Utilisateurs, Appels et consommation, SEO et acquisition,
+Mon compte. Graphiques tracés à la main en SVG — trois courbes ne valent pas cent
+kilo-octets de JavaScript — chacun avec son tableau équivalent pour les lecteurs d'écran.
+Export CSV avec point-virgule et BOM, sans quoi Excel en français ouvre le fichier en une
+colonne.
+
+### « Non disponible » est devenu une valeur
+
+Chiffre d'affaires, coût fournisseurs, coût par minute, marge, revenu récurrent,
+désabonnement, rétention : tous affichent **Non disponible**, avec la raison.
+
+Aucun paiement n'est branché et le produit ne connaît aucun tarif fournisseur. Les estimer
+donnerait une marge fausse, et une marge fausse oriente une décision de prix. Un test
+l'interdit.
+
+### Corrigé : la santé disait deux choses contradictoires
+
+L'écran affichait « Testé en conditions réelles » juste au-dessus de « Variables
+manquantes : VOICE_PROVIDER ». Les deux étaient exactes : l'une venait d'un registre écrit
+à la main, l'autre de l'environnement lu à l'affichage.
+
+Le défaut n'était pas l'affichage, c'était qu'un seul mot portait trois questions. Elles
+sont séparées, et **le présent l'emporte** : une intégration mal configurée est hors
+service, quel que soit son passé (ADR-038).
+
+La preuve ne s'écrit plus à la main : chaque échange réel réussi la date lui-même. Les
+opérations simulées n'écrivent rien — un résumé simulé ne prouve pas qu'un modèle répond.
+
+### Migration 0033
+`site_events`, `integration_checks`, et neuf fonctions d'agrégation réservées au super
+administrateur. Tout est calculé en base : compter côté application obligerait à
+rapatrier des milliers de lignes, et la somme serait fausse dès que la pagination s'en
+mêlerait.
+
+### Tests
+383 au total, dont 20 nouveaux : plan du site sans page privée, canonique en HTTPS,
+silence hors production, noindex des espaces privés, données structurées sans prix ni
+note, reconnaissance des robots déclarés, refus de trancher quand on ne sait pas, chemins
+privés jamais mesurés, aucune IP ni agent en base, réponse toujours identique du
+collecteur, droits plateforme vérifiés sur **chaque** page d'administration, déconnexion
+par action serveur, et aucun chiffre d'argent inventé.
+
+### Documents
+`docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`, `docs/ANALYTICS.md` — nouveaux.
+ADR-038, ADR-039, ADR-040.
+
 ## [0.16.0] — 2026-11-04 — Mot de passe oublié
 
 ### Nouveau : récupérer son mot de passe

@@ -39,7 +39,10 @@ export interface PhoneCheck {
 /** Indicatif par défaut quand l'appelant donne un numéro national. */
 const DEFAUT = "32";
 
-export function normalisePhone(raw: string, defaultCountry = DEFAUT): string | null {
+export function normalisePhone(
+  raw: string,
+  defaultCountry = DEFAUT,
+): string | null {
   const brut = raw.trim();
   if (brut.length === 0) return null;
 
@@ -82,7 +85,8 @@ export function checkPhone(raw: string, defaultCountry = DEFAUT): PhoneCheck {
     return {
       e164,
       plausible: false,
-      reason: "Ce numéro est trop court. Faites-le répéter chiffre par chiffre.",
+      reason:
+        "Ce numéro est trop court. Faites-le répéter chiffre par chiffre.",
     };
   }
 

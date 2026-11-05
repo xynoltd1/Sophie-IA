@@ -112,7 +112,10 @@ export async function enregistrerLigne(
 }
 
 /** Active ou désactive une ligne sans la supprimer. */
-export async function basculerLigne(id: string, actif: boolean): Promise<{ ok: boolean }> {
+export async function basculerLigne(
+  id: string,
+  actif: boolean,
+): Promise<{ ok: boolean }> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 
@@ -133,7 +136,9 @@ export async function basculerLigne(id: string, actif: boolean): Promise<{ ok: b
  * leur historique reste, et c'est ce qui compte. On ne supprime jamais un
  * appel parce qu'on a changé de numéro.
  */
-export async function retirerLigne(id: string): Promise<{ ok: boolean; erreur?: string }> {
+export async function retirerLigne(
+  id: string,
+): Promise<{ ok: boolean; erreur?: string }> {
   const { activeOrganization } = await requireOrganization();
 
   if (!can(activeOrganization.role, "organization:update")) {

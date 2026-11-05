@@ -25,7 +25,9 @@ export async function getDashboardCounts(
   organizationId: string,
 ): Promise<{ counts: DashboardCounts; error: boolean }> {
   const supabase = await createServerSupabase();
-  const { data, error } = await supabase.rpc("dashboard_counts", { org_id: organizationId });
+  const { data, error } = await supabase.rpc("dashboard_counts", {
+    org_id: organizationId,
+  });
 
   const vide: DashboardCounts = {
     urgent_leads: 0,
@@ -44,14 +46,20 @@ export async function getDashboardCounts(
   // Un tableau vide n'est pas un succes a zero : la fonction renvoie toujours
   // une ligne. Le traiter comme un resultat valide masquait un echec silencieux
   // derriere un « Rien ne vous attend » rassurant.
-  const row = (Array.isArray(data) ? data[0] : data) as DashboardCounts | undefined;
+  const row = (Array.isArray(data) ? data[0] : data) as
+    DashboardCounts | undefined;
   if (!row) return { counts: vide, error: true };
 
   return { counts: row, error: false };
 }
 
 export interface LeadWithContact extends LeadRow {
-  contacts: { id: string; full_name: string | null; company_name: string | null; phone: string | null } | null;
+  contacts: {
+    id: string;
+    full_name: string | null;
+    company_name: string | null;
+    phone: string | null;
+  } | null;
 }
 
 export async function listLeads(
@@ -74,7 +82,10 @@ export async function listLeads(
   }
 
   const { data, error } = await query;
-  return { leads: (data ?? []) as unknown as LeadWithContact[], error: Boolean(error) };
+  return {
+    leads: (data ?? []) as unknown as LeadWithContact[],
+    error: Boolean(error),
+  };
 }
 
 export async function searchCrm(
@@ -132,9 +143,15 @@ export async function getTodayAppointments(
 export async function suitesDesAppels(
   organizationId: string,
   callIds: string[],
-): Promise<Map<string, { leads: number; appointments: number; tasks: number }>> {
-  const resultat = new Map<string, { leads: number; appointments: number; tasks: number }>();
-  for (const id of callIds) resultat.set(id, { leads: 0, appointments: 0, tasks: 0 });
+): Promise<
+  Map<string, { leads: number; appointments: number; tasks: number }>
+> {
+  const resultat = new Map<
+    string,
+    { leads: number; appointments: number; tasks: number }
+  >();
+  for (const id of callIds)
+    resultat.set(id, { leads: 0, appointments: 0, tasks: 0 });
   if (callIds.length === 0) return resultat;
 
   const supabase = await createServerSupabase();
@@ -177,7 +194,9 @@ export async function suitesDesAppels(
  * pas avoir de numéro, ou ne pas être activée. Le professionnel doit voir
  * laquelle le concerne, pas un voyant gris sans explication.
  */
-export async function etatLigneSophie(organizationId: string): Promise<EtatLigneSophie> {
+export async function etatLigneSophie(
+  organizationId: string,
+): Promise<EtatLigneSophie> {
   const supabase = await createServerSupabase();
 
   const [configuration, numeros] = await Promise.all([
@@ -232,7 +251,9 @@ export interface ActiviteSophie {
  * Les comptes passent par RLS avec `head: true` : aucune ligne n'est
  * rapatriée, seulement le total.
  */
-export async function activiteSophie(organizationId: string): Promise<ActiviteSophie> {
+export async function activiteSophie(
+  organizationId: string,
+): Promise<ActiviteSophie> {
   const supabase = await createServerSupabase();
   const depuis = new Date(Date.now() - 7 * 86_400_000).toISOString();
 

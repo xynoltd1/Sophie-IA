@@ -16,7 +16,9 @@ export default async function PlansPage() {
   const [plansRes, abonnementsRes] = await Promise.all([
     supabase
       .from("plans")
-      .select("code, label, description, monthly_price_cents, included_voice_minutes, included_sms, max_members, is_public")
+      .select(
+        "code, label, description, monthly_price_cents, included_voice_minutes, included_sms, max_members, is_public",
+      )
       .order("sort_order"),
     admin
       .from("subscriptions")
@@ -36,12 +38,12 @@ export default async function PlansPage() {
   return (
     <div className="flex flex-col gap-6">
       <section>
-        <SectionTitle>Offres</SectionTitle>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Offres et abonnements</h1>
         <Sheet tone="neutral" className="mb-2">
           <p className="text-sm text-ink-soft">
-            Un prix vide signifie « pas encore fixé », et non « gratuit ». Les trois
-            catégories prévues existent sans tarif : il n’appartient pas au code de les
-            inventer.
+            Un prix vide signifie « pas encore fixé », et non « gratuit ». Les
+            trois catégories prévues existent sans tarif : il n’appartient pas
+            au code de les inventer.
           </p>
         </Sheet>
         <PlansEditor plans={(plansRes.data ?? []) as LignePlan[]} />
@@ -65,10 +67,14 @@ export default async function PlansPage() {
                     </p>
                     <p className="text-sm text-ink-soft">
                       {abonnement.plans?.label ?? "Offre inconnue"} · depuis le{" "}
-                      {new Date(abonnement.period_start).toLocaleDateString("fr-BE")}
+                      {new Date(abonnement.period_start).toLocaleDateString(
+                        "fr-BE",
+                      )}
                     </p>
                   </div>
-                  <span className="shrink-0 text-sm text-ink-soft">{abonnement.status}</span>
+                  <span className="shrink-0 text-sm text-ink-soft">
+                    {abonnement.status}
+                  </span>
                 </Sheet>
               </li>
             ))}

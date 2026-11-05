@@ -4,7 +4,11 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { SectionTitle } from "@/components/ui/sheet";
 import { ErrorState } from "@/components/ui/states";
 import { can } from "@/lib/auth/permissions";
-import { EquipeEditor, type LigneInvitation, type LigneMembre } from "./equipe-editor";
+import {
+  EquipeEditor,
+  type LigneInvitation,
+  type LigneMembre,
+} from "./equipe-editor";
 import type { MemberRole } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -46,13 +50,16 @@ export default async function EquipePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/reglages" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/reglages"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Réglages
       </Link>
       <SectionTitle>Équipe</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Un membre retiré garde son historique : ses appels et ses rendez-vous restent
-        rattachés à lui. Il perd seulement l’accès.
+        Un membre retiré garde son historique : ses appels et ses rendez-vous
+        restent rattachés à lui. Il perd seulement l’accès.
       </p>
 
       {membresRes.error ? (

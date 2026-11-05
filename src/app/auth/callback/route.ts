@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
   const suite = searchParams.get("suite");
-  const destination = suite && suite.startsWith("/") && !suite.startsWith("//") ? suite : "/";
+  const destination =
+    suite && suite.startsWith("/") && !suite.startsWith("//") ? suite : "/";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?erreur=lien_invalide`);

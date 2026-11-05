@@ -80,8 +80,13 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
     key: "telephony",
     label: "Téléphonie (numéros, appels entrants, SMS)",
     status: "BLOCKED_EXTERNAL_CONFIG",
-    blockedBy: "Compte opérateur et numéro. Fournisseur pressenti : Twilio (voir ADR-020).",
-    requiredEnv: ["TELEPHONY_PROVIDER", "TELEPHONY_ACCOUNT_SID", "TELEPHONY_AUTH_TOKEN"],
+    blockedBy:
+      "Compte opérateur et numéro. Fournisseur pressenti : Twilio (voir ADR-020).",
+    requiredEnv: [
+      "TELEPHONY_PROVIDER",
+      "TELEPHONY_ACCOUNT_SID",
+      "TELEPHONY_AUTH_TOKEN",
+    ],
     notes: "Seule l'abstraction existe. Aucune implémentation réelle.",
   },
   {
@@ -120,7 +125,8 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
     key: "ai-postcall",
     label: "Résumé et extraction après appel",
     status: "BLOCKED_EXTERNAL_CONFIG",
-    blockedBy: "Clé d'un fournisseur compatible OpenAI (AI_API_KEY). Mistral conseillé pour l'Europe.",
+    blockedBy:
+      "Clé d'un fournisseur compatible OpenAI (AI_API_KEY). Mistral conseillé pour l'Europe.",
     requiredEnv: ["AI_PROVIDER", "AI_API_KEY"],
     notes:
       "Produits par nous à partir de la transcription conservée en base, et non par le " +
@@ -132,7 +138,11 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
     label: "SMS (confirmation, modification, annulation)",
     status: "BLOCKED_EXTERNAL_CONFIG",
     blockedBy: "Compte opérateur et numéro expéditeur.",
-    requiredEnv: ["MESSAGING_PROVIDER", "MESSAGING_API_KEY", "MESSAGING_SENDER_ID"],
+    requiredEnv: [
+      "MESSAGING_PROVIDER",
+      "MESSAGING_API_KEY",
+      "MESSAGING_SENDER_ID",
+    ],
   },
 ] as const;
 

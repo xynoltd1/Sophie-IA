@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { requireOrganization } from "@/lib/auth/session";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { can } from "@/lib/auth/permissions";
-import { INTEGRATIONS, STATUS_LABELS, missingEnvFor } from "@/lib/providers/status";
+import {
+  INTEGRATIONS,
+  STATUS_LABELS,
+  missingEnvFor,
+} from "@/lib/providers/status";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Intégrations — Sophie IA" };
@@ -26,17 +30,22 @@ const TONES = {
 
 export default async function IntegrationsPage() {
   const { activeOrganization } = await requireOrganization();
-  if (!can(activeOrganization.role, "organization:update")) redirect("/app/reglages");
+  if (!can(activeOrganization.role, "organization:update"))
+    redirect("/app/reglages");
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/reglages" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/reglages"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Réglages
       </Link>
       <SectionTitle>Intégrations</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Ce qui est branché et ce qui attend une clé. Un service peut être écrit, testé, ou
-        simplement en attente de configuration : les trois sont des états différents.
+        Ce qui est branché et ce qui attend une clé. Un service peut être écrit,
+        testé, ou simplement en attente de configuration : les trois sont des
+        états différents.
       </p>
 
       <ul className="flex flex-col gap-2">
@@ -54,7 +63,9 @@ export default async function IntegrationsPage() {
                 </div>
 
                 {integration.blockedBy ? (
-                  <p className="mt-1 text-sm text-ink-soft">{integration.blockedBy}</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    {integration.blockedBy}
+                  </p>
                 ) : null}
 
                 {manquantes.length > 0 ? (
@@ -64,7 +75,9 @@ export default async function IntegrationsPage() {
                 ) : null}
 
                 {integration.notes ? (
-                  <p className="mt-2 text-sm text-ink-soft">{integration.notes}</p>
+                  <p className="mt-2 text-sm text-ink-soft">
+                    {integration.notes}
+                  </p>
                 ) : null}
               </Sheet>
             </li>

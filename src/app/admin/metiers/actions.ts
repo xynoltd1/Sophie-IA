@@ -28,7 +28,10 @@ const schema = z.object({
   slug: z
     .string()
     .trim()
-    .regex(/^[a-z][a-z0-9-]{1,48}$/, "Identifiant : minuscules, chiffres et tirets."),
+    .regex(
+      /^[a-z][a-z0-9-]{1,48}$/,
+      "Identifiant : minuscules, chiffres et tirets.",
+    ),
   label: z.string().trim().min(2, "Donnez un nom au métier").max(80),
   defaultAppointmentMinutes: z.coerce.number().int().min(5).max(1440),
   defaultBufferMinutes: z.coerce.number().int().min(0).max(240),
@@ -39,7 +42,9 @@ const schema = z.object({
 });
 
 /** Une ligne par service : « Dépannage fuite | 60 | urgent ». */
-function lireServices(brut: string): { name: string; duration_minutes: number; is_urgent: boolean }[] {
+function lireServices(
+  brut: string,
+): { name: string; duration_minutes: number; is_urgent: boolean }[] {
   const services = [];
   for (const ligne of brut.split("\n")) {
     const propre = ligne.trim();
@@ -94,7 +99,9 @@ export async function enregistrerMetier(
 
   const services = lireServices(parsed.data.services);
   if (services.length === 0) {
-    return { error: "Donnez au moins un service, sous la forme « Nom | 60 | urgent »." };
+    return {
+      error: "Donnez au moins un service, sous la forme « Nom | 60 | urgent ».",
+    };
   }
 
   const supabase = await createServerSupabase();
@@ -156,7 +163,9 @@ export async function basculerPublication(
 
   await journaliserAdmin({
     actorUserId: userId,
-    action: publie ? "PROFESSION_TEMPLATE_PUBLISH" : "PROFESSION_TEMPLATE_UNPUBLISH",
+    action: publie
+      ? "PROFESSION_TEMPLATE_PUBLISH"
+      : "PROFESSION_TEMPLATE_UNPUBLISH",
     resourceType: "profession_template",
     resourceId: slug,
     outcome: error ? "ERROR" : "SUCCESS",

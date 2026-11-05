@@ -76,7 +76,10 @@ export function secretsKeyConfigured(): boolean {
 export function encryptSecret(plaintext: string): string {
   const iv = randomBytes(IV_BYTES);
   const cipher = createCipheriv(ALGO, encryptionKey(), iv);
-  const chiffre = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const chiffre = Buffer.concat([
+    cipher.update(plaintext, "utf8"),
+    cipher.final(),
+  ]);
   const tag = cipher.getAuthTag();
 
   return [
@@ -93,8 +96,17 @@ export function decryptSecret(stored: string): string {
     throw new Error("Secret illisible : format inattendu.");
   }
 
-  const [, ivPart, tagPart, dataPart] = parts as [string, string, string, string];
-  const decipher = createDecipheriv(ALGO, encryptionKey(), Buffer.from(ivPart, "base64url"));
+  const [, ivPart, tagPart, dataPart] = parts as [
+    string,
+    string,
+    string,
+    string,
+  ];
+  const decipher = createDecipheriv(
+    ALGO,
+    encryptionKey(),
+    Buffer.from(ivPart, "base64url"),
+  );
   decipher.setAuthTag(Buffer.from(tagPart, "base64url"));
 
   return Buffer.concat([
@@ -111,7 +123,9 @@ export function decryptSecret(stored: string): string {
  * son propre agenda à l'organisation de quelqu'un d'autre.
  */
 export function signPayload(payload: string): string {
-  const signature = createHmac("sha256", encryptionKey()).update(payload).digest("base64url");
+  const signature = createHmac("sha256", encryptionKey())
+    .update(payload)
+    .digest("base64url");
   return `${Buffer.from(payload, "utf8").toString("base64url")}.${signature}`;
 }
 
@@ -122,7 +136,9 @@ export function verifyPayload(signed: string): string | null {
 
   const [encoded, signature] = parts as [string, string];
   const payload = Buffer.from(encoded, "base64url").toString("utf8");
-  const attendu = createHmac("sha256", encryptionKey()).update(payload).digest("base64url");
+  const attendu = createHmac("sha256", encryptionKey())
+    .update(payload)
+    .digest("base64url");
 
   const a = Buffer.from(signature);
   const b = Buffer.from(attendu);

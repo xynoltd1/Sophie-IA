@@ -6,7 +6,11 @@ import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 const schema = z.object({
-  assistantName: z.string().trim().min(2, "Donnez un nom à votre assistante").max(40),
+  assistantName: z
+    .string()
+    .trim()
+    .min(2, "Donnez un nom à votre assistante")
+    .max(40),
   style: z.enum(["CHALEUREUX", "NEUTRE", "DIRECT"]),
   greeting: z.string().trim().max(500).optional(),
   behaviorNotes: z.string().trim().max(2000).optional(),
@@ -31,7 +35,11 @@ export async function saveSophie(
   });
 
   if (!parsed.success) {
-    return { fieldErrors: { assistantName: parsed.error.issues[0]?.message ?? "Formulaire invalide" } };
+    return {
+      fieldErrors: {
+        assistantName: parsed.error.issues[0]?.message ?? "Formulaire invalide",
+      },
+    };
   }
 
   const { activeOrganization } = await requireOrganization();
@@ -51,7 +59,9 @@ export async function saveSophie(
   );
 
   if (error) {
-    return { error: "La configuration n'a pas pu être enregistrée. Réessayez." };
+    return {
+      error: "La configuration n'a pas pu être enregistrée. Réessayez.",
+    };
   }
 
   await supabase.rpc("set_onboarding_step", { org_id: orgId, step: "PHONE" });

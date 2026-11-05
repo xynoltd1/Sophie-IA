@@ -52,7 +52,8 @@ export async function GET(
   if (!chemin) return new NextResponse("aucun enregistrement", { status: 404 });
 
   const adresse = await adresseEcoute(chemin, 300, telecharger);
-  if (!adresse) return new NextResponse("enregistrement indisponible", { status: 503 });
+  if (!adresse)
+    return new NextResponse("enregistrement indisponible", { status: 503 });
 
   // 302 et non 301 : l'adresse signée change à chaque demande, elle ne doit
   // jamais être mise en cache par le navigateur ni par un intermédiaire.

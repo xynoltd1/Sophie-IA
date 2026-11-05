@@ -1,16 +1,17 @@
 import { requirePlatformAdmin } from "@/lib/auth/platform";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Sheet, SectionTitle } from "@/components/ui/sheet";
+import { Carte, Tableau, TitreSection } from "@/components/admin/surface";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import {
-  INTEGRATIONS,
-  STATUS_LABELS,
-  missingEnvFor,
-} from "@/lib/providers/status";
+  LIBELLES_ETAT,
+  TONS_ETAT,
+  quand,
+  santeIntegrations,
+} from "@/lib/platform/health";
 
 export const dynamic = "force-dynamic";
-
-export const metadata = { title: "Santé — Plateforme" };
+export const metadata = { title: "Santé du système — Plateforme" };
 
 /** Les noms techniques des purges, en français, pour ne pas lire « CALL_TRASH ». */
 const PURGE_LABELS: Record<string, string> = {
@@ -25,15 +26,22 @@ const PURGE_LABELS: Record<string, string> = {
 /**
  * Santé du système (section 54).
  *
- * Deux informations côte à côte, et c'est voulu : ce que le registre déclare,
- * et ce que les fournisseurs ont réellement renvoyé ces derniers jours. Quand
- * les deux divergent, c'est le registre qui ment.
+ * L'écran précédent affichait « Testé en conditions réelles » à côté de
+ * « Variables manquantes ». Les deux affirmations étaient exactes et
+ * contradictoires : l'une venait du code, l'autre de l'environnement. Un seul
+ * mot portait trois questions.
+ *
+ * Elles sont désormais séparées, et c'est **le présent qui décide** de l'état
+ * affiché : une intégration mal configurée est hors service, quel que soit son
+ * passé. Le dernier test réussi reste visible, comme information de contexte,
+ * jamais comme preuve que ça marche aujourd'hui.
  */
 export default async function SantePage() {
   await requirePlatformAdmin();
   const admin = createAdminClient();
 
-  const [{ data }, { data: purges }] = await Promise.all([
+  const [integrations, erreursRes, purgesRes] = await Promise.all([
+    santeIntegrations(),
     admin
       .from("provider_errors")
       .select("id, provider, operation, message, occurred_at")
@@ -46,7 +54,7 @@ export default async function SantePage() {
       .limit(24),
   ]);
 
-  const erreurs = (data ?? []) as {
+  const erreurs = (erreursRes.data ?? []) as {
     id: string;
     provider: string;
     operation: string;
@@ -54,7 +62,7 @@ export default async function SantePage() {
     occurred_at: string;
   }[];
 
-  const executions = (purges ?? []) as {
+  const purges = (purgesRes.data ?? []) as {
     id: string;
     kind: string;
     started_at: string;
@@ -64,101 +72,168 @@ export default async function SantePage() {
     detail: string | null;
   }[];
 
+  const enPanne = integrations.filter((i) => i.etat === "EN_PANNE").length;
+  const aConfigurer = integrations.filter(
+    (i) => i.etat === "NON_CONFIGURE",
+  ).length;
+
   return (
     <div className="flex flex-col gap-6">
+      <h1 className="font-display text-2xl font-semibold tracking-tight">
+        Santé du système
+      </h1>
+
+      <Carte>
+        <p className="text-sm leading-relaxed text-ink-soft">
+          {enPanne > 0
+            ? `${enPanne} intégration${enPanne > 1 ? "s" : ""} en panne. `
+            : "Aucune intégration en panne. "}
+          {aConfigurer > 0
+            ? `${aConfigurer} attend${aConfigurer > 1 ? "ent" : ""} une clé ou un compte.`
+            : "Toutes sont configurées."}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-faint">
+          Un test réussi le mois dernier ne prouve rien sur aujourd’hui. L’état
+          affiché est celui du présent : configuration lue maintenant, dernier
+          échange réel lu en base. Le passé est écrit à côté, jamais à la place.
+        </p>
+      </Carte>
+
       <section>
-        <SectionTitle>Intégrations</SectionTitle>
-        <ul className="flex flex-col gap-2">
-          {INTEGRATIONS.map((integration) => {
-            const manquantes = missingEnvFor(integration.key);
-            return (
-              <li key={integration.key}>
-                <Sheet className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium">{integration.label}</p>
-                    {manquantes.length > 0 ? (
-                      <p className="text-sm text-attention">
-                        Variables manquantes : {manquantes.join(", ")}
-                      </p>
-                    ) : null}
+        <TitreSection>Intégrations</TitreSection>
+        <ul className="flex flex-col gap-3">
+          {integrations.map((integration) => (
+            <li key={integration.cle}>
+              <Carte>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <p className="font-medium">{integration.libelle}</p>
+                  <Badge ton={TONS_ETAT[integration.etat]}>
+                    {LIBELLES_ETAT[integration.etat]}
+                  </Badge>
+                </div>
+
+                <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-ink-faint">Configuration</dt>
+                    <dd
+                      className={
+                        integration.variablesManquantes.length > 0
+                          ? "text-attention"
+                          : ""
+                      }
+                    >
+                      {integration.variablesManquantes.length === 0
+                        ? "complète"
+                        : `manquant : ${integration.variablesManquantes.join(", ")}`}
+                    </dd>
                   </div>
-                  <span className="shrink-0 text-sm text-ink-soft">
-                    {STATUS_LABELS[integration.status]}
-                  </span>
-                </Sheet>
-              </li>
-            );
-          })}
+                  <div>
+                    <dt className="text-ink-faint">Dernier échange réussi</dt>
+                    <dd className="tabular">
+                      {quand(integration.dernierSucces)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-ink-faint">Dernier échec</dt>
+                    <dd className="tabular">
+                      {quand(integration.dernierEchec)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-ink-faint">Erreurs sur 7 jours</dt>
+                    <dd className="tabular">{integration.erreursRecentes}</dd>
+                  </div>
+                </dl>
+
+                {integration.dernierDetail ? (
+                  <p className="mt-3 rounded-control bg-urgent-soft px-3 py-2 text-sm">
+                    {integration.dernierDetail}
+                  </p>
+                ) : null}
+
+                <p className="mt-3 text-sm text-ink-soft">
+                  <span className="font-medium text-ink">À faire : </span>
+                  {integration.action}
+                </p>
+
+                {integration.codeNote ? (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-sm text-ink-faint">
+                      Ce que le code fait
+                    </summary>
+                    <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+                      {integration.codeNote}
+                    </p>
+                  </details>
+                ) : null}
+              </Carte>
+            </li>
+          ))}
         </ul>
       </section>
 
       <section>
-        <SectionTitle>Purges de conservation</SectionTitle>
-        {executions.length === 0 ? (
+        <TitreSection detail="Elles tournent chaque nuit. Une purge sans trace ne peut ni se prouver ni se diagnostiquer.">
+          Purges de conservation
+        </TitreSection>
+        {purges.length === 0 ? (
           <EmptyState
             title="Aucune purge consignée"
-            description="La tâche planifiée n’a pas encore tourné, ou rien n’était arrivé à échéance."
+            description="La tâche planifiée n’a pas encore tourné, ou CRON_SECRET manque sur Vercel. Vérifiez Vercel → Cron Jobs."
           />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {executions.map((execution) => (
-              <li key={execution.id}>
-                <Sheet
-                  tone={execution.outcome === "ERROR" ? "urgent" : "neutral"}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium">
-                      {PURGE_LABELS[execution.kind] ?? execution.kind}
-                    </p>
-                    <span className="shrink-0 text-sm text-ink-soft">
-                      {execution.outcome === "ERROR"
-                        ? "échec"
-                        : `${execution.affected} supprimé${execution.affected === 1 ? "" : "s"}`}
-                    </span>
-                  </div>
-                  {execution.detail ? (
-                    <p className="mt-1 text-sm text-ink-soft">
-                      {execution.detail}
-                    </p>
+          <Tableau entetes={["Purge", "Quand", "Supprimés", "Issue"]}>
+            {purges.map((purge) => (
+              <tr key={purge.id}>
+                <td className="px-4 py-3 font-medium">
+                  {PURGE_LABELS[purge.kind] ?? purge.kind}
+                </td>
+                <td className="tabular px-4 py-3 text-ink-soft">
+                  {new Date(purge.started_at).toLocaleString("fr-BE", {
+                    timeZone: "Europe/Brussels",
+                  })}
+                </td>
+                <td className="tabular px-4 py-3">{purge.affected}</td>
+                <td className="px-4 py-3">
+                  {purge.outcome === "ERROR" ? (
+                    <Badge ton="urgent">échec</Badge>
+                  ) : purge.finished_at === null ? (
+                    <Badge ton="attention">jamais terminée</Badge>
+                  ) : (
+                    <Badge ton="neutre">ok</Badge>
+                  )}
+                  {purge.detail ? (
+                    <span className="ml-2 text-ink-soft">{purge.detail}</span>
                   ) : null}
-                  <p className="mt-1 text-sm text-ink-faint">
-                    {new Date(execution.started_at).toLocaleString("fr-BE", {
-                      timeZone: "Europe/Brussels",
-                    })}
-                    {execution.finished_at === null ? " · jamais terminée" : ""}
-                  </p>
-                </Sheet>
-              </li>
+                </td>
+              </tr>
             ))}
-          </ul>
+          </Tableau>
         )}
       </section>
 
       <section>
-        <SectionTitle>Erreurs des fournisseurs</SectionTitle>
+        <TitreSection>Erreurs des fournisseurs</TitreSection>
         {erreurs.length === 0 ? (
           <EmptyState
             title="Aucune erreur consignée"
             description="Les pannes des services externes apparaîtront ici, avec l’heure et l’opération concernée."
           />
         ) : (
-          <ul className="flex flex-col gap-2">
+          <Tableau entetes={["Fournisseur", "Opération", "Message", "Quand"]}>
             {erreurs.map((erreur) => (
-              <li key={erreur.id}>
-                <Sheet tone="attention">
-                  <p className="font-medium">
-                    {erreur.provider} · {erreur.operation}
-                  </p>
-                  <p className="mt-1 text-sm text-ink-soft">{erreur.message}</p>
-                  <p className="mt-1 text-sm text-ink-faint">
-                    {new Date(erreur.occurred_at).toLocaleString("fr-BE", {
-                      timeZone: "Europe/Brussels",
-                    })}
-                  </p>
-                </Sheet>
-              </li>
+              <tr key={erreur.id}>
+                <td className="px-4 py-3 font-medium">{erreur.provider}</td>
+                <td className="px-4 py-3 text-ink-soft">{erreur.operation}</td>
+                <td className="px-4 py-3 text-ink-soft">{erreur.message}</td>
+                <td className="tabular px-4 py-3 text-ink-faint">
+                  {new Date(erreur.occurred_at).toLocaleString("fr-BE", {
+                    timeZone: "Europe/Brussels",
+                  })}
+                </td>
+              </tr>
             ))}
-          </ul>
+          </Tableau>
         )}
       </section>
     </div>

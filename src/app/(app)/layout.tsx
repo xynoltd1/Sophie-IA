@@ -10,7 +10,16 @@ import { alertesNonLues, etatLigneSophie } from "@/lib/crm/queries";
  */
 export const dynamic = "force-dynamic";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+// Espace prive : jamais indexe, quoi que dise robots.txt. Ce fichier-la est
+// une demande polie ; cet en-tete est une consigne que Google applique meme
+// s'il arrive sur la page par un lien.
+export const metadata = { robots: { index: false, follow: false } };
+
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { activeOrganization } = await requireOrganization();
 
   // Cette valeur etait ecrite en dur a false depuis la Phase 0. L en-tete

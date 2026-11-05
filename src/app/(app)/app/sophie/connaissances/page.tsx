@@ -20,7 +20,8 @@ export const metadata = { title: "Connaissances de Sophie — Sophie IA" };
  */
 export default async function ConnaissancesPage() {
   const { activeOrganization } = await requireOrganization();
-  if (!can(activeOrganization.role, "sophie:configure")) redirect("/app/sophie");
+  if (!can(activeOrganization.role, "sophie:configure"))
+    redirect("/app/sophie");
 
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
@@ -32,16 +33,19 @@ export default async function ConnaissancesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/app/sophie" className="text-sm text-ink-soft underline underline-offset-4">
+      <Link
+        href="/app/sophie"
+        className="text-sm text-ink-soft underline underline-offset-4"
+      >
         ← Sophie
       </Link>
       <SectionTitle>Connaissances de Sophie</SectionTitle>
 
       <Sheet tone="neutral">
         <p className="text-sm text-ink-soft">
-          Sophie ne dit que ce qu’elle sait d’ici, de vos services et de vos horaires. Elle
-          n’invente jamais un tarif ni une disponibilité : quand elle ne sait pas, elle dit
-          qu’elle transmet la question.
+          Sophie ne dit que ce qu’elle sait d’ici, de vos services et de vos
+          horaires. Elle n’invente jamais un tarif ni une disponibilité : quand
+          elle ne sait pas, elle dit qu’elle transmet la question.
         </p>
       </Sheet>
 

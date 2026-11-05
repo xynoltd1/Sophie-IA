@@ -37,7 +37,10 @@ export default async function EnregistrementPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <Link href="/app/sophie" className="text-sm text-ink-soft underline underline-offset-4">
+        <Link
+          href="/app/sophie"
+          className="text-sm text-ink-soft underline underline-offset-4"
+        >
           ← Sophie
         </Link>
       </div>
@@ -51,9 +54,9 @@ export default async function EnregistrementPage() {
             : "Aucun enregistrement n’est conservé chez vous aujourd’hui."}
         </p>
         <p className="mt-1 text-sm text-ink-soft">
-          Votre opérateur téléphonique, lui, enregistre selon ses propres règles. Ce réglage
-          ne décide que d’une chose : garder ou non une copie chez vous, dans un espace
-          privé, où vous seule pouvez l’écouter.
+          Votre opérateur téléphonique, lui, enregistre selon ses propres
+          règles. Ce réglage ne décide que d’une chose : garder ou non une copie
+          chez vous, dans un espace privé, où vous seule pouvez l’écouter.
         </p>
       </Sheet>
 
@@ -61,22 +64,30 @@ export default async function EnregistrementPage() {
         <SectionTitle>Ce que ça implique</SectionTitle>
         <Sheet className="flex flex-col gap-3 text-sm text-ink-soft">
           <p>
-            <span className="font-medium text-ink">Vos clients doivent être prévenus.</span>{" "}
-            Sophie l’annonce au début de chaque appel. Cette annonce n’est pas désactivable.
+            <span className="font-medium text-ink">
+              Vos clients doivent être prévenus.
+            </span>{" "}
+            Sophie l’annonce au début de chaque appel. Cette annonce n’est pas
+            désactivable.
           </p>
           <p>
-            <span className="font-medium text-ink">Le fichier reste privé.</span> Il n’est
-            jamais accessible par une adresse publique. Chaque écoute passe par une adresse
-            temporaire, créée après vérification que l’appel vous appartient.
+            <span className="font-medium text-ink">
+              Le fichier reste privé.
+            </span>{" "}
+            Il n’est jamais accessible par une adresse publique. Chaque écoute
+            passe par une adresse temporaire, créée après vérification que
+            l’appel vous appartient.
           </p>
           <p>
-            <span className="font-medium text-ink">Il s’efface tout seul.</span> Au-delà du
-            délai que vous choisissez, l’enregistrement est supprimé. Trente jours au
-            maximum, et cette limite est dans la base de données, pas seulement dans cet
-            écran.
+            <span className="font-medium text-ink">Il s’efface tout seul.</span>{" "}
+            Au-delà du délai que vous choisissez, l’enregistrement est supprimé.
+            Trente jours au maximum, et cette limite est dans la base de
+            données, pas seulement dans cet écran.
           </p>
           <p>
-            <span className="font-medium text-ink">Un client peut demander l’effacement.</span>{" "}
+            <span className="font-medium text-ink">
+              Un client peut demander l’effacement.
+            </span>{" "}
             C’est son droit, et vous devez pouvoir y répondre.
           </p>
         </Sheet>
@@ -92,8 +103,8 @@ export default async function EnregistrementPage() {
               ))}
             </ul>
             <p className="mt-2 text-sm text-ink-soft">
-              Ces points n’empêchent pas vos appels d’essai d’être conservés. Ils doivent
-              être levés avant le premier appel d’un vrai client.
+              Ces points n’empêchent pas vos appels d’essai d’être conservés.
+              Ils doivent être levés avant le premier appel d’un vrai client.
             </p>
           </Sheet>
         </section>

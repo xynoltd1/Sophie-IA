@@ -42,7 +42,10 @@ export interface SophieTool {
 }
 
 /** Lit un argument texte, en refusant le vide et les valeurs non textuelles. */
-export function texte(args: Record<string, unknown>, nom: string): string | null {
+export function texte(
+  args: Record<string, unknown>,
+  nom: string,
+): string | null {
   const valeur = args[nom];
   if (typeof valeur !== "string") return null;
   const propre = valeur.trim();
@@ -50,7 +53,10 @@ export function texte(args: Record<string, unknown>, nom: string): string | null
 }
 
 /** Lit un argument numérique, en acceptant une chaîne de chiffres. */
-export function nombre(args: Record<string, unknown>, nom: string): number | null {
+export function nombre(
+  args: Record<string, unknown>,
+  nom: string,
+): number | null {
   const valeur = args[nom];
   if (typeof valeur === "number" && Number.isFinite(valeur)) return valeur;
   if (typeof valeur === "string") {

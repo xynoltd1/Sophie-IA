@@ -7,7 +7,11 @@ import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { marquerLue, toutMarquerLu } from "./actions";
 import type { LigneNotification } from "./page";
 
-const TONES = { CRITIQUE: "urgent", ACTION: "attention", INFO: "neutral" } as const;
+const TONES = {
+  CRITIQUE: "urgent",
+  ACTION: "attention",
+  INFO: "neutral",
+} as const;
 
 export function ListeNotifications({
   nonLues,
@@ -28,10 +32,12 @@ export function ListeNotifications({
             <button
               type="button"
               disabled={enCours}
-              onClick={() => demarrer(async () => {
-                await toutMarquerLu();
-                router.refresh();
-              })}
+              onClick={() =>
+                demarrer(async () => {
+                  await toutMarquerLu();
+                  router.refresh();
+                })
+              }
               className="text-sm text-ink-soft underline underline-offset-4 disabled:opacity-60"
             >
               Tout marquer comme lu
@@ -49,7 +55,9 @@ export function ListeNotifications({
                     <div className="min-w-0">
                       <p className="font-medium">{notification.title}</p>
                       {notification.body ? (
-                        <p className="mt-0.5 text-sm text-ink-soft">{notification.body}</p>
+                        <p className="mt-0.5 text-sm text-ink-soft">
+                          {notification.body}
+                        </p>
                       ) : null}
                       <p className="mt-1 text-sm text-ink-faint first-letter:uppercase">
                         {quand(notification.created_at)}
@@ -100,7 +108,13 @@ export function ListeNotifications({
   );
 }
 
-function Lien({ href, children }: { href: string | null; children: React.ReactNode }) {
+function Lien({
+  href,
+  children,
+}: {
+  href: string | null;
+  children: React.ReactNode;
+}) {
   if (!href) return <>{children}</>;
   return (
     <Link href={href} className="block">

@@ -69,9 +69,10 @@ export async function inviterMembre(
 
   if (error) {
     return {
-      error: error.code === "23505"
-        ? "Une invitation est déjà en attente pour cette adresse."
-        : "L’invitation n’a pas pu être créée.",
+      error:
+        error.code === "23505"
+          ? "Une invitation est déjà en attente pour cette adresse."
+          : "L’invitation n’a pas pu être créée.",
     };
   }
 
@@ -84,7 +85,9 @@ export async function inviterMembre(
   };
 }
 
-export async function revoquerInvitation(invitationId: string): Promise<{ ok: boolean }> {
+export async function revoquerInvitation(
+  invitationId: string,
+): Promise<{ ok: boolean }> {
   const { activeOrganization } = await requireOrganization();
   if (!can(activeOrganization.role, "members:invite")) return { ok: false };
 
@@ -115,7 +118,10 @@ export async function changerRole(
   const supabase = await createServerSupabase();
 
   if (!can(activeOrganization.role, "members:update_role")) {
-    return { ok: false, erreur: "Votre rôle ne permet pas de modifier les droits." };
+    return {
+      ok: false,
+      erreur: "Votre rôle ne permet pas de modifier les droits.",
+    };
   }
 
   const { data: cible } = await supabase
@@ -138,7 +144,10 @@ export async function changerRole(
     .eq("user_id", memberUserId);
 
   revalidatePath("/app/reglages/equipe");
-  return { ok: !error, erreur: error ? "Le changement n’a pas pu être enregistré." : undefined };
+  return {
+    ok: !error,
+    erreur: error ? "Le changement n’a pas pu être enregistré." : undefined,
+  };
 }
 
 /**
@@ -147,12 +156,17 @@ export async function changerRole(
  * Ses rendez-vous, ses appels et ses actions restent rattachés à lui : effacer
  * la personne effacerait l'histoire de l'entreprise.
  */
-export async function desactiverMembre(memberUserId: string): Promise<{ ok: boolean; erreur?: string }> {
+export async function desactiverMembre(
+  memberUserId: string,
+): Promise<{ ok: boolean; erreur?: string }> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 
   if (!can(activeOrganization.role, "members:remove")) {
-    return { ok: false, erreur: "Votre rôle ne permet pas de retirer un membre." };
+    return {
+      ok: false,
+      erreur: "Votre rôle ne permet pas de retirer un membre.",
+    };
   }
 
   const { data: cible } = await supabase

@@ -91,7 +91,10 @@ export class VapiVoiceProvider implements VoiceAIProvider {
    * objet JSON produit une signature différente : espaces, ordre des clés,
    * échappement des caractères.
    */
-  verifyRequest(params: { rawBody: string; headers: Record<string, string> }): boolean {
+  verifyRequest(params: {
+    rawBody: string;
+    headers: Record<string, string>;
+  }): boolean {
     const headers = normalizeHeaders(params.headers);
     const secret = this.secret();
 
@@ -107,8 +110,12 @@ export class VapiVoiceProvider implements VoiceAIProvider {
 
       // Quand un horodatage accompagne la requête, il fait partie du message
       // signé : sans cela, rejouer une requête ancienne resterait possible.
-      const message = timestamp ? `${timestamp}.${params.rawBody}` : params.rawBody;
-      const attendu = createHmac("sha256", secret).update(message).digest("hex");
+      const message = timestamp
+        ? `${timestamp}.${params.rawBody}`
+        : params.rawBody;
+      const attendu = createHmac("sha256", secret)
+        .update(message)
+        .digest("hex");
 
       return safeEqual(signature.replace(/^sha256=/, ""), attendu);
     }
@@ -184,12 +191,16 @@ export class VapiVoiceProvider implements VoiceAIProvider {
     return {
       results: results.map((result) => ({
         toolCallId: result.toolCallId,
-        ...(result.error ? { error: result.error } : { result: result.result ?? "" }),
+        ...(result.error
+          ? { error: result.error }
+          : { result: result.result ?? "" }),
       })),
     };
   }
 
-  async upsertAssistant(config: VoiceAssistantConfig): Promise<{ assistantId: string }> {
+  async upsertAssistant(
+    config: VoiceAssistantConfig,
+  ): Promise<{ assistantId: string }> {
     const response = await fetch(`${API}/assistant`, {
       method: "POST",
       headers: {
@@ -217,7 +228,11 @@ export class VapiVoiceProvider implements VoiceAIProvider {
         voice: config.voiceId
           ? { provider: "azure", voiceId: config.voiceId }
           : { provider: "azure", voiceId: "fr-FR-DeniseNeural" },
-        transcriber: { provider: "deepgram", model: "nova-3", language: config.language },
+        transcriber: {
+          provider: "deepgram",
+          model: "nova-3",
+          language: config.language,
+        },
         artifactPlan: { recordingEnabled: config.recordingEnabled },
         maxDurationSeconds: config.maxDurationSeconds ?? 900,
         metadata: { organizationId: config.organizationId },
@@ -226,25 +241,35 @@ export class VapiVoiceProvider implements VoiceAIProvider {
     });
 
     if (!response.ok) {
-      throw new Error(`Vapi a refusé la configuration : ${await response.text()}`);
+      throw new Error(
+        `Vapi a refusé la configuration : ${await response.text()}`,
+      );
     }
 
     const data = (await response.json()) as { id: string };
     return { assistantId: data.id };
   }
 
-  async attachPhoneNumber(params: { assistantId: string; e164: string }): Promise<void> {
+  async attachPhoneNumber(params: {
+    assistantId: string;
+    e164: string;
+  }): Promise<void> {
     const response = await fetch(`${API}/phone-number`, {
       method: "PATCH",
       headers: {
         authorization: `Bearer ${this.apiKey()}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ number: params.e164, assistantId: params.assistantId }),
+      body: JSON.stringify({
+        number: params.e164,
+        assistantId: params.assistantId,
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`Association du numéro refusée : ${await response.text()}`);
+      throw new Error(
+        `Association du numéro refusée : ${await response.text()}`,
+      );
     }
   }
 
@@ -253,20 +278,23 @@ export class VapiVoiceProvider implements VoiceAIProvider {
     to: string;
     summary?: string;
   }): Promise<void> {
-    const response = await fetch(`${API}/call/${params.providerCallId}/transfer`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.apiKey()}`,
-        "content-type": "application/json",
+    const response = await fetch(
+      `${API}/call/${params.providerCallId}/transfer`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.apiKey()}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          destination: { type: "number", number: params.to },
+          // Le transfert avec résumé annonce le contexte au professionnel avant
+          // de lui passer le client (section 27).
+          mode: params.summary ? "warm-transfer-say-summary" : "blind-transfer",
+          ...(params.summary ? { summary: params.summary } : {}),
+        }),
       },
-      body: JSON.stringify({
-        destination: { type: "number", number: params.to },
-        // Le transfert avec résumé annonce le contexte au professionnel avant
-        // de lui passer le client (section 27).
-        mode: params.summary ? "warm-transfer-say-summary" : "blind-transfer",
-        ...(params.summary ? { summary: params.summary } : {}),
-      }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Transfert refusé : ${await response.text()}`);
@@ -279,12 +307,16 @@ export class VapiVoiceProvider implements VoiceAIProvider {
     });
 
     if (!response.ok) return null;
-    const data = (await response.json()) as { artifact?: { recordingUrl?: string } };
+    const data = (await response.json()) as {
+      artifact?: { recordingUrl?: string };
+    };
     return data.artifact?.recordingUrl ?? null;
   }
 }
 
-function normalizeHeaders(headers: Record<string, string>): Record<string, string> {
+function normalizeHeaders(
+  headers: Record<string, string>,
+): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
     result[key.toLowerCase()] = value;

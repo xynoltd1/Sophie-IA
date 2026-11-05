@@ -76,7 +76,9 @@ export async function basculerConnaissance(
   return { ok: !error };
 }
 
-export async function supprimerConnaissance(id: string): Promise<{ ok: boolean }> {
+export async function supprimerConnaissance(
+  id: string,
+): Promise<{ ok: boolean }> {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 

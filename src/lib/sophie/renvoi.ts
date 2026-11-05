@@ -51,7 +51,8 @@ export function instructionsRenvoi(
     {
       titre: "Tout annuler",
       code: "##002#",
-      explication: "Supprime tous les renvois. Votre téléphone redevient normal.",
+      explication:
+        "Supprime tous les renvois. Votre téléphone redevient normal.",
     },
   ];
 
@@ -59,30 +60,34 @@ export function instructionsRenvoi(
     return commun.map((instruction) =>
       instruction.titre === "Tout annuler"
         ? instruction
-        : { ...instruction, explication: `${instruction.explication} (code valable chez la plupart des opérateurs français)` },
+        : {
+            ...instruction,
+            explication: `${instruction.explication} (code valable chez la plupart des opérateurs français)`,
+          },
     );
   }
 
   return commun;
 }
 
-export const MODES: { cle: ModeConnexion; libelle: string; detail: string }[] = [
-  {
-    cle: "FORWARD",
-    libelle: "Je garde mon numéro et je le renvoie",
-    detail:
-      "Vos clients continuent d’appeler votre numéro habituel. Vous le renvoyez vers le numéro de Sophie. C’est le mode conseillé : rien ne change pour vos clients.",
-  },
-  {
-    cle: "DIRECT",
-    libelle: "Je donne le numéro de Sophie à mes clients",
-    detail:
-      "Vous communiquez directement le numéro de Sophie, par exemple sur un site ou une annonce. Votre numéro personnel reste privé.",
-  },
-  {
-    cle: "PORTED",
-    libelle: "J’ai transféré mon numéro chez l’opérateur de Sophie",
-    detail:
-      "Votre numéro historique a été porté. Il n’y a plus de renvoi à faire, mais la portabilité se demande auprès de l’opérateur et prend plusieurs jours.",
-  },
-];
+export const MODES: { cle: ModeConnexion; libelle: string; detail: string }[] =
+  [
+    {
+      cle: "FORWARD",
+      libelle: "Je garde mon numéro et je le renvoie",
+      detail:
+        "Vos clients continuent d’appeler votre numéro habituel. Vous le renvoyez vers le numéro de Sophie. C’est le mode conseillé : rien ne change pour vos clients.",
+    },
+    {
+      cle: "DIRECT",
+      libelle: "Je donne le numéro de Sophie à mes clients",
+      detail:
+        "Vous communiquez directement le numéro de Sophie, par exemple sur un site ou une annonce. Votre numéro personnel reste privé.",
+    },
+    {
+      cle: "PORTED",
+      libelle: "J’ai transféré mon numéro chez l’opérateur de Sophie",
+      detail:
+        "Votre numéro historique a été porté. Il n’y a plus de renvoi à faire, mais la portabilité se demande auprès de l’opérateur et prend plusieurs jours.",
+    },
+  ];

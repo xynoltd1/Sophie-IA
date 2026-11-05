@@ -32,7 +32,9 @@ export function instantDepuisHeureLocale(
   const estimation = new Date(`${dateISO}T${heure}:00Z`);
   if (Number.isNaN(estimation.getTime())) return null;
 
-  const corrige = new Date(estimation.getTime() - decalage(estimation, timezone));
+  const corrige = new Date(
+    estimation.getTime() - decalage(estimation, timezone),
+  );
 
   // Deuxième passe : aux changements d'heure, l'écart du premier calcul peut
   // être celui de l'autre côté de la bascule. On recalcule une fois avec
