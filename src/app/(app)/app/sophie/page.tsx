@@ -4,6 +4,12 @@ import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { etatLigneSophie } from "@/lib/crm/queries";
 import { MESSAGE_SILENCE } from "@/lib/sophie/ligne";
 import { isRecordingActive } from "@/lib/org/recording";
+import { createServerSupabase } from "@/lib/supabase/server";
+import {
+  composerAccueil,
+  modelePourMoment,
+  momentDeLaJournee,
+} from "@/lib/sophie/greeting";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Sophie — Sophie IA" };
@@ -16,7 +22,18 @@ export const metadata = { title: "Sophie — Sophie IA" };
  */
 export default async function SophiePage() {
   const { activeOrganization: org } = await requireOrganization();
-  const ligne = await etatLigneSophie(org.organization_id);
+  const supabase = await createServerSupabase();
+
+  const [ligne, { data: config }] = await Promise.all([
+    etatLigneSophie(org.organization_id),
+    supabase
+      .from("sophie_configurations")
+      .select(
+        "assistant_name, spoken_name, greeting, greeting_morning, greeting_evening",
+      )
+      .eq("organization_id", org.organization_id)
+      .maybeSingle(),
+  ]);
 
   const enregistre = isRecordingActive({
     recording_enabled: org.recording_enabled,
@@ -28,6 +45,10 @@ export default async function SophiePage() {
   });
 
   const silence = ligne.raison ? MESSAGE_SILENCE[ligne.raison] : null;
+
+  // La vraie phrase, composée comme elle le sera au téléphone. Un résumé
+  // approximatif ici obligerait à ouvrir l'écran pour savoir ce qui est dit.
+  const accueil = apercuAccueil(org, config);
 
   return (
     <div className="flex flex-col gap-5">
@@ -68,6 +89,26 @@ export default async function SophiePage() {
             </Link>
           </li>
           <li>
+            <Link href="/app/sophie/accueil" className="block">
+              <Sheet
+                interactive
+                className="flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">Accueil téléphonique</p>
+                  <p className="text-sm text-ink-soft">
+                    {accueil
+                      ? `« ${accueil} »`
+                      : "La phrase dite en décrochant, et le nom de l’assistante."}
+                  </p>
+                </div>
+                <span aria-hidden className="shrink-0 text-ink-soft">
+                  →
+                </span>
+              </Sheet>
+            </Link>
+          </li>
+          <li>
             <Link href="/app/sophie/enregistrement" className="block">
               <Sheet
                 interactive
@@ -92,8 +133,8 @@ export default async function SophiePage() {
 
       <Sheet tone="neutral">
         <p className="text-sm text-ink-soft">
-          Sa voix et son vocabulaire se règlent chez le fournisseur vocal pour
-          l’instant. Ce qu’elle a le droit de répondre se règle dans{" "}
+          Sa voix se règle chez le fournisseur vocal pour l’instant. Ce qu’elle
+          a le droit de répondre se règle dans{" "}
           <Link href="/app/sophie/connaissances" className="underline">
             ses connaissances
           </Link>
@@ -102,4 +143,35 @@ export default async function SophiePage() {
       </Sheet>
     </div>
   );
+}
+
+interface ConfigAccueil {
+  assistant_name?: string | null;
+  spoken_name?: string | null;
+  greeting?: string | null;
+  greeting_morning?: string | null;
+  greeting_evening?: string | null;
+}
+
+/** La phrase du moment, pour l'aperçu de la liste. */
+function apercuAccueil(
+  org: { name: string },
+  config: ConfigAccueil | null,
+): string | null {
+  if (!config) return null;
+
+  const moment = momentDeLaJournee(new Date(), "Europe/Brussels");
+
+  return composerAccueil({
+    modele: modelePourMoment({
+      base: config.greeting,
+      matin: config.greeting_morning,
+      soir: config.greeting_evening,
+      moment,
+      ouvert: true,
+    }),
+    entreprise: config.spoken_name?.trim() || org.name,
+    assistante: config.assistant_name ?? "Sophie",
+    moment,
+  });
 }

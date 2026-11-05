@@ -275,6 +275,89 @@ suite("isolation multi-tenant", () => {
     expect(data).toEqual([]);
   });
 
+  // ---------------------------------------------------------------------------
+  // Accueil telephonique : la bonne entreprise, et seulement elle
+  // ---------------------------------------------------------------------------
+
+  it("un numero rend la configuration de SON organisation, jamais d une autre", async () => {
+    const numeroAlice = `+3247${Math.floor(1000000 + Math.random() * 8999999)}`;
+    const numeroBob = `+3247${Math.floor(1000000 + Math.random() * 8999999)}`;
+
+    await admin.from("phone_numbers").insert([
+      { organization_id: alice.organizationId, e164: numeroAlice, is_active: true },
+      { organization_id: bob.organizationId, e164: numeroBob, is_active: true },
+    ]);
+
+    await admin.from("sophie_configurations").upsert(
+      [
+        {
+          organization_id: alice.organizationId,
+          assistant_name: "Alice-Bot",
+          spoken_name: "Plomberie Alice",
+          is_active: true,
+          answer_mode: "ALWAYS",
+        },
+        {
+          organization_id: bob.organizationId,
+          assistant_name: "Bob-Bot",
+          spoken_name: "Toiture Bob",
+          is_active: true,
+          answer_mode: "ALWAYS",
+        },
+      ],
+      { onConflict: "organization_id" },
+    );
+
+    const { data: pourAlice } = await admin.rpc("sophie_runtime_for_number", {
+      numero: numeroAlice,
+    });
+    const ligneAlice = Array.isArray(pourAlice) ? pourAlice[0] : pourAlice;
+
+    expect(ligneAlice?.organization_id).toBe(alice.organizationId);
+    expect(ligneAlice?.spoken_name).toBe("Plomberie Alice");
+    expect(ligneAlice?.assistant_name).toBe("Alice-Bot");
+
+    const { data: pourBob } = await admin.rpc("sophie_runtime_for_number", {
+      numero: numeroBob,
+    });
+    const ligneBob = Array.isArray(pourBob) ? pourBob[0] : pourBob;
+
+    expect(ligneBob?.organization_id).toBe(bob.organizationId);
+    expect(ligneBob?.spoken_name).toBe("Toiture Bob");
+
+    // Le controle positif compte autant : une base entierement verrouillee
+    // ferait passer toutes les assertions negatives.
+    expect(ligneAlice?.spoken_name).not.toBe(ligneBob?.spoken_name);
+  });
+
+  it("un numero inconnu ne rend aucune ligne", async () => {
+    const { data } = await admin.rpc("sophie_runtime_for_number", {
+      numero: "+32470000001",
+    });
+    expect(Array.isArray(data) ? data : []).toEqual([]);
+  });
+
+  it("un numero desactive ne rend aucune ligne", async () => {
+    const numero = `+3247${Math.floor(1000000 + Math.random() * 8999999)}`;
+    await admin.from("phone_numbers").insert({
+      organization_id: alice.organizationId,
+      e164: numero,
+      is_active: false,
+    });
+
+    const { data } = await admin.rpc("sophie_runtime_for_number", { numero });
+    expect(Array.isArray(data) ? data : []).toEqual([]);
+  });
+
+  it("la resolution d accueil est refusee a un utilisateur connecte", async () => {
+    // Elle lit la configuration de n importe quelle organisation a partir
+    // d un numero : c est une fonction de serveur, pas de navigateur.
+    const { error } = await alice.client.rpc("sophie_runtime_for_number", {
+      numero: "+32470000002",
+    });
+    expect(error).not.toBeNull();
+  });
+
   it("toute table du schema public a RLS active", async () => {
     const { data, error } = await admin.rpc("exec_sql_readonly", {
       statement: `select relname from pg_class c

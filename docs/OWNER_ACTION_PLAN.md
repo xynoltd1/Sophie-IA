@@ -780,6 +780,61 @@ npm run vapi:tools -- --apply
 - Les outils existent mais Sophie ne les appelle pas : vérifiez que l'assistant utilisé
   pendant l'appel est bien celui auquel les outils sont rattachés.
 
+## B4b — Régler l'assistant pour l'accueil personnalisé
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **haute** · dépend de **B4** · **coût : 0 €**
+
+**Quoi** Trois réglages chez Vapi, pour que chaque entreprise ait son propre accueil.
+
+**Pourquoi** Sans eux, Vapi prononce la phrase fixe écrite dans l'assistant, la même
+pour tout le monde. Avec eux, il nous demande quoi dire à chaque appel, et nous
+répondons avec le nom de l'entreprise appelée.
+
+**Les menus**
+
+1. **Assistants** → votre assistant → **First Message** : effacez tout et mettez
+   exactement ceci, accolades comprises :
+
+```
+{{premierMessage}}
+```
+
+2. **Assistants** → votre assistant → **Server URL** (ou l'onglet *Advanced*) :
+
+```
+https://zelicall.com/api/voice/events
+```
+
+3. **Phone Numbers** → votre numéro → **Server URL** :
+
+```
+https://zelicall.com/api/voice/assistant
+```
+
+   Et sur ce même numéro, **laissez le champ Assistant vide**. C'est ce vide qui
+   déclenche la question : un numéro déjà rattaché à un assistant ne nous demande rien.
+
+**Résultat attendu** À l'appel suivant, Sophie dit le nom de l'entreprise réglé dans
+`/app/sophie/accueil`.
+
+**Comment vérifier** Appelez le numéro. La première phrase doit être celle de l'aperçu,
+mot pour mot.
+
+**Si ça échoue**
+- Sophie dit littéralement « premierMessage » entre accolades : la surcharge n'est pas
+  arrivée. Vérifiez le point 3 — c'est l'adresse du **numéro**, pas celle de l'assistant.
+- Sophie dit l'ancienne phrase fixe : le point 1 n'a pas été enregistré, ou le numéro
+  porte encore un assistant (point 3).
+- « Ce numéro n'est rattaché à aucune entreprise » : le numéro n'est pas déclaré dans
+  `/app/sophie/ligne`, ou il y est écrit dans un autre format. Toujours `+32…`.
+- « L'assistante téléphonique n'est pas activée » : Sophie est en pause. Voir
+  `/app/sophie`.
+
+**Le piège du 23 octobre, toujours valable** Modifier l'assistant dans le tableau de bord
+Vapi écrase ce que le script a poussé. Relancez `npm run vapi:tools -- --apply` après
+chaque modification faite à la main.
+
 ## B5 — Obtenir un numéro de téléphone
 
 - [ ] Fait
@@ -1486,7 +1541,7 @@ ligne `Sitemap:`. La troisième liste deux adresses.
 Vercel. Corrigez la variable, puis **relancez un déploiement** : elle est lue à la
 compilation.
 
-## D2 — Appliquer les migrations 0033, 0034 et 0035
+## D2 — Appliquer les migrations 0033, 0034, 0035 et 0036
 
 - [ ] Fait
 `ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
@@ -1496,6 +1551,7 @@ compilation.
 1. `supabase/migrations/20261104120000_0033_analytics_and_stats.sql`
 2. `supabase/migrations/20261105100000_0034_platform_configuration.sql`
 3. `supabase/migrations/20261105140000_0035_seo_pages.sql`
+4. `supabase/migrations/20261105170000_0036_accueil_personnalise.sql`
 
 Puis les mêmes sur la préproduction.
 
@@ -1526,10 +1582,12 @@ select
       and table_name in ('platform_settings','provider_credentials',
                          'search_console_connection','seo_pages')) as tables,
   (select count(*) from storage.buckets where id = 'public-assets') as bucket,
-  (select count(*) from public.seo_pages) as pages_semees;
+  (select count(*) from public.seo_pages) as pages_semees,
+  (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'sophie_runtime_for_number') as accueil;
 ```
 
-**Réussi** `tables` = **4**, `bucket` = **1**, `pages_semees` = **2**.
+**Réussi** `tables` = **4**, `bucket` = **1**, `pages_semees` = **2**, `accueil` = **1**.
 
 ## D3 — Vérifier la propriété du site dans Search Console
 

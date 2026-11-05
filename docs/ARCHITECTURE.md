@@ -166,3 +166,30 @@ des créneaux bloqués. Chacune est isolée dans son `try` : l'échec de l'une n
 autres, et le compte rendu dit laquelle a échoué.
 
 Le chemin normal reste le webhook de fin d'appel. Le travail planifié n'est qu'un filet.
+
+## Le chemin de l'accueil téléphonique (0.20.0)
+
+```
+sonnerie
+  └─ fournisseur vocal : « qui décroche sur ce numéro ? »   (assistant-request)
+       └─ POST /api/voice/assistant
+            ├─ verifyRequest()                      signature, avant toute lecture
+            ├─ sophie_runtime_for_number(numéro)    1 aller-retour, security definer
+            │    └─ rien → refus, jamais une autre organisation
+            ├─ composerAccueil()                    pur ; garantit la mention d'IA
+            ├─ buildAnnouncement()                  annonce légale, si elle est due
+            └─ { assistantId, assistantOverrides }  on remplace les mots, pas les outils
+```
+
+Budget : **7,5 secondes**, imposé par le fournisseur, non configurable, au-delà
+desquelles l'appel échoue chez un vrai client. C'est ce chiffre qui dicte la forme :
+une seule fonction en base, aucun appel réseau sortant, aucune construction d'assistant.
+
+`/api/voice/assistant` est distinct de `/api/voice/events` et de `/api/voice/tools`, et
+les trois ont des contraintes différentes :
+
+| Route | Quand | Contrainte |
+|---|---|---|
+| `assistant` | à la sonnerie | 7,5 s, sinon l'appel échoue |
+| `tools` | pendant la conversation | une seconde de trop s'entend |
+| `events` | après l'appel | peut prendre 60 s, personne n'écoute |

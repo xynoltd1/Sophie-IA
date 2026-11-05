@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.19.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.20.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-cinq
+## Migrations — trente-six
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -285,9 +285,15 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  png/jpeg/webp) pour l image de partage.
 ```
 
-**0033, 0034 et 0035 ne sont pas appliquées en production.** Les écrans qui en dépendent
+0036_accueil_personnalise        colonnes d accueil sur sophie_configurations
+                                 (spoken_name, formules par moment, position de
+                                 l annonce) + sophie_runtime_for_number(), qui
+                                 rend toute la configuration d un numero en un
+                                 seul aller-retour. Revoquee a anon/authenticated.
+
+**0033, 0034, 0035 et 0036 ne sont pas appliquées en production.** Les écrans qui en dépendent
 — statistiques, consommation, SEO, intégrations, référencement page par page, envoi
-d'image — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
+d'image, accueil téléphonique — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
 étape D2.
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -437,8 +443,30 @@ dépend du pays et du métier (`LEGAL_COMPLIANCE.md`, point L5).
 retour `/api/integrations/search-console/callback` (`OWNER_ACTION_PLAN.md`, D3b). La
 connexion est écrite et fonctionnelle ; sans cette portée, Google refuse l'autorisation.
 
+**10. Régler l'assistant Vapi pour l'accueil personnalisé** (`OWNER_ACTION_PLAN.md`,
+B4b) : première phrase `{{premierMessage}}`, adresse serveur du **numéro** vers
+`/api/voice/assistant`, et numéro laissé sans assistant fixe. Sans ces trois réglages,
+le code est en place et le fournisseur continue de prononcer sa phrase figée.
+
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Leçon de la 0.20.0 — la vérité est dans ce qui est prononcé
+
+L'accueil téléphonique est le premier endroit où « le formulaire enregistre » et « le
+client entend » pouvaient diverger sans que rien ne le signale. Trois choix en
+découlent, à garder pour toute fonction qui finit en paroles :
+
+**L'aperçu appelle la fonction du serveur.** `composerAccueil` est pur et importé des
+deux côtés. Un aperçu qui recomposerait la phrase de son côté finirait par mentir.
+
+**La garantie légale est au dernier point de passage.** La mention d'IA est ajoutée par
+le composeur, pas vérifiée par le formulaire : seul le composeur est traversé par
+toutes les phrases, y compris celles écrites l'an dernier.
+
+**La phrase part par deux chemins.** `variableValues` est documenté chez le
+fournisseur, `firstMessage` ne l'est pas. Les deux portent la même phrase. Un test
+vérifie qu'elles sont identiques — si l'une est ignorée, l'autre tient.
 
 ## Leçon de la 0.19.0 — une page statique ne relit pas la base
 

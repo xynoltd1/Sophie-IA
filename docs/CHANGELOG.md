@@ -3,6 +3,106 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.20.0] — 2026-11-05 — Sophie décroche au nom de l'entreprise appelée
+
+### Ce qui changeait de place
+
+Un seul assistant servait toutes les entreprises, avec une première phrase
+fixe. Un client qui appelait « Martin Plomberie » n'entendait pas « Martin
+Plomberie ». Et la seule façon de changer cette phrase était de la modifier à
+la main chez le fournisseur vocal — pour tout le monde en même temps.
+
+### L'accueil appartient maintenant à chaque entreprise
+
+> « Martin Plomberie, bonjour. Je suis Sophie, votre assistante virtuelle.
+> Comment puis-je vous aider ? »
+
+Le nom de l'entreprise d'abord. C'est ainsi que décroche une vraie secrétaire,
+et cela répond tout de suite à la question que se pose l'appelant : ai-je
+composé le bon numéro ?
+
+Nouvel écran `/app/sophie/accueil` :
+
+- le **nom de l'assistante** — Sophie, Léa, Camille, ce que vous voulez ;
+- le **nom tel qu'il se prononce**, distinct de la raison sociale : on ne dit
+  pas « SRL » au téléphone ;
+- la **formule d'accueil**, avec les variables `{entreprise}`, `{assistante}`,
+  `{metier}`, `{moment}` ;
+- des **formules différentes** le matin, le soir, et hors horaires ;
+- la **place de l'annonce d'enregistrement** : avant ou après l'accueil.
+
+L'aperçu montre la phrase complète, chronométrée, et bascule entre matin,
+après-midi et soir. Il appelle **la même fonction que le serveur** au moment où
+le téléphone sonne : un aperçu qui recomposerait la phrase de son côté
+finirait par montrer autre chose que ce qui est dit.
+
+### Sans redéploiement
+
+La phrase est lue en base **à chaque appel**. Vous l'enregistrez, le prochain
+appel l'utilise.
+
+Techniquement : le fournisseur vocal demande qui décroche
+(`assistant-request`), et la nouvelle route `/api/voice/assistant` répond avec
+les mots de l'organisation du numéro appelé. L'assistant enregistré garde ses
+quatorze outils ; on ne remplace que les mots (ADR-046).
+
+### Quand on ne sait pas, Sophie ne parle pas
+
+Numéro inconnu, organisation supprimée, Sophie éteinte, aucun assistant
+déclaré : quatre refus, quatre phrases, et **aucune ne nomme d'entreprise**. À
+ce stade on ne sait pas laquelle — c'est la raison du refus. Aucun repli sur
+une organisation « probable » n'existe dans ce chemin.
+
+### Ce que l'écran ne peut pas retirer
+
+**Dire que c'est une machine.** Si votre formule l'oublie, la phrase « Je suis
+une assistante virtuelle. » est ajoutée automatiquement, et l'écran le dit.
+Obligation européenne depuis le 2 août 2026. La garantie est placée dans le
+composeur, pas dans le formulaire : c'est le seul point par lequel passent
+toutes les phrases, y compris celles écrites avant aujourd'hui (ADR-047).
+
+**Annoncer l'enregistrement**, quand les appels sont enregistrés. Vous
+choisissez où la phrase tombe, pas si elle est dite. Elle disparaît d'elle-même
+si vous arrêtez l'enregistrement.
+
+### Correction au passage
+
+Le nettoyage de la phrase supprimait l'espace avant « ? » et « ! ». En
+français, cette espace existe. L'aperçu affichait « vous aider? », et l'artisan
+aurait corrigé à la main en croyant à sa propre faute.
+
+### Migration
+
+`0036_accueil_personnalise` — colonnes d'accueil sur `sophie_configurations`,
+et la fonction `sophie_runtime_for_number` qui rend toute la configuration en
+un seul aller-retour. **À appliquer**, comme 0033, 0034 et 0035.
+
+### Vérifié automatiquement
+
+456 tests (434 passants, 22 ignorés faute de base de test locale), typecheck,
+lint, build. Trente-cinq tests nouveaux : deux entreprises donnent deux
+phrases, deux noms d'assistante sont respectés, une formule modifiée change ce
+qui est dit, une configuration absente donne quand même un accueil correct, la
+mention d'IA est ajoutée quand elle manque et pas dupliquée quand elle est là,
+l'annonce légale se place des deux côtés et disparaît quand elle n'est pas due,
+le fuseau de l'entreprise décide de « bonjour » ou « bonsoir », un numéro
+inconnu ne nomme aucune entreprise, la fonction de résolution est refusée au
+navigateur, et la phrase renvoyée au fournisseur est bien celle de la
+configuration — par les deux chemins.
+
+Quatre tests d'isolation en plus sur base réelle : deux organisations, deux
+numéros, deux accueils, et aucune fuite entre les deux.
+
+### Ce qui demande encore un vrai appel
+
+**Que le fournisseur honore la surcharge.** Les tests prouvent que nous
+envoyons la bonne phrase ; ils ne prouvent pas que Vapi la prononce. C'est
+pourquoi la phrase part par deux chemins. Un seul appel réel le confirmera.
+
+**Le réglage de l'assistant chez Vapi** : première phrase `{{premierMessage}}`,
+adresse serveur `/api/voice/assistant`, numéro laissé sans assistant fixe.
+Détail dans `OWNER_ACTION_PLAN.md`, étape B4b.
+
 ## [0.19.1] — 2026-11-05 — Le navigateur remplissait les cases à notre place
 
 Chrome ignorait `autocomplete="off"` sur l'écran Intégrations. Il a rempli « Identifiant de

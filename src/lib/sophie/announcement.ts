@@ -142,22 +142,8 @@ async function noticeTemplate(
 }
 
 /**
- * Vérifie qu'un texte d'annonce dit bien qu'il s'agit d'une IA.
- *
- * Utilisé avant d'envoyer la configuration au fournisseur de voix. Le modèle
- * reformule volontiers ce qu'on lui demande de dire ; cette vérification porte
- * sur le texte que NOUS imposons, pas sur ce que le modèle improvisera.
+ * `disclosesAI` vit dans `greeting.ts`, qui est pur : l'aperçu d'accueil, côté
+ * navigateur, a besoin de la même vérification, et ce module-ci est réservé au
+ * serveur. Réexportée ici pour ne rien casser de ce qui l'importait.
  */
-export function disclosesAI(text: string): boolean {
-  const normalise = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-
-  const marqueurs = [
-    "assistant virtuel",
-    "assistante virtuelle",
-    "systeme automatise",
-    "intelligence artificielle",
-    "repondeur automatique",
-  ];
-
-  return marqueurs.some((marqueur) => normalise.includes(marqueur));
-}
+export { disclosesAI } from "./greeting";

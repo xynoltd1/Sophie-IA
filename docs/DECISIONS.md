@@ -1582,3 +1582,104 @@ Ajouter une lecture en base dans un fichier de métadonnées ou une page statiqu
 n'est pas une modification locale : c'est un changement de mode de rendu. Un
 test vérifie la présence de `revalidate` sur les trois fichiers concernés, pour
 que l'oubli se voie au lieu de produire un écran qui mentirait.
+
+## ADR-046 — L accueil est lu a chaque appel, pas ecrit dans l assistant
+
+**Date** : 2026-11-05 · **Statut** : accepté
+
+### Le problème
+
+Un seul assistant chez le fournisseur vocal servait toutes les organisations,
+avec une première phrase fixe. Un client qui appelait « Martin Plomberie »
+entendait une phrase qui ne nommait pas Martin Plomberie. Pire : la seule
+façon de la changer était de modifier l'assistant chez le fournisseur, donc à
+la main, donc pour tout le monde à la fois.
+
+### Les options écartées
+
+**Un assistant par organisation.** Techniquement possible, et c'est ce que
+prévoyait `upsertAssistant`. Mais chaque assistant doit porter les quatorze
+outils de Sophie, et un assistant créé sans eux donne une Sophie qui parle
+sans rien savoir. Multiplier les copies, c'est multiplier les occasions qu'une
+copie dérive — et le 23 octobre a déjà montré que le tableau de bord du
+fournisseur écrase ce qu'un script a poussé.
+
+**Un assistant transitoire à chaque appel.** Le fournisseur l'accepte. Mais il
+faudrait alors reconstruire la liste des outils à chaque sonnerie, dans un
+budget de 7,5 secondes, et une erreur dans cette liste couperait Sophie de la
+base pendant la conversation.
+
+### La décision
+
+Un assistant enregistré, qui porte les outils et rien d'autre de variable. À
+chaque appel entrant, le fournisseur demande qui décroche
+(`assistant-request`) ; nous répondons `{ assistantId, assistantOverrides }`
+avec les mots de cette organisation-là.
+
+L'assistant enregistré porte `{{premierMessage}}` comme première phrase, et
+nous envoyons cette variable dans `variableValues` — la voie documentée.
+`firstMessage` part aussi dans les surcharges : honoré, tant mieux ; ignoré,
+la variable produit exactement la même phrase. **Aucune des deux voies n'est
+seule responsable du résultat**, parce que l'une est documentée et l'autre ne
+l'est pas, et qu'un accueil muet est un appel perdu.
+
+### Le budget de 7,5 secondes
+
+Le fournisseur attend la réponse 7,5 secondes, délai non configurable,
+au-delà duquel l'appel échoue chez un vrai client. D'où une seule fonction en
+base (`sophie_runtime_for_number`) qui rend en un aller-retour tout ce qu'il
+faut : organisation, nom prononcé, nom de l'assistante, formules, position de
+l'annonce, métier.
+
+### Quand on ne sait pas, on ne parle pas
+
+Numéro inconnu, organisation supprimée, Sophie éteinte, aucun assistant
+déclaré : quatre refus distincts, quatre phrases distinctes, et **aucune ne
+nomme d'entreprise**. À ce stade on ne sait pas laquelle, et c'est la raison
+même du refus. Aucun repli sur une organisation par défaut n'existe dans ce
+chemin, ni par variable d'environnement, ni par « première ligne trouvée ».
+
+## ADR-047 — La mention d IA s ajoute, elle ne se refuse pas
+
+**Date** : 2026-11-05 · **Statut** : accepté
+
+### Le problème
+
+L'article 50 du règlement (UE) 2024/1689 impose que l'appelant sache qu'il
+parle à une machine. Le texte d'accueil, lui, doit pouvoir être écrit par
+l'artisan. Deux exigences qui se contredisent dès qu'il oublie la mention.
+
+### Les deux réponses possibles
+
+**Refuser l'enregistrement** de toute formule sans la mention. C'est la
+réaction réflexe, et elle a deux défauts. Elle apprend à l'artisan à écrire une
+formule magique sans comprendre pourquoi. Et elle ne protège pas les formules
+déjà en base, écrites avant la règle.
+
+**Ajouter la mention à la prononciation.** C'est ce qui est fait.
+`composerAccueil` vérifie le texte final et, s'il ne dit pas que c'est une
+machine, ajoute « Je suis une assistante virtuelle. » L'écran l'annonce
+clairement — ajouter en silence serait reprendre d'une main ce qu'on donne de
+l'autre.
+
+### Pourquoi la garantie est dans le composeur, pas dans le formulaire
+
+Un formulaire ne garde que ce qu'on lui soumet. Le composeur, lui, est
+traversé par **toutes** les phrases prononcées : celle du matin, celle du soir,
+celle d'une organisation créée l'an dernier, celle d'un import. Placer la
+garantie au dernier point de passage est la seule façon de la rendre vraie
+pour tous les appels, pas seulement pour les prochains.
+
+### Ce qui reste refusé
+
+Une formule trop longue pour être écoutée (400 caractères), trop courte pour
+dire quelque chose, ou qui utilise une variable inexistante. Dans les trois
+cas, l'erreur se découvrirait au téléphone, par un client.
+
+### L'annonce d'enregistrement est séparée
+
+Elle n'est pas dans la formule d'accueil, et c'est délibéré. La demande était
+un accueil court et naturel, pas la suppression d'une obligation. Séparées, on
+raccourcit l'une sans toucher à l'autre, et la position se règle — avant ou
+après l'accueil. Elle disparaît d'elle-même quand l'enregistrement s'arrête,
+parce qu'elle vient de `recording_allowed()` et non d'un texte saisi.
