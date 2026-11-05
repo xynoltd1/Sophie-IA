@@ -68,17 +68,37 @@ describe("indexation", () => {
   it("les donnees structurees ne declarent ni prix ni note", () => {
     // Declarer un tarif qui n existe pas ou une note que personne n a donnee
     // est une donnee structuree trompeuse.
-    const accueil = lire("src/app/(public)/page.tsx");
+    const accueil = lire("src/app/page.tsx");
     const bloc = accueil.slice(accueil.indexOf("donneesStructurees"));
     expect(bloc).toContain("SoftwareApplication");
     expect(bloc).not.toContain("aggregateRating");
     expect(bloc).not.toContain('"offers"');
   });
 
+  it("la page d accueil n est pas dans un groupe de routes", () => {
+    // Next.js n emet pas le manifeste des composants clients pour une page
+    // d accueil placee dans un groupe de routes. La compilation passe en
+    // local et le deploiement echoue sur :
+    //   ENOENT ... app/(public)/page_client-reference-manifest.js
+    // Le symptome n apparait donc qu au dernier moment, la ou il coute le
+    // plus cher. Vu le 2026-11-05 sur Vercel.
+    expect(existsSync(resolve(RACINE, "src/app/page.tsx"))).toBe(true);
+
+    for (const entree of readdirSync(resolve(RACINE, "src/app"), {
+      withFileTypes: true,
+    })) {
+      if (!entree.isDirectory() || !entree.name.startsWith("(")) continue;
+      expect(
+        existsSync(resolve(RACINE, "src/app", entree.name, "page.tsx")),
+        `${entree.name} contient une page d accueil : elle cassera le deploiement`,
+      ).toBe(false);
+    }
+  });
+
   it("il existe au moins une page publique indexable", () => {
     // Le site a longtemps redirige sa racine vers la connexion : tout travail
     // de referencement portait alors sur rien.
-    expect(existsSync(resolve(RACINE, "src/app/(public)/page.tsx"))).toBe(true);
+    expect(existsSync(resolve(RACINE, "src/app/page.tsx"))).toBe(true);
     expect(PAGES_PUBLIQUES.length).toBeGreaterThan(0);
   });
 });

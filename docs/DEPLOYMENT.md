@@ -120,6 +120,24 @@ Point qui surprend souvent : les variables `NEXT_PUBLIC_` sont lues **au moment 
 pas à l'exécution. Les ajouter ne suffit pas — il faut relancer un déploiement pour qu'elles
 soient prises en compte. Sur Vercel : *Deployments → … → Redeploy*.
 
+### Le déploiement échoue sur `page_client-reference-manifest.js`
+
+```
+Error: ENOENT: no such file or directory, lstat
+'.next/server/app/(public)/page_client-reference-manifest.js'
+```
+
+Une page d'accueil placée dans un **groupe de routes** — un dossier entre parenthèses.
+Next.js n'émet pas son manifeste de composants clients, et Vercel échoue à l'étape qui
+suit la compilation.
+
+`npm run build` réussit en local : ce piège rejoint celui des tâches planifiées trop
+fréquentes (ADR-024) dans la courte liste des erreurs qu'aucun des quatre contrôles ne
+voit.
+
+**La correction** : la page d'accueil reste à `src/app/page.tsx`. Son habillage vit dans
+un composant, pas dans une mise en page de groupe. `tests/seo.test.ts` le vérifie.
+
 ### Avertissement sur la version de Node
 
 `Detected "engines": { "node": ">=20.9.0" } … will automatically upgrade`

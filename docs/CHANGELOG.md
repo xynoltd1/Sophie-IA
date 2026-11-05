@@ -3,6 +3,28 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.17.1] — 2026-11-05 — La page d'accueil sort du groupe de routes
+
+### Corrigé : le déploiement échouait là où la compilation passait
+
+```
+Error: ENOENT: no such file or directory, lstat
+'/vercel/path0/.next/server/app/(public)/page_client-reference-manifest.js'
+```
+
+Next.js n'émet pas le manifeste des composants clients pour une page d'accueil placée
+dans un groupe de routes. En local, `npm run build` réussit ; sur Vercel, le déploiement
+casse à l'étape qui suit la compilation. Le symptôme n'apparaît donc qu'au dernier
+moment, là où il coûte le plus cher — et aucun des quatre contrôles habituels ne le voit.
+
+La page est revenue à `src/app/page.tsx`, et l'en-tête, le pied de page et la mesure de
+visite sont devenus `HabillagePublic`, un composant que toute page publique enveloppe.
+Rien ne change pour le visiteur.
+
+Un test refuse désormais qu'une page d'accueil réapparaisse dans un groupe de routes. Il
+ne couvre pas une classe de bugs : il couvre celui-là, parce qu'il reviendra la prochaine
+fois qu'on voudra ranger les pages publiques ensemble.
+
 ## [0.17.0] — 2026-11-04 — Une console, un site public, et de quoi les mesurer
 
 Trois chantiers d'un coup, parce qu'ils se tiennent : on ne pilote pas ce qu'on ne mesure
