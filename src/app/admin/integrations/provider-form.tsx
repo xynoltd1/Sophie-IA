@@ -82,7 +82,14 @@ export function ProviderForm({
                       id={id}
                       name={champ.cle}
                       type={champ.secret ? "password" : "text"}
-                      autoComplete="off"
+                      // `off` ne suffit pas : Chrome l'ignore et remplit tout
+                      // champ qui lui ressemble à un identifiant. Il a mis
+                      // l'adresse e-mail du compte dans « Identifiant de
+                      // l'assistant », « Expéditeur » et « Identifiant client
+                      // OAuth ». `new-password`, lui, est respecté.
+                      autoComplete="new-password"
+                      data-1p-ignore
+                      data-lpignore="true"
                       defaultValue={
                         champ.secret ? "" : (valeurs[champ.cle] ?? "")
                       }

@@ -3,6 +3,19 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.19.1] — 2026-11-05 — Le navigateur remplissait les cases à notre place
+
+Chrome ignorait `autocomplete="off"` sur l'écran Intégrations. Il a rempli « Identifiant de
+l'assistant », « Expéditeur » et « Identifiant client OAuth » avec l'adresse e-mail du
+compte, et les cases à secret avec un mot de passe enregistré.
+
+Aucun de ces champs n'attend une adresse e-mail. Un clic sur Enregistrer aurait rangé un
+mot de passe personnel comme clé API — chiffré, mais faux, et le test de connexion aurait
+échoué sans dire pourquoi.
+
+`autocomplete="new-password"`, que Chrome respecte, plus les marqueurs que lisent 1Password
+et LastPass.
+
 ## [0.19.0] — 2026-11-05 — Search Console connecté, et le référencement page par page
 
 ### Google Search Console
