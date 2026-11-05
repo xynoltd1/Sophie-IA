@@ -92,6 +92,35 @@ de `public`, et absence du droit de vider une table.
 Ce qui n'est pas vérifié par cette suite : les volumes, la téléphonie, et tout
 ce qui dépend d'un fournisseur externe.
 
+## Les secrets des fournisseurs (0.18.0)
+
+Les clés d'API se saisissent depuis la console et vivent en base, chiffrées en
+AES-256-GCM par le module qui protège déjà les jetons d'agenda.
+
+**Ce qui ne sort jamais.** `provider_credentials` n'a aucune policy de lecture et aucun
+GRANT. Une table sans policy est invisible : même le super administrateur ne lit jamais
+une valeur. L'écran affiche une empreinte salée par la clé maîtresse et les quatre
+derniers caractères — assez pour reconnaître la bonne clé, inutile pour s'en servir. Le
+sel compte : une empreinte nue d'une clé courte se retrouve par force brute.
+
+**Ce qui reste hors de la base.** `SUPABASE_SERVICE_ROLE_KEY`, `SECRETS_ENCRYPTION_KEY`,
+`CRON_SECRET`, `VOICE_WEBHOOK_SECRET`. La raison est mécanique : la clé qui déchiffre
+cette table ne peut pas y être rangée, et la clé qui lit la base ne peut pas être lue
+depuis la base. Un test refuse qu'elles apparaissent dans le catalogue des champs
+saisissables.
+
+**Ce qui est journalisé.** Qui a changé quoi, quand, et l'empreinte du nouveau secret.
+Jamais la valeur.
+
+**Le changement de mot de passe administrateur** redemande l'ancien et le vérifie.
+Supabase ne l'exige pas : une session valide suffit à son API. Mais une session valide,
+c'est un écran resté ouvert dans un bureau — et ce compte ouvre les données de toutes les
+entreprises.
+
+**Les tests de connexion** sont des lectures. Aucun n'envoie de SMS, ne passe d'appel ni
+ne crée quoi que ce soit chez un fournisseur. Celui de l'IA utilise une fausse
+transcription écrite dans le code, jamais celle d'un client.
+
 ## Le droit qui traverse RLS
 
 `TRUNCATE` ignore la sécurité au niveau ligne. RLS filtre des lignes ; TRUNCATE

@@ -124,7 +124,7 @@ export async function genererIntelligenceAppel(
   }
 
   const conversation = transcriptionEnTexte(tours);
-  const fournisseur = aiProvider();
+  const fournisseur = await aiProvider();
 
   await admin
     .from("calls")

@@ -1600,3 +1600,112 @@ mien, pas celui d'un juriste.**
 
 Le jour où vous ajouteriez un outil tiers, un cookie ou un identifiant persistant,
 l'exemption tombe immédiatement et il faut une bannière.
+
+---
+
+# E — Après la 0.18.0 : configurer depuis la console
+
+Ajouté le 2026-11-05. La console sait maintenant enregistrer vos clés : vous n'avez plus
+besoin de Vercel pour la plupart d'entre elles.
+
+## E1 — Corriger `NEXT_PUBLIC_APP_ENV`
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **haute** · **coût : 0 €**
+
+**Quoi** Mettre cette variable à `production` sur Vercel.
+
+**Pourquoi** Votre écran SEO le dit déjà : « NEXT_PUBLIC_APP_ENV ne vaut pas production :
+tout est en noindex ». Tant que c'est le cas, `robots.txt` interdit tout, le plan du site
+est vide, et **Google ne peut pas indexer votre site**. C'est la seule chose qui bloque
+le référencement aujourd'hui, et elle ne demande pas une ligne de code.
+
+**Les menus** Vercel → votre projet → **Settings** → **Environment Variables** →
+`NEXT_PUBLIC_APP_ENV` → valeur `production`, environnement **Production**.
+
+**Puis relancez un déploiement.** Cette variable est lue à la compilation : la changer
+sans redéployer ne change rien.
+
+**Réussi** `https://zelicall.com/robots.txt` affiche `Allow: /` et une ligne `Sitemap:`.
+Dans la console, `/admin/seo` fait passer les deux lignes « à vérifier » en *en place*.
+
+## E2 — Appliquer la migration 0034
+
+- [ ] Fait
+`ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
+
+**Quoi** Coller `supabase/migrations/20261105100000_0034_platform_configuration.sql` dans
+l'éditeur SQL de la production, puis de la préproduction.
+
+**Pourquoi** Sans elle, les écrans Intégrations et Paramètres ne peuvent rien enregistrer.
+
+**Vérifier**
+
+```sql
+select count(*) as tables
+from information_schema.tables
+where table_schema = 'public'
+  and table_name in ('platform_settings','provider_credentials','search_console_connection');
+```
+
+**Réussi** Le résultat est **3**.
+
+## E3 — Vérifier que `SECRETS_ENCRYPTION_KEY` existe sur Vercel
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **haute** · **coût : 0 €**
+
+**Pourquoi** C'est elle qui chiffre les clés que vous allez saisir. Sans elle, la console
+refusera d'enregistrer et vous dira pourquoi.
+
+**Attention** Si vous la changez un jour, **toutes les clés enregistrées deviennent
+illisibles**, et les agendas Google de vos clients aussi. Ce n'est pas une variable qu'on
+fait tourner sans préparation.
+
+**Réussi** Enregistrer une clé dans `/admin/integrations` fonctionne.
+
+## E4 — Saisir vos clés depuis la console
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité moyenne · dépend de **E2**, **E3** · **coût : 0 €**
+
+**Les menus** `/admin/integrations`. Pour chaque fournisseur : le formulaire, puis
+**Enregistrer**, puis **Tester la connexion**.
+
+**Ce que le test prouve** Que vos identifiants sont acceptés et que le service répond.
+**Pas** qu'un vrai SMS arrivera ni qu'un vrai appel aboutira — seul un vrai envoi et un
+vrai appel le diront.
+
+**Ce qui est gratuit** Les tests du fournisseur vocal, de l'opérateur SMS, de la base et
+de Google. **Ce qui coûte** Le test de l'IA : quelques centièmes de centime.
+
+**Réussi** La pastille passe à *Opérationnel*, et l'écran de santé affiche une date de
+dernier échange réussi.
+
+## E5 — Régler le site public
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité moyenne · dépend de **E2** · **coût : 0 €**
+
+**Les menus** `/admin/parametres`. Titre, description, adresse canonique, image de
+partage, adresses de contact. L'aperçu montre ce que Google affichera.
+
+**Ne changez pas l'adresse canonique** sans avoir d'abord configuré le domaine sur Vercel,
+le DNS chez votre registrar, et l'adresse de retour OAuth chez Google. Le formulaire écrit
+une adresse ; il ne déplace pas le site. S'il détecte que les deux ne correspondent pas,
+il vous le dit.
+
+**Réussi** Ouvrez `https://zelicall.com` en navigation privée, affichez le code source
+(Ctrl+U) : le `<title>` et la `<meta name="description">` portent vos valeurs.
+
+## E6 — Connecter Search Console
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité moyenne · **coût : 0 €**
+
+**Pour l'instant, à la main.** Voir la section **D3** et **D4** de ce document : balise de
+vérification via `GOOGLE_SITE_VERIFICATION`, puis dépôt du plan du site.
+
+Le bouton « Connecter Google Search Console » n'existe pas encore dans la console. La
+table et l'état sont prêts ; la connexion OAuth reste à écrire. Je préfère vous le dire
+plutôt que de livrer un bouton qui ne ferait rien.

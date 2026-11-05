@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.17.1 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
+**Version** 0.18.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-02**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-trois
+## Migrations — trente-quatre
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -273,6 +273,12 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  platform_series, usage_totals, site_traffic,
                                  site_sources, site_pages, site_series,
                                  record_integration_check, integration_health.
+0034_platform_configuration      platform_settings (reglages non secrets),
+                                 provider_credentials (secrets chiffres, AUCUNE
+                                 policy de lecture, aucun GRANT),
+                                 search_console_connection, credentials_state()
+                                 et search_console_state() qui exposent l etat
+                                 sans jamais les valeurs.
 ```
 
 `supabase/checks/01_verify_schema.sql` et `02_verify_content.sql` vérifient l'état du
@@ -287,6 +293,21 @@ a été trouvée par les tests.
 **Écrire des contrôles positifs autant que négatifs.** La suite d'isolation ne contenait
 que des assertions « X ne doit pas voir Y ». Une base entièrement verrouillée les faisait
 toutes passer. Quatre contrôles positifs ont été ajoutés ; garder ce réflexe.
+
+## Configuration : base d'abord, environnement ensuite
+
+Depuis la 0.18.0, les cles des fournisseurs et les reglages du site se saisissent dans la
+console et vivent en base. `src/lib/config/platform.ts` est la seule porte : **la base
+l'emporte, l'environnement sert de filet**. Les adaptateurs (`providers/ai`,
+`providers/messaging`) sont devenus asynchrones pour cela.
+
+Trois cles restent dans l'environnement et ne seront jamais reglables depuis un ecran :
+`SUPABASE_SERVICE_ROLE_KEY`, `SECRETS_ENCRYPTION_KEY`, `CRON_SECRET`. La raison est
+mecanique (ADR-041). `VOICE_WEBHOOK_SECRET` les rejoint : un secret qui protege une entree
+ne se regle pas depuis l'interieur.
+
+Cache d'une minute, en memoire du processus : une modification se propage en une minute au
+plus sur Vercel, sans redeploiement.
 
 ## Variables d'environnement
 

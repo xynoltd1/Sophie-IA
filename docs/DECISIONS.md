@@ -1343,3 +1343,123 @@ d honnetete produit ici le meilleur argument disponible.
 Le jour ou il y aura des clients, des prix et des avis, ils pourront etre affiches — parce
 qu ils existeront. Rien dans le code ne les bloque ; les tests bloquent seulement de les
 declarer avant.
+
+---
+
+## ADR-041 — Les cles des fournisseurs vivent en base, trois exceptions mises a part
+
+**2026-11-05** · Accepte
+
+### Le probleme
+
+Chaque cle d API vivait dans les variables d environnement de Vercel. Changer de modele
+d IA demandait : ouvrir Vercel, editer une variable, relancer un deploiement, attendre.
+La proprietaire du produit n ecrit pas de code. Pour elle, cela revenait a ne pas pouvoir
+administrer sa plateforme.
+
+### La decision
+
+Les identifiants se saisissent depuis la console, chiffres en AES-256-GCM par le meme
+module qui protege deja les jetons d agenda (ADR-021), et ranges dans
+`provider_credentials`.
+
+### L ordre de priorite
+
+1. la base, si une valeur y est enregistree ;
+2. l environnement, sinon.
+
+**La base l emporte**, parce que c est la seule des deux qu on peut changer sans
+redeployer. L inverse donnerait une interface dont les reglages seraient silencieusement
+ignores — exactement le formulaire decoratif qu on cherchait a eviter.
+
+L environnement reste comme filet : il porte les valeurs d aujourd hui, il fonctionne
+avant que la table existe, et il permet de reprendre la main depuis Vercel si la console
+devient inaccessible.
+
+### Les trois exceptions, et pourquoi elles ne sont pas negociables
+
+`SUPABASE_SERVICE_ROLE_KEY`, `SECRETS_ENCRYPTION_KEY`, `CRON_SECRET`.
+
+La raison n est pas prudentielle, elle est mecanique : **la cle qui dechiffre cette table
+ne peut pas etre rangee dedans, et la cle qui lit la base ne peut pas etre lue depuis la
+base**. Un test refuse qu elles apparaissent dans le catalogue des champs saisissables.
+
+`VOICE_WEBHOOK_SECRET` les rejoint pour une raison voisine : il protege l entree des
+webhooks. Un secret d entree ne se regle pas depuis l interieur.
+
+### Ce qui ne sort jamais
+
+La table n a **aucune policy de lecture et aucun GRANT**. Une table sans policy est
+invisible, et c est exactement ce qu on veut d une table de secrets : meme le super
+administrateur ne lit jamais une valeur.
+
+L ecran affiche une empreinte — huit caracteres d un SHA-256 **sale par la cle
+maitresse** — et les quatre derniers caracteres. Assez pour reconnaitre la bonne cle dans
+le tableau de bord du fournisseur ; inutile pour s en servir. Le sel compte : une
+empreinte nue d une cle courte se retrouve par force brute.
+
+### Un champ vide ne vide rien
+
+Les champs secrets arrivent vides a chaque affichage. Soumettre le formulaire sans y
+toucher conserve donc la cle. C est le seul comportement qui permette de corriger un
+reglage voisin sans ressaisir une cle qu on n a plus sous la main. Le retrait a son
+propre bouton.
+
+### Le cache
+
+Soixante secondes, en memoire du processus. Sur Vercel, chaque instance a la sienne : une
+modification se propage en une minute au plus. L ecran dit *d ici une minute*. Promettre
+l instantane serait faux des qu il y a deux instances, et une promesse fausse sur ce
+point ferait chercher un bug la ou il n y en a pas.
+
+---
+
+## ADR-042 — Un test de connexion dit ce qu il prouve
+
+**2026-11-05** · Accepte
+
+### Cinq choses sous un seul mot
+
+« Ca marche » recouvre cinq etats differents :
+
+1. la configuration est complete — on a les champs ;
+2. les identifiants sont presents — ils ne sont pas vides ;
+3. les identifiants sont valides — le fournisseur les accepte ;
+4. le service est joignable — il repond ;
+5. une operation metier a reussi — un vrai appel, un vrai SMS.
+
+Les confondre fait croire a un produit pret. C est deja arrive sur ce projet : l ecran de
+sante affichait « Teste en conditions reelles » a cote de « Variables manquantes »
+(ADR-038).
+
+### La decision
+
+Les tests de la console prouvent **3 et 4**. Jamais 5. Chaque resultat l ecrit en toutes
+lettres sous le message.
+
+Un compte SMS valide ne garantit pas qu un message arrivera sur un telephone belge ; seul
+un vrai envoi le dirait, et un vrai envoi coute de l argent et derange quelqu un.
+
+### Tous en lecture
+
+Liste des assistants chez le fournisseur vocal. Fiche du compte chez l operateur. Comptage
+des entreprises en base. Reconnaissance de l application chez Google, par un echange de
+jeton volontairement invalide — la seule verification possible sans toucher a l agenda de
+quelqu un.
+
+Le seul qui consomme est celui de l IA : une fausse transcription de trois lignes, ecrite
+dans le code. **Jamais celle d un vrai client** — son contenu appartient a l artisan et a
+son appelant, et un test n est pas une raison de l envoyer a un fournisseur. Son cout est
+annonce avant le clic.
+
+### La trace
+
+Chaque test ecrit dans `integration_checks`. C est ce qui transforme « historique non
+disponible » en preuve datee, sans attendre qu une operation metier reelle survienne.
+
+### Ce que cela corrige au passage
+
+Supabase et Google Agenda affichaient « Jamais exerce » alors que l un fait tourner
+l application pendant qu on lit l ecran. L absence d historique etait une absence de
+mesure, pas un diagnostic. L etat s appelle desormais « Historique non disponible », et
+l action propose le test qui produira la preuve.

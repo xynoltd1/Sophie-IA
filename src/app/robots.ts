@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { ESPACES_PRIVES, SITE_URL, siteIndexable } from "@/lib/seo/site";
+import { ESPACES_PRIVES, reglagesSite, siteIndexable } from "@/lib/seo/site";
 
 /**
  * `robots.txt`, généré plutôt qu'écrit à la main.
@@ -19,12 +19,14 @@ import { ESPACES_PRIVES, SITE_URL, siteIndexable } from "@/lib/seo/site";
  * et c'est Google qui choisit laquelle montrer. L'erreur est courante et longue
  * à rattraper.
  */
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
   if (!siteIndexable()) {
     return {
       rules: [{ userAgent: "*", disallow: "/" }],
     };
   }
+
+  const site = await reglagesSite();
 
   return {
     rules: [
@@ -34,7 +36,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ESPACES_PRIVES.map((espace) => `${espace}/`),
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    sitemap: `${site.canonical}/sitemap.xml`,
+    host: site.canonical,
   };
 }

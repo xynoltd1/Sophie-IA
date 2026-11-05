@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { PAGES_PUBLIQUES, SITE_URL, siteIndexable } from "@/lib/seo/site";
+import { PAGES_PUBLIQUES, reglagesSite, siteIndexable } from "@/lib/seo/site";
 
 /**
  * Plan du site.
@@ -13,13 +13,14 @@ import { PAGES_PUBLIQUES, SITE_URL, siteIndexable } from "@/lib/seo/site";
  * Hors production, il est vide : annoncer les pages d'une préversion revient à
  * demander leur indexation.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!siteIndexable()) return [];
 
+  const site = await reglagesSite();
   const maintenant = new Date();
 
   return PAGES_PUBLIQUES.map((page) => ({
-    url: `${SITE_URL}${page.chemin === "/" ? "" : page.chemin}`,
+    url: `${site.canonical}${page.chemin === "/" ? "" : page.chemin}`,
     lastModified: maintenant,
     changeFrequency: page.frequence,
     priority: page.priorite,

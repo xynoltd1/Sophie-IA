@@ -120,7 +120,7 @@ export async function expedier(messageId: string): Promise<ResultatFile> {
     return { messageId, envoye: true, simule: false };
   }
 
-  const fournisseur = messagingProvider();
+  const fournisseur = await messagingProvider();
 
   await admin
     .from("outbound_messages")

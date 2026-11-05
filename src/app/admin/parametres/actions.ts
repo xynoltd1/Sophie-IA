@@ -3,115 +3,142 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePlatformAdmin } from "@/lib/auth/platform";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { enregistrerReglages } from "@/lib/config/platform";
 import { journaliserAdmin } from "@/lib/platform/audit";
 
-export interface CompteState {
+export interface ParametresState {
   error?: string;
   success?: string;
+  avertissement?: string;
 }
 
+const schema = z.object({
+  name: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(10).max(120),
+  description: z.string().trim().min(50).max(300),
+  canonical: z.string().trim().url(),
+  locale: z.string().trim().min(2).max(10),
+  og_image: z.string().trim().url().or(z.literal("")),
+  contact_email: z.string().trim().email().or(z.literal("")),
+  support_email: z.string().trim().email().or(z.literal("")),
+});
+
 /**
- * Changer son nom.
+ * Enregistre les réglages du site public.
  *
- * Le nom vit à deux endroits : `profiles.full_name`, que l'application lit
- * partout, et les métadonnées du compte d'authentification, que l'écran
- * d'accueil utilise pour dire « Bonjour Zehra ». Les deux ont déjà divergé une
- * fois — un compte affichait un prénom et le profil un autre. On écrit donc
- * les deux, dans la même action.
+ * ## Les bornes ne sont pas décoratives
+ *
+ * Un titre de plus de 120 caractères est coupé dans les résultats Google ;
+ * une description de moins de 50 ne dit rien. Les refuser ici évite de
+ * découvrir le problème trois semaines plus tard dans Search Console.
+ *
+ * ## Changer l'adresse canonique ne déplace pas le site
+ *
+ * Le formulaire écrit une adresse ; il ne crée ni enregistrement DNS, ni
+ * domaine sur Vercel, ni adresse de retour OAuth chez Google. Saisir un
+ * domaine qui n'est pas configuré ailleurs donne un site qui se déclare à une
+ * adresse où il ne répond pas — et Google suit la déclaration. L'écran le dit
+ * au moment où ça arrive.
  */
-export async function changerNom(
-  _prev: CompteState,
+export async function enregistrerSite(
+  _prev: ParametresState,
   formData: FormData,
-): Promise<CompteState> {
-  const parsed = z
-    .object({ nom: z.string().trim().min(2, "Indiquez un nom").max(120) })
-    .safeParse({ nom: formData.get("nom") });
-
-  if (!parsed.success)
-    return { error: "Indiquez un nom d’au moins deux caractères." };
-
-  const { userId } = await requirePlatformAdmin();
-  const supabase = await createServerSupabase();
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({ full_name: parsed.data.nom })
-    .eq("id", userId);
-
-  if (error) return { error: "Le nom n’a pas pu être enregistré." };
-
-  await supabase.auth.updateUser({ data: { full_name: parsed.data.nom } });
-  await journaliserAdmin({
-    actorUserId: userId,
-    action: "profile.rename",
-    resourceType: "profiles",
-    resourceId: userId,
+): Promise<ParametresState> {
+  const parsed = schema.safeParse({
+    name: formData.get("name"),
+    title: formData.get("title"),
+    description: formData.get("description"),
+    canonical: formData.get("canonical"),
+    locale: formData.get("locale"),
+    og_image: formData.get("og_image") ?? "",
+    contact_email: formData.get("contact_email") ?? "",
+    support_email: formData.get("support_email") ?? "",
   });
 
-  revalidatePath("/admin/parametres");
-  revalidatePath("/admin");
-  return { success: "Nom enregistré." };
-}
-
-/**
- * Changer son mot de passe.
- *
- * L'ancien mot de passe est redemandé et **vérifié** avant le changement.
- * Supabase ne l'exige pas : une session valide suffit à son API. Mais une
- * session valide, c'est un écran resté ouvert dans un bureau — et ce compte-ci
- * ouvre les données de toutes les entreprises. La réauthentification coûte
- * quinze secondes et ferme ce chemin.
- */
-export async function changerMotDePasse(
-  _prev: CompteState,
-  formData: FormData,
-): Promise<CompteState> {
-  const parsed = z
-    .object({
-      actuel: z.string().min(1),
-      nouveau: z.string().min(8),
-      confirmation: z.string().min(8),
-    })
-    .safeParse({
-      actuel: formData.get("actuel"),
-      nouveau: formData.get("nouveau"),
-      confirmation: formData.get("confirmation"),
-    });
-
   if (!parsed.success) {
+    const premier = parsed.error.issues[0];
     return {
-      error: "Le nouveau mot de passe doit contenir au moins 8 caractères.",
+      error:
+        premier?.path[0] === "description"
+          ? "La description doit faire entre 50 et 300 caractères."
+          : premier?.path[0] === "title"
+            ? "Le titre doit faire entre 10 et 120 caractères."
+            : premier?.path[0] === "canonical"
+              ? "L’adresse canonique doit être une adresse complète, avec https://."
+              : "Un champ est invalide.",
     };
   }
 
-  if (parsed.data.nouveau !== parsed.data.confirmation) {
-    return { error: "Les deux nouveaux mots de passe ne sont pas identiques." };
-  }
+  const { userId } = await requirePlatformAdmin();
 
-  const { email, userId } = await requirePlatformAdmin();
-  if (!email) return { error: "Ce compte n’a pas d’adresse e-mail." };
+  const valeurs = {
+    ...parsed.data,
+    canonical: parsed.data.canonical.replace(/\/$/, ""),
+  };
 
-  const supabase = await createServerSupabase();
-
-  const { error: verification } = await supabase.auth.signInWithPassword({
-    email,
-    password: parsed.data.actuel,
-  });
-
-  if (verification) return { error: "Le mot de passe actuel est incorrect." };
-
-  const { error } = await supabase.auth.updateUser({
-    password: parsed.data.nouveau,
-  });
-  if (error) return { error: "Le mot de passe n’a pas pu être changé." };
+  const ok = await enregistrerReglages("site", valeurs, userId);
+  if (!ok) return { error: "Les réglages n’ont pas pu être enregistrés." };
 
   await journaliserAdmin({
     actorUserId: userId,
-    action: "profile.password",
-    resourceType: "auth.users",
-    resourceId: userId,
+    action: "settings.site",
+    resourceType: "platform_settings",
+    resourceId: "site",
+    details: { canonical: valeurs.canonical },
   });
 
-  return { success: "Mot de passe changé." };
+  revalidatePath("/admin/parametres");
+  revalidatePath("/");
+
+  const attendu = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  const avertissement =
+    attendu && attendu !== valeurs.canonical
+      ? `L’adresse canonique (${valeurs.canonical}) ne correspond pas au domaine servi (${attendu}). Le site va se déclarer à une adresse où il ne répond pas, et Google suivra la déclaration. Configurez d’abord le domaine sur Vercel et le DNS, ainsi que l’adresse de retour OAuth chez Google.`
+      : undefined;
+
+  return {
+    success:
+      "Enregistré. Les pages publiques utilisent ces valeurs d’ici une minute, sans redéploiement.",
+    avertissement,
+  };
+}
+
+const analytics = z.object({
+  enabled: z.enum(["true", "false"]),
+  exclude_internal: z.enum(["true", "false"]),
+});
+
+export async function enregistrerAnalytics(
+  _prev: ParametresState,
+  formData: FormData,
+): Promise<ParametresState> {
+  const parsed = analytics.safeParse({
+    enabled: formData.get("enabled"),
+    exclude_internal: formData.get("exclude_internal"),
+  });
+
+  if (!parsed.success) return { error: "Réglage invalide." };
+
+  const { userId } = await requirePlatformAdmin();
+
+  const ok = await enregistrerReglages(
+    "analytics",
+    {
+      enabled: parsed.data.enabled === "true",
+      exclude_internal: parsed.data.exclude_internal === "true",
+    },
+    userId,
+  );
+
+  if (!ok) return { error: "Le réglage n’a pas pu être enregistré." };
+
+  await journaliserAdmin({
+    actorUserId: userId,
+    action: "settings.analytics",
+    resourceType: "platform_settings",
+    resourceId: "analytics",
+  });
+
+  revalidatePath("/admin/parametres");
+  return { success: "Enregistré." };
 }

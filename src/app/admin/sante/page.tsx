@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/auth/platform";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Carte, Tableau, TitreSection } from "@/components/admin/surface";
@@ -155,6 +156,26 @@ export default async function SantePage() {
                   <span className="font-medium text-ink">À faire : </span>
                   {integration.action}
                 </p>
+
+                {/* Depuis la supervision, on rejoint la configuration en un
+                    clic. Un écran qui signale un problème sans mener à l'endroit
+                    où le corriger oblige à chercher. */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href="/admin/integrations"
+                    className="flex min-h-11 items-center rounded-control border border-line bg-surface px-3 text-sm font-medium"
+                  >
+                    Configurer
+                  </Link>
+                  {integration.testable ? (
+                    <Link
+                      href="/admin/integrations"
+                      className="flex min-h-11 items-center rounded-control border border-line bg-surface px-3 text-sm font-medium"
+                    >
+                      Tester la connexion
+                    </Link>
+                  ) : null}
+                </div>
 
                 {integration.codeNote ? (
                   <details className="mt-2">

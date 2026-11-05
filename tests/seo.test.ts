@@ -244,3 +244,113 @@ describe("console d administration", () => {
     }
   });
 });
+
+describe("configuration depuis la console", () => {
+  const platform = lire("src/lib/config/platform.ts");
+
+  it("la base l emporte sur l environnement", () => {
+    // L inverse donnerait une interface dont les reglages seraient
+    // silencieusement ignores : un formulaire decoratif.
+    const bloc = platform.slice(
+      platform.indexOf("export async function secret"),
+    );
+    expect(bloc.indexOf("provider_credentials")).toBeLessThan(
+      bloc.indexOf("process.env[variableEnv]"),
+    );
+  });
+
+  it("les secrets sont chiffres avant d entrer en base", () => {
+    const bloc = platform.slice(
+      platform.indexOf("export async function enregistrerSecret"),
+    );
+    expect(bloc).toContain("encryptSecret(propre)");
+    // Jamais la valeur en clair dans la colonne.
+    expect(bloc).not.toContain("secret: propre");
+  });
+
+  it("la table des secrets n est lisible par personne", () => {
+    // Pas de policy de lecture, pas de GRANT : une table sans policy est
+    // invisible, et c est exactement ce qu on veut d une table de secrets.
+    const sql = lire(
+      "supabase/migrations/20261105100000_0034_platform_configuration.sql",
+    );
+    const bloc = sql.slice(
+      sql.indexOf("create table if not exists public.provider_credentials"),
+    );
+    const avantSuivante = bloc.slice(
+      0,
+      bloc.indexOf("search_console_connection"),
+    );
+    expect(avantSuivante).toContain(
+      "revoke all on public.provider_credentials",
+    );
+    expect(avantSuivante).not.toContain("for select to authenticated");
+  });
+
+  it("l empreinte est salee", () => {
+    // Une empreinte nue d une cle courte se retrouve par force brute.
+    const bloc = platform.slice(platform.indexOf("export function empreinte"));
+    expect(bloc).toContain("SECRETS_ENCRYPTION_KEY");
+  });
+
+  it("aucune valeur de secret ne sort de la base", () => {
+    // `etatSecrets` alimente l ecran : il ne doit jamais selectionner la
+    // colonne chiffree.
+    const bloc = platform.slice(
+      platform.indexOf("export async function etatSecrets"),
+    );
+    expect(bloc).toContain("provider, field, fingerprint, last4, updated_at");
+    expect(bloc).not.toContain('select("secret")');
+  });
+
+  it("les cles de demarrage ne sont pas dans le catalogue", () => {
+    // La cle qui dechiffre les secrets ne peut pas etre rangee avec eux, et
+    // celle qui lit la base ne peut pas etre lue depuis la base.
+    const catalogue = lire("src/lib/config/catalogue.ts");
+    for (const interdite of [
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "SECRETS_ENCRYPTION_KEY",
+      "CRON_SECRET",
+      "VOICE_WEBHOOK_SECRET",
+    ]) {
+      const champs = catalogue.split("champs:").slice(1).join("");
+      expect(champs, `${interdite} est proposee a la saisie`).not.toContain(
+        `variableEnv: "${interdite}"`,
+      );
+    }
+  });
+
+  it("les reglages du site atteignent vraiment le rendu", () => {
+    // Un formulaire qui ecrirait en base sans que le `<head>` change serait
+    // une interface decorative.
+    const accueil = lire("src/app/page.tsx");
+    expect(accueil).toContain("export async function generateMetadata");
+    expect(accueil).toContain("reglagesSite()");
+    expect(lire("src/app/robots.ts")).toContain("reglagesSite()");
+    expect(lire("src/app/sitemap.ts")).toContain("reglagesSite()");
+  });
+
+  it("l indexation ne se regle pas depuis un formulaire", () => {
+    // Un interrupteur qui ferait indexer une preversion mettrait deux sites
+    // en concurrence sur les memes mots.
+    const parametres = lire("src/app/admin/parametres/actions.ts");
+    expect(parametres).not.toContain("siteIndexable");
+    expect(parametres).not.toContain("NEXT_PUBLIC_APP_ENV =");
+  });
+
+  it("les tests de connexion sont des lectures", () => {
+    // Aucun n envoie de SMS ni ne passe d appel : un test ne doit pas couter
+    // d argent ni deranger quelqu un.
+    const tests = lire("src/lib/config/tests.ts");
+    expect(tests).not.toContain("Messages.json");
+    expect(tests).toContain("Aucun SMS n’a été envoyé");
+    expect(tests).toContain("record_integration_check");
+  });
+
+  it("le test d IA n utilise jamais une vraie transcription", () => {
+    const tests = lire("src/lib/config/tests.ts");
+    const bloc = tests.slice(tests.indexOf("async function testerAI"));
+    expect(bloc).toContain("Jean Test");
+    expect(bloc).not.toContain("call_transcript_segments");
+  });
+});

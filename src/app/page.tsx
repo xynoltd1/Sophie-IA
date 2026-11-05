@@ -1,34 +1,46 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  SITE_DESCRIPTION,
-  SITE_NAME,
-  SITE_URL,
-  siteIndexable,
-} from "@/lib/seo/site";
+import { reglagesSite, siteIndexable } from "@/lib/seo/site";
 import { HabillagePublic } from "@/components/public/chrome";
 
-export const metadata: Metadata = {
-  title: "Sophie IA — la secrétaire qui répond pendant que vous travaillez",
-  description: SITE_DESCRIPTION,
-  alternates: { canonical: SITE_URL },
-  openGraph: {
-    type: "website",
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    locale: "fr_BE",
-    title: "Sophie IA — la secrétaire qui répond pendant que vous travaillez",
-    description: SITE_DESCRIPTION,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Sophie IA",
-    description: SITE_DESCRIPTION,
-  },
-  robots: siteIndexable()
-    ? { index: true, follow: true }
-    : { index: false, follow: false },
-};
+/**
+ * Les métadonnées viennent de la base, avec repli sur le code.
+ *
+ * C'est ce qui rend l'écran de réglages utile : ce que la console enregistre
+ * arrive réellement dans le `<head>`. Un formulaire qui écrirait en base sans
+ * que le rendu change serait une interface décorative.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await reglagesSite();
+
+  return {
+    title: site.title,
+    description: site.description,
+    alternates: { canonical: site.canonical },
+    openGraph: {
+      type: "website",
+      url: site.canonical,
+      siteName: site.name,
+      locale: site.locale,
+      title: site.title,
+      description: site.description,
+      images: site.og_image ? [{ url: site.og_image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: site.name,
+      description: site.description,
+      images: site.og_image ? [site.og_image] : undefined,
+    },
+    // L'indexation ne se règle pas depuis un formulaire : elle suit
+    // l'environnement. Un interrupteur qui ferait indexer une préversion
+    // mettrait deux sites en concurrence sur les mêmes mots, et c'est Google
+    // qui choisirait lequel montrer.
+    robots: siteIndexable()
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+  };
+}
 
 const ETAPES = [
   {
@@ -113,25 +125,27 @@ const QUESTIONS = [
  * « ce que Sophie ne fera jamais » dit à un artisan méfiant des outils
  * automatiques exactement ce qu'il veut savoir, et aucun concurrent ne l'écrit.
  */
-export default function AccueilPublic() {
+export default async function AccueilPublic() {
+  const site = await reglagesSite();
+
   const donneesStructurees = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        "@id": `${SITE_URL}/#organisation`,
-        name: SITE_NAME,
-        url: SITE_URL,
-        description: SITE_DESCRIPTION,
+        "@id": `${site.canonical}/#organisation`,
+        name: site.name,
+        url: site.canonical,
+        description: site.description,
         areaServed: ["FR", "BE"],
       },
       {
         "@type": "SoftwareApplication",
-        name: SITE_NAME,
+        name: site.name,
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
-        url: SITE_URL,
-        description: SITE_DESCRIPTION,
+        url: site.canonical,
+        description: site.description,
         inLanguage: "fr",
         // Ni prix ni note : les tarifs ne sont pas fixés et le produit n'a
         // reçu aucun avis. Déclarer l'un ou l'autre serait une donnée

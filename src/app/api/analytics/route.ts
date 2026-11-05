@@ -65,6 +65,13 @@ export async function POST(request: NextRequest) {
     const chemin = (corps.path ?? "").split("?")[0] ?? "";
     if (!cheminPublic(chemin)) return fin();
 
+    // Le réglage de la console peut éteindre la collecte. Lu ici, et non au
+    // chargement du module : une instance démarrée avant la modification
+    // continuerait sinon de compter pendant des heures.
+    const { reglages } = await import("@/lib/config/platform");
+    const mesure = await reglages("analytics", { enabled: true });
+    if (mesure.enabled === false) return fin();
+
     const userAgent = request.headers.get("user-agent");
     const verdict = classifier({
       userAgent,

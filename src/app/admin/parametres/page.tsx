@@ -1,102 +1,119 @@
+import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/auth/platform";
-import { createServerSupabase } from "@/lib/supabase/server";
 import { Carte, TitreSection } from "@/components/admin/surface";
-import { FormulaireMotDePasse, FormulaireNom } from "./forms";
+import { reglages } from "@/lib/config/platform";
+import { reglagesSite, siteIndexable } from "@/lib/seo/site";
+import { FormulaireAnalytics, FormulaireSite } from "./forms";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Mon compte — Plateforme" };
+export const metadata = { title: "Paramètres — Plateforme" };
 
 /**
- * Compte administrateur.
+ * Paramètres de la plateforme.
  *
- * Ce qui s'y règle et ce qui ne s'y règle pas obéit à une seule règle : un
- * espace ne doit pas pouvoir augmenter ses propres droits. Le nom et le mot de
- * passe se changent ici ; le droit d'administration de la plateforme, non. Il
- * s'accorde en base, par quelqu'un qui a déjà accès à la base.
+ * Ce qui se règle ici arrive réellement dans le rendu des pages publiques :
+ * titre, description, canonique, image de partage, et les mêmes valeurs dans
+ * `robots.txt` et le plan du site. Un formulaire dont la valeur n'atteindrait
+ * pas le site serait une interface décorative.
+ *
+ * Ce qui ne se règle pas ici, et pourquoi, est écrit en bas de page. La règle
+ * est simple : un interrupteur ne doit pas pouvoir créer une situation qu'on
+ * ne saurait pas défaire — faire indexer une préversion, par exemple.
  */
 export default async function ParametresPage() {
-  const { userId, email } = await requirePlatformAdmin();
+  await requirePlatformAdmin();
 
-  const supabase = await createServerSupabase();
-  const { data: profil } = await supabase
-    .from("profiles")
-    .select("full_name, created_at")
-    .eq("id", userId)
-    .maybeSingle();
+  const [site, mesure] = await Promise.all([
+    reglagesSite(),
+    reglages("analytics", { enabled: true, exclude_internal: true }),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-2xl font-semibold tracking-tight">
-        Mon compte
-      </h1>
+      <div>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Paramètres
+        </h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          Ces valeurs sont utilisées par les pages publiques, le plan du site et
+          le fichier robots. Elles s’appliquent d’ici une minute, sans
+          redéploiement.
+        </p>
+      </div>
 
       <section>
-        <TitreSection>Identité</TitreSection>
+        <TitreSection detail="Ce que voient Google et les gens qui partagent un lien.">
+          Site public
+        </TitreSection>
         <Carte>
-          <dl className="mb-5 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-ink-faint">Adresse e-mail</dt>
-              <dd>{email ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-ink-faint">Rôle</dt>
-              <dd>Administrateur de la plateforme</dd>
-            </div>
-            <div>
-              <dt className="text-ink-faint">Compte créé le</dt>
-              <dd className="tabular">
-                {profil?.created_at
-                  ? new Date(profil.created_at as string).toLocaleDateString(
-                      "fr-BE",
-                      {
-                        timeZone: "Europe/Brussels",
-                      },
-                    )
-                  : "—"}
-              </dd>
-            </div>
-          </dl>
+          <FormulaireSite site={site} />
+        </Carte>
+      </section>
 
-          <FormulaireNom
-            nom={(profil?.full_name as string | undefined) ?? ""}
+      <section>
+        <TitreSection detail="La collecte maison, sans cookie. Voir SEO et acquisition pour les chiffres.">
+          Mesure de fréquentation
+        </TitreSection>
+        <Carte>
+          <FormulaireAnalytics
+            active={mesure.enabled !== false}
+            exclureInterne={mesure.exclude_internal !== false}
           />
         </Carte>
       </section>
 
       <section>
-        <TitreSection detail="L’ancien mot de passe est redemandé : une session restée ouverte dans un bureau ne doit pas suffire à changer les clés de la plateforme.">
-          Mot de passe
-        </TitreSection>
+        <TitreSection>Indexation</TitreSection>
         <Carte>
-          <FormulaireMotDePasse />
+          <p className="text-sm">
+            {siteIndexable()
+              ? "Le site est indexable : NEXT_PUBLIC_APP_ENV vaut production."
+              : "Le site n’est pas indexable : NEXT_PUBLIC_APP_ENV ne vaut pas production. robots.txt interdit tout et chaque page est en noindex."}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            Ce réglage n’a volontairement pas de bouton. Une préversion indexée
+            fait concurrence au vrai site sur ses propres mots, et c’est Google
+            qui choisit laquelle montrer — une erreur longue à rattraper, pour
+            un gain nul. Il suit donc l’environnement, et rien d’autre.
+          </p>
         </Carte>
       </section>
 
       <section>
-        <TitreSection>Ce qui ne se règle pas ici</TitreSection>
+        <TitreSection>Ce qui se règle ailleurs</TitreSection>
         <Carte>
           <ul className="flex list-disc flex-col gap-2 pl-5 text-sm leading-relaxed text-ink-soft">
             <li>
               <span className="font-medium text-ink">
-                Le droit d’administration.
+                Les clés des fournisseurs
               </span>{" "}
-              Il s’accorde en base, par quelqu’un qui y a déjà accès. Un espace
-              capable de se distribuer ses propres droits n’a besoin que d’une
-              faille.
+              — dans{" "}
+              <Link
+                href="/admin/integrations"
+                className="underline underline-offset-4"
+              >
+                Intégrations
+              </Link>
+              , chiffrées, jamais réaffichées.
             </li>
             <li>
-              <span className="font-medium text-ink">L’adresse e-mail.</span> La
-              changer demande de vérifier la nouvelle avant d’abandonner
-              l’ancienne, sinon une faute de frappe ferme le compte
-              définitivement. Ce parcours n’est pas écrit : il vaut mieux
-              l’absence qu’une version qui enferme dehors.
+              <span className="font-medium text-ink">Le domaine</span> — sur
+              Vercel et chez votre registrar. Le changer ici ne déplace rien :
+              ça déclare une adresse, et Google suit la déclaration même si le
+              site n’y répond pas.
+            </li>
+            <li>
+              <span className="font-medium text-ink">Les pages juridiques</span>{" "}
+              — elles n’existent pas encore. Elles attendent les textes du
+              juriste (plan d’action, étape C2), pas du développement.
             </li>
             <li>
               <span className="font-medium text-ink">
-                Les sessions ouvertes.
+                Le logo et le favicon
               </span>{" "}
-              Supabase ne permet pas de les lister depuis l’application. Se
-              déconnecter ferme la session courante, pas les autres.
+              — des fichiers dans le dépôt. Les rendre réglables demanderait un
+              stockage d’images et une validation de format ; dites-le-moi si
+              vous en avez besoin.
             </li>
           </ul>
         </Carte>

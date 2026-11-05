@@ -6,6 +6,7 @@ import {
   missingEnvFor,
   type IntegrationEntry,
 } from "@/lib/providers/status";
+import { fournisseur } from "@/lib/config/catalogue";
 
 /**
  * Santé réelle d'une intégration.
@@ -46,14 +47,22 @@ export type EtatSante =
   | "EN_PANNE"
   /** Configuration incomplète : rien ne peut fonctionner. */
   | "NON_CONFIGURE"
-  /** Configuration complète, aucun échange réel à ce jour. */
-  | "JAMAIS_EXERCE";
+  /**
+   * Configuration complète, mais aucune trace d'échange.
+   *
+   * Ce n'est pas « ça ne marche pas ». Supabase fait tourner l'application
+   * pendant qu'on lit cet écran, et Google Agenda a été vérifié en octobre :
+   * ni l'un ni l'autre n'écrivait de trace à l'époque. L'absence d'historique
+   * est une absence de mesure, pas un diagnostic — et l'afficher comme un
+   * diagnostic ferait douter de ce qui fonctionne.
+   */
+  | "HISTORIQUE_ABSENT";
 
 export const LIBELLES_ETAT: Record<EtatSante, string> = {
   OPERATIONNEL: "Opérationnel",
   EN_PANNE: "En panne",
   NON_CONFIGURE: "Non configuré",
-  JAMAIS_EXERCE: "Jamais exercé",
+  HISTORIQUE_ABSENT: "Historique non disponible",
 };
 
 export const TONS_ETAT: Record<
@@ -63,7 +72,7 @@ export const TONS_ETAT: Record<
   OPERATIONNEL: "signal",
   EN_PANNE: "urgent",
   NON_CONFIGURE: "attention",
-  JAMAIS_EXERCE: "neutre",
+  HISTORIQUE_ABSENT: "neutre",
 };
 
 export interface SanteIntegration {
@@ -77,6 +86,8 @@ export interface SanteIntegration {
   dernierEchec: string | null;
   dernierDetail: string | null;
   erreursRecentes: number;
+  /** Un test de connexion existe-t-il pour ce fournisseur ? */
+  testable: boolean;
   /** Ce qu'il faut faire ensuite, en une phrase. */
   action: string;
 }
@@ -85,6 +96,7 @@ function action(
   etat: EtatSante,
   manquantes: string[],
   entry: IntegrationEntry,
+  testable: boolean,
 ): string {
   switch (etat) {
     case "NON_CONFIGURE":
@@ -93,8 +105,10 @@ function action(
         : `Renseigner sur Vercel : ${manquantes.join(", ")}.`;
     case "EN_PANNE":
       return "Lire le détail de l’échec ci-dessous, puis réessayer l’opération concernée.";
-    case "JAMAIS_EXERCE":
-      return "La configuration est complète. Il manque un échange réel pour le prouver.";
+    case "HISTORIQUE_ABSENT":
+      return testable
+        ? "Configuration complète, aucune trace d’échange. Lancez un test de connexion pour obtenir une preuve datée."
+        : "Configuration complète. Rien n’instrumente cette intégration : son état se vérifie ailleurs.";
     case "OPERATIONNEL":
       return "Rien à faire.";
   }
@@ -139,6 +153,7 @@ export async function santeIntegrations(): Promise<SanteIntegration[]> {
   return INTEGRATIONS.map((entry) => {
     const manquantes = missingEnvFor(entry.key);
     const controle = parIntegration.get(entry.key);
+    const catalogue = fournisseur(entry.key);
 
     const dernierSucces = controle?.last_ok ?? null;
     const dernierEchec = controle?.last_fail ?? null;
@@ -156,7 +171,7 @@ export async function santeIntegrations(): Promise<SanteIntegration[]> {
     } else if (dernierSucces) {
       etat = "OPERATIONNEL";
     } else {
-      etat = "JAMAIS_EXERCE";
+      etat = "HISTORIQUE_ABSENT";
     }
 
     return {
@@ -169,7 +184,8 @@ export async function santeIntegrations(): Promise<SanteIntegration[]> {
       dernierEchec,
       dernierDetail: controle?.last_detail ?? null,
       erreursRecentes: comptesErreurs.get(entry.key) ?? 0,
-      action: action(etat, manquantes, entry),
+      testable: catalogue?.testable ?? false,
+      action: action(etat, manquantes, entry, catalogue?.testable ?? false),
     };
   });
 }

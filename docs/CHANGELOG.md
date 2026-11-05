@@ -3,6 +3,119 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.18.0] — 2026-11-05 — La console configure au lieu de constater
+
+### Le problème
+
+Les écrans d'administration disaient ce qui manquait sans permettre de le fournir.
+« Variables manquantes : AI_PROVIDER, AI_API_KEY » — et pour y répondre, il fallait
+ouvrir Vercel, éditer une variable, relancer un déploiement, attendre. Pour quelqu'un
+qui n'écrit pas de code, cela revient à ne pas pouvoir administrer son produit.
+
+### Les clés se saisissent depuis la console
+
+`/admin/integrations`. Chaque fournisseur a son formulaire, en français : « Clé API » et
+non `AI_API_KEY`, avec une phrase qui dit à quoi elle sert. Le nom technique reste, dans
+un repli, parce qu'on en a besoin pour retrouver la variable sur Vercel.
+
+**Les secrets sont chiffrés en AES-256-GCM** avant d'entrer en base, avec la clé maîtresse
+qui reste dans l'environnement — la base ne détient jamais de quoi se déchiffrer
+elle-même. La table n'a **aucune policy de lecture et aucun GRANT** : même le super
+administrateur ne peut pas lire une clé. L'écran affiche une empreinte salée et les
+quatre derniers caractères, assez pour reconnaître la bonne clé dans le tableau de bord
+du fournisseur, inutile pour s'en servir.
+
+Un champ secret laissé vide **conserve** la valeur existante : c'est le seul comportement
+qui permette de corriger un réglage voisin sans ressaisir une clé qu'on n'a plus sous la
+main. Le retrait a son propre bouton, qui dit ce qu'il fait.
+
+### Trois clés ne seront jamais réglables ici
+
+Celle qui lit toute la base, celle qui déchiffre cette table, celle qui ouvre les travaux
+planifiés. **La raison est mécanique, pas prudentielle** : la clé qui déchiffre les
+secrets ne peut pas être rangée avec eux, et la clé qui lit la base ne peut pas être lue
+depuis la base. Un test refuse qu'elles apparaissent dans le catalogue (ADR-041).
+
+### Appliqué sans redéploiement
+
+Les adaptateurs lisent désormais une couche de configuration : **la base d'abord,
+l'environnement ensuite**. La base l'emporte parce que c'est la seule des deux qu'on peut
+changer sans redéployer ; l'environnement reste comme filet, et permet de reprendre la
+main depuis Vercel si la console devient inaccessible.
+
+Le cache est d'une minute. Sur Vercel, chaque instance a sa propre mémoire : une
+modification se propage donc en une minute au plus. L'écran dit *d'ici une minute* —
+promettre l'instantané serait faux dès qu'il y a deux instances.
+
+### Tester une connexion
+
+Un bouton par fournisseur, et chaque test est **une lecture** : liste des assistants chez
+le fournisseur vocal, fiche du compte chez l'opérateur SMS, comptage des entreprises en
+base, reconnaissance de l'application chez Google. Aucun n'envoie de SMS ni ne passe
+d'appel. Le seul qui consomme est celui de l'IA — quelques centièmes de centime — avec
+une fausse transcription de trois lignes écrite dans le code : **jamais celle d'un vrai
+client**.
+
+Chaque test dit **ce qu'il prouve** : identifiants valides et service joignable. Pas
+qu'une opération métier réussira. Cinq choses se confondent sous « ça marche », et les
+mélanger fait croire à un produit prêt.
+
+Le résultat s'écrit dans `integration_checks` : le test donne donc à l'écran de santé une
+preuve datée.
+
+### Corrigé : « Jamais exercé » était un faux diagnostic
+
+Supabase et Google Agenda affichaient « Jamais exercé » alors que l'un fait tourner
+l'application pendant qu'on lit l'écran et que l'autre a été vérifié en octobre. Ni l'un
+ni l'autre n'écrivait de trace à l'époque : l'absence d'historique est une absence de
+mesure, pas un diagnostic.
+
+L'état s'appelle maintenant **« Historique non disponible »**, et l'action propose le test
+qui produira la preuve.
+
+### Le référencement se règle, et le réglage sert
+
+`/admin/parametres` : nom du site, titre, description, adresse canonique, langue, image de
+partage, adresses de contact. Avec un aperçu du résultat de recherche et un compteur qui
+dit quand Google coupera.
+
+Ces valeurs sont lues par `generateMetadata`, par `robots.txt` et par le plan du site :
+elles arrivent réellement dans le `<head>`. Un test le vérifie — un formulaire qui
+écrirait en base sans que le rendu change serait une interface décorative.
+
+**L'indexation n'a volontairement pas de bouton.** Elle suit l'environnement. Un
+interrupteur qui ferait indexer une préversion mettrait deux sites en concurrence sur les
+mêmes mots, et c'est Google qui choisirait lequel montrer.
+
+**Changer l'adresse canonique ne déplace pas le site.** Le formulaire écrit une adresse ;
+il ne crée ni DNS, ni domaine Vercel, ni adresse de retour OAuth. Si la canonique ne
+correspond pas au domaine servi, l'écran le dit au moment de l'enregistrement.
+
+### Aussi
+- La mesure de fréquentation s'active et se désactive depuis la console.
+- Les fournisseurs sans adaptateur — opérateur téléphonique, e-mail, paiement —
+  apparaissent marqués indisponibles, **avec la raison**. Les cacher laisserait croire
+  qu'ils n'existent pas ; leur donner un formulaire laisserait croire qu'ils
+  fonctionnent.
+- L'écran de santé a ses boutons *Configurer* et *Tester*.
+- « Mon compte » a déménagé en `/admin/compte` ; `/admin/parametres` est désormais les
+  réglages de la plateforme.
+
+### Migration 0034
+`platform_settings`, `provider_credentials`, `search_console_connection`, et deux
+fonctions qui exposent l'état sans jamais les valeurs.
+
+### Tests
+397 au total, 11 nouveaux : priorité base-sur-environnement, chiffrement avant écriture,
+table de secrets invisible, empreinte salée, aucune valeur renvoyée par l'écran, clés de
+démarrage absentes du catalogue, réglages qui atteignent le rendu, indexation non
+réglable, tests de connexion en lecture seule, et fausse transcription dans le test d'IA.
+
+### Ce qui n'est pas dans cette livraison
+**La connexion OAuth à Google Search Console.** La table et l'état sont prêts, le bouton
+ne l'est pas. C'est le seul point de la demande que je n'ai pas fait, et je préfère le
+dire que livrer un bouton qui simule une connexion.
+
 ## [0.17.1] — 2026-11-05 — La page d'accueil sort du groupe de routes
 
 ### Corrigé : le déploiement échouait là où la compilation passait

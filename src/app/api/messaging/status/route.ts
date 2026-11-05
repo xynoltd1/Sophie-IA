@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   // L'opérateur signe l'URL complète en plus du corps : on la lui redonne.
   headers["x-webhook-url"] = request.nextUrl.toString();
 
-  const fournisseur = messagingProvider();
+  const fournisseur = await messagingProvider();
 
   if (!fournisseur.verifyWebhook({ rawBody, headers })) {
     return new NextResponse("signature invalide", { status: 401 });

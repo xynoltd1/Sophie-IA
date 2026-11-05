@@ -28,7 +28,7 @@ export function AccountMenu({ nom, email }: { nom: string; email: string }) {
       {ouvert ? (
         <div className="absolute bottom-full left-0 mb-2 w-full overflow-hidden rounded-control border border-console-line bg-console-raised">
           <Link
-            href="/admin/parametres"
+            href="/admin/compte"
             onClick={() => setOuvert(false)}
             className="flex min-h-11 items-center px-3 text-sm text-console-ink-soft hover:bg-console hover:text-console-ink"
           >

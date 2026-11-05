@@ -51,3 +51,66 @@ export const ESPACES_PRIVES = [
 export function siteIndexable(): boolean {
   return (process.env.NEXT_PUBLIC_APP_ENV ?? "development") === "production";
 }
+
+// ---------------------------------------------------------------------------
+// Les mêmes valeurs, mais réglables depuis la console
+// ---------------------------------------------------------------------------
+
+export interface ReglagesSite {
+  name: string;
+  title: string;
+  description: string;
+  canonical: string;
+  locale: string;
+  og_image: string;
+  contact_email: string;
+  support_email: string;
+}
+
+/** Ce que le code sait faire sans la base. Sert de repli, jamais de vérité. */
+export const DEFAUTS_SITE: ReglagesSite = {
+  name: SITE_NAME,
+  title: "Sophie IA — la secrétaire qui répond pendant que vous travaillez",
+  description: SITE_DESCRIPTION,
+  canonical: SITE_URL,
+  locale: "fr_BE",
+  og_image: "",
+  contact_email: "",
+  support_email: "",
+};
+
+/**
+ * Les réglages du site, base d'abord.
+ *
+ * Appelée par `generateMetadata` : ce que la console enregistre arrive donc
+ * réellement dans le `<head>` des pages publiques. Un formulaire qui écrirait
+ * en base sans que le rendu change serait exactement le genre d'interface
+ * décorative qu'on cherche à éviter.
+ *
+ * Jamais d'exception : base injoignable, la page sort avec les valeurs par
+ * défaut plutôt que de ne pas sortir du tout.
+ */
+export async function reglagesSite(): Promise<ReglagesSite> {
+  const { reglages } = await import("@/lib/config/platform");
+  const lus = await reglages<Record<string, unknown>>("site", {});
+
+  const texte = (cle: keyof ReglagesSite): string => {
+    const valeur = lus[cle];
+    return typeof valeur === "string" && valeur.trim().length > 0
+      ? valeur.trim()
+      : DEFAUTS_SITE[cle];
+  };
+
+  return {
+    name: texte("name"),
+    title: texte("title"),
+    description: texte("description"),
+    // L'adresse canonique ne doit jamais finir par une barre : deux adresses
+    // pour une même page se concurrencent dans l'index.
+    canonical: texte("canonical").replace(/\/$/, ""),
+    locale: texte("locale"),
+    og_image: texte("og_image"),
+    contact_email: texte("contact_email"),
+    support_email: texte("support_email"),
+  };
+}
