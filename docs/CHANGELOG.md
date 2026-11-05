@@ -3,6 +3,14 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.18.1] — 2026-11-05 — Un trait qui ne voulait rien dire
+
+Les cartes sans champ ni bouton — Transcription, Opérateur téléphonique — dessinaient
+quand même le trait de séparation du formulaire. Un trait suivi de rien laisse croire
+qu'un élément a raté son chargement.
+
+Le bloc ne se dessine plus que lorsqu'il contient quelque chose.
+
 ## [0.18.0] — 2026-11-05 — La console configure au lieu de constater
 
 ### Le problème

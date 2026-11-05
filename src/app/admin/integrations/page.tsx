@@ -132,7 +132,12 @@ export default async function IntegrationsPage() {
                       </dl>
                     ) : null}
 
-                    {config.implemente ? (
+                    {/* Un bloc de formulaire ne se dessine que s'il contient
+                        quelque chose. Sans champ ni bouton de test, il ne
+                        restait qu'un trait, et un trait laisse croire qu'un
+                        élément a raté son chargement. */}
+                    {config.implemente &&
+                    (config.champs.length > 0 || config.testable) ? (
                       <div className="mt-4 border-t border-line pt-4">
                         <ProviderForm
                           config={config}

@@ -150,7 +150,13 @@ export function ProviderForm({
         </form>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
+      <div
+        className={
+          config.champs.length > 0
+            ? "flex flex-wrap items-center gap-3 border-t border-line pt-4"
+            : "flex flex-wrap items-center gap-3"
+        }
+      >
         {config.testable ? (
           <form action={tester}>
             <input type="hidden" name="fournisseur" value={config.cle} />
