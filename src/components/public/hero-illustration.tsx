@@ -37,7 +37,7 @@ export function IllustrationAccueil() {
         className="h-auto w-full"
       >
         <title id="illustration-titre">
-          Un téléphone reçoit un appel. Sophie répond, et un rendez-vous se
+          Un téléphone reçoit un appel. Zeli répond, et un rendez-vous se
           prépare : mardi 14 h, fuite sous évier.
         </title>
 
@@ -161,7 +161,7 @@ export function IllustrationAccueil() {
               +32 470 ·· ·· 18
             </text>
 
-            {/* La voix de Sophie, pendant qu'elle parle. */}
+            {/* La voix de Zeli, pendant qu'elle parle. */}
             <g>
               {[
                 { x: 216, h: 26, d: "0s" },
@@ -199,7 +199,7 @@ export function IllustrationAccueil() {
               fill="#4d5c56"
               fontFamily="system-ui, sans-serif"
             >
-              Sophie répond
+              Zeli répond
             </text>
 
             {/* Les deux boutons du bas */}

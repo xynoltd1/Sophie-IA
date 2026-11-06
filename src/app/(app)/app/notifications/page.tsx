@@ -6,7 +6,7 @@ import { EmptyState, ErrorState } from "@/components/ui/states";
 import { ListeNotifications } from "./liste";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Alertes — Sophie IA" };
+export const metadata = { title: "Alertes — Zelicall" };
 
 export interface LigneNotification {
   id: string;

@@ -4,12 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureCalendarFresh } from "@/lib/providers/calendar/service";
 import type { VoiceToolDefinition } from "@/lib/providers/voice/types";
 import { CRM_TOOLS } from "./tools-crm";
-import { texte, type SophieTool as SophieToolType } from "./tool-types";
+import { texte, type ZeliTool as ZeliToolType } from "./tool-types";
 
 /**
- * Outils métier de Sophie (section 11).
+ * Outils métier de Zeli (section 11).
  *
- * Principe directeur : **Sophie ne produit aucune vérité métier**. Elle mène la
+ * Principe directeur : **Zeli ne produit aucune vérité métier**. Elle mène la
  * conversation ; les disponibilités, les tarifs, les services et l'identité des
  * clients viennent d'ici, où ils sont vérifiés contre la base.
  *
@@ -25,7 +25,7 @@ export type {
   ToolContext,
   ToolOutcome,
   ToolHandler,
-  SophieTool,
+  ZeliTool,
 } from "./tool-types";
 
 /** Formate une heure pour être prononcée en français. */
@@ -54,10 +54,10 @@ function jourParle(iso: string, timezone: string): string {
  *
  * Règle appliquée ici, et non dans les instructions du modèle : si l'agenda
  * externe n'est pas à jour, **aucun créneau n'est proposé** (sections 19 et
- * 43). Sophie annonce alors que le professionnel confirmera. Laisser cette
+ * 43). Zeli annonce alors que le professionnel confirmera. Laisser cette
  * règle au modèle reviendrait à espérer qu'il s'en souvienne.
  */
-const checkAvailability: SophieToolType = {
+const checkAvailability: ZeliToolType = {
   definition: {
     name: "check_availability",
     description:
@@ -99,7 +99,7 @@ const checkAvailability: SophieToolType = {
     // Le message rappelle la date du jour, et ce n'est pas du confort : un
     // modèle de langage n'a pas d'horloge. Interprété seul, « lundi prochain »
     // est calculé à partir d'une date imaginaire, souvent celle de son
-    // entraînement, et tombe dans le passé. Sans cette précision, Sophie
+    // entraînement, et tombe dans le passé. Sans cette précision, Zeli
     // répète la même erreur indéfiniment parce que rien ne la contredit.
     //
     // La date du jour est normalement injectée dans ses instructions par le
@@ -215,12 +215,12 @@ const checkAvailability: SophieToolType = {
 };
 
 /**
- * get_business_information — ce que Sophie a le droit de dire de l'entreprise.
+ * get_business_information — ce que Zeli a le droit de dire de l'entreprise.
  *
  * Elle ne récite que ce que le professionnel a saisi. Rien n'est déduit, rien
  * n'est calculé (section 9).
  */
-const getBusinessInformation: SophieToolType = {
+const getBusinessInformation: ZeliToolType = {
   definition: {
     name: "get_business_information",
     description:
@@ -253,7 +253,7 @@ const getBusinessInformation: SophieToolType = {
     const topic = typeof args.topic === "string" ? args.topic : "services";
 
     // Les connaissances saisies par le professionnel passent avant tout le
-    // reste (section 9). C'est le seul moyen qu'il a de corriger Sophie, et
+    // reste (section 9). C'est le seul moyen qu'il a de corriger Zeli, et
     // jusqu'ici l'écran « Connaissances » existait sans que rien de ce qu'on
     // y écrivait n'atteigne un appel.
     const connue = await reponsePreparee(
@@ -296,7 +296,7 @@ const getBusinessInformation: SophieToolType = {
       return {
         result: services
           .map((service) => {
-            // Le tarif est un texte saisi par le professionnel. Sophie le
+            // Le tarif est un texte saisi par le professionnel. Zeli le
             // répète tel quel et ne calcule jamais un prix.
             const prix = service.price_indication
               ? ` — tarif annoncé : ${service.price_indication}`
@@ -371,13 +371,13 @@ const getBusinessInformation: SophieToolType = {
   },
 };
 
-export const SOPHIE_TOOLS: readonly SophieToolType[] = [
+export const SOPHIE_TOOLS: readonly ZeliToolType[] = [
   checkAvailability,
   getBusinessInformation,
   ...CRM_TOOLS,
 ];
 
-export function findTool(name: string): SophieToolType | undefined {
+export function findTool(name: string): ZeliToolType | undefined {
   return SOPHIE_TOOLS.find((tool) => tool.definition.name === name);
 }
 
@@ -397,7 +397,7 @@ function repartir<T>(items: T[], n: number): T[] {
  *
  * Recherche volontairement simple : les mots de la question contre la question
  * enregistrée et sa réponse. Pas de recherche sémantique, pas de modèle — ce
- * que Sophie dit doit venir d'une phrase écrite par un humain, et la
+ * que Zeli dit doit venir d'une phrase écrite par un humain, et la
  * correspondance doit être explicable (section 9).
  *
  * Les consignes de comportement (`INSTRUCTION`) sont toujours jointes : elles

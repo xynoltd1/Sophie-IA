@@ -4,7 +4,7 @@ import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { can } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Réglages — Sophie IA" };
+export const metadata = { title: "Réglages — Zelicall" };
 
 /**
  * Le point d'entrée des réglages d'entreprise.
@@ -29,19 +29,19 @@ const ENTREES = [
   {
     href: "/app/reglages/absences",
     titre: "Absences et vacances",
-    detail: "Les périodes où Sophie ne doit proposer aucun rendez-vous.",
+    detail: "Les périodes où Zeli ne doit proposer aucun rendez-vous.",
     permission: "organization:update" as const,
   },
   {
     href: "/app/sophie/ligne",
     titre: "Ligne téléphonique",
     detail:
-      "Le numéro sur lequel Sophie répond, et comment y renvoyer vos appels.",
+      "Le numéro sur lequel Zeli répond, et comment y renvoyer vos appels.",
     permission: "organization:update" as const,
   },
   {
     href: "/app/sophie/connaissances",
-    titre: "Connaissances de Sophie",
+    titre: "Connaissances de Zeli",
     detail:
       "Ce qu'elle a le droit de répondre : questions fréquentes et consignes.",
     permission: "sophie:configure" as const,

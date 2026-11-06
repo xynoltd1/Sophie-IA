@@ -11,7 +11,7 @@ import { Chip } from "@/components/ui/chip";
 import type { LeadStatus } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Prospects — Sophie IA" };
+export const metadata = { title: "Prospects — Zelicall" };
 
 const FILTRES = [
   { cle: "ouverts", label: "En cours" },
@@ -112,7 +112,7 @@ export default async function ProspectsPage({
           ) : visibles.length === 0 ? (
             <EmptyState
               title="Aucun prospect ici"
-              description="Ajoutez une demande à la main, ou attendez que Sophie prenne ses premiers appels."
+              description="Ajoutez une demande à la main, ou attendez que Zeli prenne ses premiers appels."
             />
           ) : (
             <ul className="flex flex-col gap-2">

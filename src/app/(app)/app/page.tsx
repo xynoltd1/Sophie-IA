@@ -6,8 +6,8 @@ import { StatStrip } from "@/components/ui/stat";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { onboardingProgress } from "@/lib/org/onboarding";
 import {
-  activiteSophie,
-  etatLigneSophie,
+  activiteZeli,
+  etatLigneZeli,
   getDashboardCounts,
   getTodayAppointments,
 } from "@/lib/crm/queries";
@@ -20,7 +20,7 @@ import {
 import { STEP_ROUTES } from "@/app/onboarding/steps";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Accueil — Sophie IA" };
+export const metadata = { title: "Accueil — Zelicall" };
 
 /**
  * Écran d'accueil (section 30).
@@ -58,8 +58,8 @@ export default async function HomePage() {
     await Promise.all([
       getDashboardCounts(activeOrganization.organization_id),
       getTodayAppointments(activeOrganization.organization_id),
-      etatLigneSophie(activeOrganization.organization_id),
-      activiteSophie(activeOrganization.organization_id),
+      etatLigneZeli(activeOrganization.organization_id),
+      activiteZeli(activeOrganization.organization_id),
     ]);
 
   const firstName = (
@@ -78,7 +78,7 @@ export default async function HomePage() {
           compte: counts.pending_appointments,
           titre: `Rendez-vous à valider`,
           detail:
-            "Sophie les a pris provisoirement. Ils attendent votre accord.",
+            "Zeli les a pris provisoirement. Ils attendent votre accord.",
         }
       : null,
     counts.calls_no_followup > 0
@@ -96,7 +96,7 @@ export default async function HomePage() {
       ? {
           href: "/app/appels?filtre=echoues",
           compte: counts.calls_failed,
-          titre: "Appels que Sophie n'a pas pu prendre",
+          titre: "Appels que Zeli n'a pas pu prendre",
           detail: "Le client a entendu sonner sans réponse.",
         }
       : null,
@@ -129,19 +129,19 @@ export default async function HomePage() {
         </h1>
         <p className="mt-1 text-ink-soft">
           {!configured
-            ? "Sophie n'est pas encore prête à répondre à vos appels."
+            ? "Zeli n'est pas encore prête à répondre à vos appels."
             : ligne.repond
-              ? `Sophie répond sur le ${ligne.numero}.`
+              ? `Zeli répond sur le ${ligne.numero}.`
               : ligne.raison
                 ? MESSAGE_SILENCE[ligne.raison].titre
-                : "Sophie ne répond pas pour le moment."}
+                : "Zeli ne répond pas pour le moment."}
         </p>
       </header>
 
       {!configured ? (
         <Sheet tone="attention">
           <p className="font-display text-lg font-semibold">
-            Configuration de Sophie
+            Configuration de Zeli
           </p>
           <p className="mt-1 text-sm text-ink-soft">
             {progress} % de la configuration est fait. Il reste votre métier,
@@ -187,7 +187,7 @@ export default async function HomePage() {
           >
             {ligne.raison === "AUCUN_NUMERO"
               ? "Déclarer mon numéro"
-              : "Ouvrir les réglages de Sophie"}
+              : "Ouvrir les réglages de Zeli"}
           </Link>
         </Sheet>
       ) : null}
@@ -313,7 +313,7 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <SectionTitle>Sophie, ces sept jours</SectionTitle>
+        <SectionTitle>Zeli, ces sept jours</SectionTitle>
         <StatStrip
           items={[
             {

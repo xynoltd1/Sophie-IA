@@ -8,7 +8,7 @@ import { listerTaches } from "@/lib/crm/tasks-query";
 import { TaskList } from "./task-list";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Tâches — Sophie IA" };
+export const metadata = { title: "Tâches — Zelicall" };
 
 /** Ce qu'on dit quand une vue est vide, vue par vue. */
 const VIDE: Record<VueTaches, { titre: string; detail: string }> = {
@@ -23,7 +23,7 @@ const VIDE: Record<VueTaches, { titre: string; detail: string }> = {
   ouvertes: {
     titre: "Aucune tâche",
     detail:
-      "Les rappels que Sophie note pendant un appel apparaissent ici, et vous pouvez en ajouter vous-même.",
+      "Les rappels que Zeli note pendant un appel apparaissent ici, et vous pouvez en ajouter vous-même.",
   },
   faites: {
     titre: "Rien de terminé",

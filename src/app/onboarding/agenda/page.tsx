@@ -7,7 +7,7 @@ import { getCalendarState } from "@/lib/crm/calendar-state";
 import { googleCalendarConfigured } from "@/lib/providers/calendar/google";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Votre agenda — Sophie IA" };
+export const metadata = { title: "Votre agenda — Zelicall" };
 
 /**
  * Étape agenda.
@@ -27,7 +27,7 @@ export default async function CalendarStep() {
     <StepShell
       step="CALENDAR"
       title="Votre agenda"
-      intro="Sophie lira vos vraies disponibilités pour ne jamais proposer un créneau qui n'existe pas."
+      intro="Zeli lira vos vraies disponibilités pour ne jamais proposer un créneau qui n'existe pas."
       backHref="/onboarding/horaires"
     >
       {state.connected ? (
@@ -37,14 +37,14 @@ export default async function CalendarStep() {
             <p className="text-sm text-ink-soft">{state.account}</p>
           ) : null}
           <p className="text-sm text-ink-soft">
-            Sophie tiendra compte de vos rendez-vous personnels.
+            Zeli tiendra compte de vos rendez-vous personnels.
           </p>
         </Sheet>
       ) : configured ? (
         <Sheet className="flex flex-col gap-3">
           <p className="font-medium">Connecter Google Calendar</p>
           <p className="text-sm text-ink-soft">
-            Sophie lira vos plages occupées pour ne pas proposer un créneau déjà
+            Zeli lira vos plages occupées pour ne pas proposer un créneau déjà
             pris. Elle ne lit que les horaires de vos événements, jamais leur
             contenu, et elle n&apos;accède qu&apos;à votre agenda — pas à vos
             e-mails ni à vos contacts.
@@ -67,7 +67,7 @@ export default async function CalendarStep() {
             seront en place, sans refaire la configuration.
           </p>
           <p className="text-sm text-ink-soft">
-            En attendant, Sophie s&apos;appuiera uniquement sur les horaires que
+            En attendant, Zeli s&apos;appuiera uniquement sur les horaires que
             vous venez de définir.
           </p>
         </Sheet>

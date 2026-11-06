@@ -6,7 +6,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Consommation — Sophie IA" };
+export const metadata = { title: "Consommation — Zelicall" };
 
 const LIBELLES: Record<string, { titre: string; unite: string }> = {
   VOICE_MINUTES: { titre: "Minutes d’appel", unite: "min" },

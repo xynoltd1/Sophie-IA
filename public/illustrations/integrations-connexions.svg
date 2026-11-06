@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" role="img" aria-labelledby="t">
+  <title id="t">Zelicall au centre, relié par des liaisons animées à quatre services : la téléphonie, l’agenda, les SMS et la transcription.</title>
+  <defs>
+    <linearGradient id="iv" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#12a271"/><stop offset="100%" stop-color="#0a6b4f"/></linearGradient>
+    <linearGradient id="ip" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#eef5f1"/></linearGradient>
+    <linearGradient id="ic" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#1d3b33"/><stop offset="100%" stop-color="#0c211c"/></linearGradient>
+    <radialGradient id="ih" cx="50%" cy="48%" r="52%"><stop offset="0%" stop-color="#8ddcbb" stop-opacity="0.5"/><stop offset="100%" stop-color="#8ddcbb" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>
+    .fil{stroke-dasharray:6 7;animation:fil 2.4s linear infinite}
+    .f1{animation:fl 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .f2{animation:fl 6.8s ease-in-out infinite .6s;transform-box:fill-box;transform-origin:center}
+    .f3{animation:fl 5.4s ease-in-out infinite 1.2s;transform-box:fill-box;transform-origin:center}
+    .f4{animation:fl 7.2s ease-in-out infinite 1.8s;transform-box:fill-box;transform-origin:center}
+    .coeur{animation:c 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes fil{to{stroke-dashoffset:-26}}
+    @keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    @keyframes c{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.07);opacity:1}}
+    @media (prefers-reduced-motion:reduce){.fil,.f1,.f2,.f3,.f4,.coeur{animation:none}}
+  </style>
+  <ellipse cx="220" cy="150" rx="215" ry="145" fill="url(#ih)"/>
+
+  <!-- Les liaisons, tracées avant les blocs pour passer dessous -->
+  <g class="fil" fill="none" stroke="#0a6b4f" stroke-width="2.2" stroke-linecap="round" opacity="0.6">
+    <path d="M184 128 118 94"/>
+    <path d="M256 128 322 94"/>
+    <path d="M184 176 118 212"/>
+    <path d="M256 176 322 212"/>
+  </g>
+
+  <!-- Le cœur -->
+  <g class="coeur">
+    <ellipse cx="220" cy="206" rx="46" ry="8" fill="#0e1c18" opacity="0.13"/>
+    <rect x="172" y="116" width="96" height="76" rx="20" fill="url(#ic)"/>
+    <rect x="186" y="134" width="12" height="18" rx="6" fill="#8ddcbb"/>
+    <rect x="206" y="126" width="12" height="34" rx="6" fill="#ffffff"/>
+    <rect x="226" y="132" width="12" height="22" rx="6" fill="#8ddcbb"/>
+    <rect x="246" y="138" width="12" height="12" rx="6" fill="#4bc795"/>
+    <text x="220" y="180" text-anchor="middle" font-size="10" font-weight="700" fill="#e8f0ed" font-family="system-ui,sans-serif">Zelicall</text>
+  </g>
+
+  <!-- Téléphonie -->
+  <g class="f1">
+    <rect x="28" y="52" width="104" height="62" rx="15" fill="url(#ip)" stroke="#dde7e2"/>
+    <rect x="44" y="66" width="22" height="34" rx="6" fill="url(#ic)"/>
+    <circle cx="55" cy="76" r="4" fill="#8ddcbb"/>
+    <rect x="49" y="84" width="12" height="2.6" rx="1.3" fill="#4bc795"/>
+    <rect x="49" y="90" width="8" height="2.6" rx="1.3" fill="#4bc795" opacity="0.6"/>
+    <text x="74" y="78" font-size="7.4" fill="#7f8d87" font-family="system-ui,sans-serif">Ligne</text>
+    <text x="74" y="92" font-size="9.4" font-weight="700" fill="#0e1c18" font-family="system-ui,sans-serif">Téléphonie</text>
+  </g>
+
+  <!-- Agenda -->
+  <g class="f2">
+    <rect x="308" y="52" width="104" height="62" rx="15" fill="url(#ip)" stroke="#dde7e2"/>
+    <rect x="324" y="66" width="30" height="32" rx="6" fill="#dcece5"/>
+    <rect x="324" y="66" width="30" height="9" rx="6" fill="#0a6b4f"/>
+    <rect x="324" y="71" width="30" height="4" fill="#0a6b4f"/>
+    <rect x="329" y="80" width="8" height="6" rx="2" fill="#12a271"/>
+    <rect x="341" y="80" width="8" height="6" rx="2" fill="#b7cdc4"/>
+    <rect x="329" y="89" width="8" height="5" rx="2" fill="#b7cdc4"/>
+    <text x="362" y="78" font-size="7.4" fill="#7f8d87" font-family="system-ui,sans-serif">Créneaux</text>
+    <text x="362" y="92" font-size="9.4" font-weight="700" fill="#0e1c18" font-family="system-ui,sans-serif">Agenda</text>
+  </g>
+
+  <!-- SMS -->
+  <g class="f3">
+    <rect x="28" y="192" width="104" height="62" rx="15" fill="url(#ip)" stroke="#dde7e2"/>
+    <rect x="44" y="208" width="30" height="22" rx="7" fill="url(#iv)"/>
+    <path d="M50 230l2 8 8-8Z" fill="#0a6b4f"/>
+    <rect x="49" y="214" width="20" height="2.8" rx="1.4" fill="#ffffff" opacity="0.9"/>
+    <rect x="49" y="220" width="13" height="2.8" rx="1.4" fill="#ffffff" opacity="0.6"/>
+    <text x="82" y="218" font-size="7.4" fill="#7f8d87" font-family="system-ui,sans-serif">Au client</text>
+    <text x="82" y="232" font-size="9.4" font-weight="700" fill="#0e1c18" font-family="system-ui,sans-serif">SMS</text>
+  </g>
+
+  <!-- Transcription -->
+  <g class="f4">
+    <rect x="308" y="192" width="104" height="62" rx="15" fill="url(#ip)" stroke="#dde7e2"/>
+    <rect x="324" y="206" width="26" height="32" rx="5" fill="#dcece5"/>
+    <rect x="328" y="212" width="18" height="2.6" rx="1.3" fill="#0a6b4f"/>
+    <rect x="328" y="218" width="14" height="2.6" rx="1.3" fill="#5f8278"/>
+    <rect x="328" y="224" width="18" height="2.6" rx="1.3" fill="#5f8278"/>
+    <rect x="328" y="230" width="10" height="2.6" rx="1.3" fill="#9fada8"/>
+    <text x="358" y="218" font-size="7.4" fill="#7f8d87" font-family="system-ui,sans-serif">Après l’appel</text>
+    <text x="358" y="232" font-size="9.4" font-weight="700" fill="#0e1c18" font-family="system-ui,sans-serif">Résumé</text>
+  </g>
+</svg>

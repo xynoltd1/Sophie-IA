@@ -9,13 +9,13 @@
  *
  * ## La forme retenue
  *
- * « Martin Plomberie, bonjour. Je suis Sophie, votre assistante virtuelle.
+ * « Martin Plomberie, bonjour. Je suis Zeli, votre assistante virtuelle.
  * Comment puis-je vous aider ? »
  *
  * Le nom de l'entreprise d'abord. C'est ainsi que décroche une vraie
  * secrétaire, et cela répond tout de suite à la question que se pose
  * l'appelant : « est-ce que j'ai composé le bon numéro ? ». Une phrase qui
- * commence par « Bonjour, ici Sophie » laisse cette question ouverte pendant
+ * commence par « Bonjour, ici Zeli » laisse cette question ouverte pendant
  * trois secondes.
  *
  * ## L'obligation qui ne se règle pas
@@ -31,7 +31,7 @@
 /** Les variables utilisables dans une formule d'accueil. */
 export const VARIABLES = [
   { cle: "entreprise", exemple: "Martin Plomberie" },
-  { cle: "assistante", exemple: "Sophie" },
+  { cle: "assistante", exemple: "Zeli" },
   { cle: "metier", exemple: "plomberie" },
   { cle: "moment", exemple: "bonjour / bonsoir" },
 ] as const;

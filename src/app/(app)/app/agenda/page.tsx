@@ -18,7 +18,7 @@ import type { AppointmentRow } from "@/types/database";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Agenda — Sophie IA" };
+export const metadata = { title: "Agenda — Zelicall" };
 
 export default async function AgendaPage() {
   const { activeOrganization } = await requireOrganization();
@@ -96,7 +96,7 @@ export default async function AgendaPage() {
         ) : rendezVous.length === 0 ? (
           <EmptyState
             title="Aucun rendez-vous à venir"
-            description="Réservez un créneau ci-dessus, ou attendez que Sophie en propose."
+            description="Réservez un créneau ci-dessus, ou attendez que Zeli en propose."
           />
         ) : (
           <div className="flex flex-col gap-4">

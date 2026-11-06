@@ -229,3 +229,21 @@ brouillons : indexées, elles seraient lues comme les documents en vigueur
 
 Pour les ouvrir une fois validées : `/admin/seo`, section **Référencement page
 par page**, cocher « Indexable » et « Dans le plan du site ».
+
+## Les illustrations (0.22.0)
+
+Dix fichiers dans `public/illustrations/`, 60 ko au total.
+
+Celle du hero est écrite dans la page ; les neuf autres sont des fichiers chargés
+en différé (ADR-054). Toutes passent par le composant `Illustration`, qui impose
+`width`, `height` et une alternative textuelle — un test refuse une alternative de
+moins de trente caractères.
+
+Aucune ne contient de script ni de ressource externe, et chacune porte sa propre
+règle `prefers-reduced-motion`, parce qu'une image chargée par une balise `img`
+n'hérite d'aucune feuille de style de la page.
+
+Effet sur les Core Web Vitals : le plus grand élément du premier écran reste le SVG
+du hero, présent dans le HTML. Les illustrations de section sont sous la ligne de
+flottaison, en `loading="lazy"`, avec leurs dimensions déclarées — donc aucun
+décalage de mise en page.

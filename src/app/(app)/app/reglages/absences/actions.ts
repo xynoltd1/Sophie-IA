@@ -24,7 +24,7 @@ const schema = z.object({
  * Les dates saisies sont des JOURS, pas des instants. « Du 10 au 14 » veut
  * dire « jusqu'au 14 inclus, au soir » : on borne à minuit le lendemain, dans
  * le fuseau de l'entreprise. Prendre la date telle quelle libérerait toute la
- * journée du 14, et Sophie proposerait un rendez-vous pendant les vacances.
+ * journée du 14, et Zeli proposerait un rendez-vous pendant les vacances.
  */
 export async function ajouterAbsence(
   _prev: AbsenceState,
@@ -82,7 +82,7 @@ export async function ajouterAbsence(
   revalidatePath("/app/reglages/absences");
   revalidatePath("/app/agenda");
   return {
-    success: "Absence enregistrée. Sophie ne proposera plus ces jours-là.",
+    success: "Absence enregistrée. Zeli ne proposera plus ces jours-là.",
   };
 }
 

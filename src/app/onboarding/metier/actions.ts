@@ -34,7 +34,7 @@ export async function chooseProfession(
   const supabase = await createServerSupabase();
 
   // La fonction SQL crée le profil, les services suggérés, les horaires par
-  // défaut et la configuration de Sophie en une seule transaction.
+  // défaut et la configuration de Zeli en une seule transaction.
   const applied = await supabase.rpc("apply_profession_template", {
     org_id: activeOrganization.organization_id,
     template_id: parsed.data.templateId,

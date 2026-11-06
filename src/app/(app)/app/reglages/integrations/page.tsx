@@ -10,7 +10,7 @@ import {
 } from "@/lib/providers/status";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Intégrations — Sophie IA" };
+export const metadata = { title: "Intégrations — Zelicall" };
 
 /**
  * L'état réel des services externes.

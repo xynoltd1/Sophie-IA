@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 240" role="img" aria-labelledby="t">
+  <title id="t">Un artisan travaille tranquillement pendant que son téléphone, posé à côté, affiche trois demandes déjà traitées par Zeli.</title>
+  <defs>
+    <linearGradient id="cv" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#4bc795"/><stop offset="100%" stop-color="#17b07e"/></linearGradient>
+    <linearGradient id="cp" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#1b4038"/><stop offset="100%" stop-color="#112e28"/></linearGradient>
+    <linearGradient id="cpeau" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f6cfab"/><stop offset="100%" stop-color="#e5b289"/></linearGradient>
+    <radialGradient id="ch" cx="50%" cy="44%" r="58%"><stop offset="0%" stop-color="#4bc795" stop-opacity="0.3"/><stop offset="100%" stop-color="#4bc795" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>
+    .f{animation:f 6.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .g{animation:f 5.6s ease-in-out infinite .7s;transform-box:fill-box;transform-origin:center}
+    .h{animation:f 7s ease-in-out infinite 1.4s;transform-box:fill-box;transform-origin:center}
+    @keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @media (prefers-reduced-motion:reduce){.f,.g,.h{animation:none}}
+  </style>
+  <ellipse cx="210" cy="112" rx="205" ry="118" fill="url(#ch)"/>
+
+  <!-- L'artisan, debout, détendu, un outil à la main -->
+  <g class="f">
+    <ellipse cx="126" cy="222" rx="54" ry="9" fill="#000" opacity="0.2"/>
+    <path d="M104 214h18v8h-22Z" fill="#0d2a22"/>
+    <path d="M136 214h18v8h-22Z" fill="#0d2a22"/>
+    <path d="M110 140h36v76h-14l-4-44-4 44h-14Z" fill="#0f6f52"/>
+    <path d="M104 86q24-10 48 0 10 26 6 56h-60q-4-30 6-56Z" fill="#17b07e"/>
+    <path d="M128 92v50" stroke="#0f8a66" stroke-width="5" stroke-linecap="round"/>
+    <!-- Bras le long du corps, et un bras qui tient une clé, détendu -->
+    <path d="M106 96q-16 16-14 42" stroke="#17b07e" stroke-width="17" fill="none" stroke-linecap="round"/>
+    <path d="M150 96q16 16 14 42" stroke="#17b07e" stroke-width="17" fill="none" stroke-linecap="round"/>
+    <circle cx="92" cy="142" r="9" fill="url(#cpeau)"/>
+    <circle cx="164" cy="142" r="9" fill="url(#cpeau)"/>
+    <g transform="translate(168 150) rotate(16)">
+      <rect x="-3" y="0" width="6" height="30" rx="3" fill="#b9c6c2"/>
+      <path d="M-8 0h5v-5h6v5h5v-8a4 4 0 0 0-4-4h-8a4 4 0 0 0-4 4Z" fill="#9aa8a4"/>
+    </g>
+    <!-- Tête, casquette, et un sourire discret suffit -->
+    <circle cx="128" cy="62" r="24" fill="url(#cpeau)"/>
+    <path d="M105 58a23 23 0 0 1 46 0Z" fill="#0d5c44"/>
+    <path d="M104 58H88a5 5 0 0 0 0 10h18Z" fill="#0a4c38"/>
+    <circle cx="120" cy="66" r="2.4" fill="#2d3d38"/>
+    <circle cx="137" cy="66" r="2.4" fill="#2d3d38"/>
+    <path d="M121 75q7 5 14 0" stroke="#2d3d38" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Le téléphone, calme : tout a déjà été traité -->
+  <g class="g">
+    <rect x="252" y="40" width="130" height="164" rx="20" fill="url(#cp)" stroke="#2a5a4c"/>
+    <rect x="260" y="48" width="114" height="148" rx="14" fill="#143830"/>
+    <text x="276" y="70" font-size="8.4" fill="#79a596" font-family="system-ui,sans-serif">Pendant votre journée</text>
+    <g>
+      <rect x="272" y="80" width="90" height="32" rx="9" fill="#1d4b40"/>
+      <circle cx="288" cy="96" r="8" fill="#4bc795"/>
+      <path d="M284.5 96l2.5 2.5 4.5-5" stroke="#0c211c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="302" y="93" font-size="7.4" fill="#79a596" font-family="system-ui,sans-serif">Appel traité</text>
+      <text x="302" y="104" font-size="8.4" font-weight="600" fill="#e8f0ed" font-family="system-ui,sans-serif">Mardi 14 h</text>
+    </g>
+    <g>
+      <rect x="272" y="118" width="90" height="32" rx="9" fill="#1d4b40"/>
+      <circle cx="288" cy="134" r="8" fill="#4bc795"/>
+      <path d="M284.5 134l2.5 2.5 4.5-5" stroke="#0c211c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="302" y="131" font-size="7.4" fill="#79a596" font-family="system-ui,sans-serif">Devis demandé</text>
+      <text x="302" y="142" font-size="8.4" font-weight="600" fill="#e8f0ed" font-family="system-ui,sans-serif">À rappeler</text>
+    </g>
+    <g>
+      <rect x="272" y="156" width="90" height="32" rx="9" fill="#1d4b40"/>
+      <circle cx="288" cy="172" r="8" fill="#4bc795"/>
+      <path d="M284.5 172l2.5 2.5 4.5-5" stroke="#0c211c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="302" y="169" font-size="7.4" fill="#79a596" font-family="system-ui,sans-serif">SMS envoyé</text>
+      <text x="302" y="180" font-size="8.4" font-weight="600" fill="#e8f0ed" font-family="system-ui,sans-serif">Confirmé</text>
+    </g>
+  </g>
+
+  <!-- Une pastille qui dit l'essentiel -->
+  <g class="h">
+    <rect x="196" y="24" width="112" height="30" rx="15" fill="url(#cv)"/>
+    <text x="252" y="43" text-anchor="middle" font-size="10" font-weight="700" fill="#0c211c" font-family="system-ui,sans-serif">Zeli a répondu</text>
+  </g>
+</svg>

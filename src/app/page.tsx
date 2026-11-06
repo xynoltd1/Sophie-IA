@@ -8,6 +8,7 @@ import {
 } from "@/lib/seo/site";
 import { IllustrationAccueil } from "@/components/public/hero-illustration";
 import { Reveal } from "@/components/public/reveal";
+import { Illustration } from "@/components/public/illustration";
 import { offresPubliques, type OffrePublique } from "@/lib/seo/offres";
 import { pageSeo } from "@/lib/seo/pages";
 import { HabillagePublic } from "@/components/public/chrome";
@@ -103,24 +104,32 @@ const PROBLEMES = [
 const ETAPES = [
   {
     numero: "01",
+    image: "etape-1-repond",
+    alt: "Un téléphone décroche un appel ; des ondes de voix en sortent de chaque côté.",
     titre: "Elle décroche",
     texte:
       "Elle répond au nom de votre entreprise, en français, et dit tout de suite qu’elle est une assistante virtuelle.",
   },
   {
     numero: "02",
+    image: "etape-2-comprend",
+    alt: "Une bulle de conversation se transforme en fiche client : nom, adresse, problème.",
     titre: "Elle comprend",
     texte:
       "Elle écoute, pose les questions de votre métier, note le nom, l’adresse et le problème. Une urgence est marquée comme telle.",
   },
   {
     numero: "03",
+    image: "etape-3-agenda",
+    alt: "Un agenda de la semaine : deux créneaux pris, un troisième libre mis en avant à 14 h.",
     titre: "Elle regarde votre agenda",
     texte:
       "Vos vrais créneaux, vos horaires, vos congés, la marge entre deux interventions. Elle propose une heure qui existe, et la bloque.",
   },
   {
     numero: "04",
+    image: "etape-4-valide",
+    alt: "Une fiche de rendez-vous à valider, avec un pouce qui appuie sur le bouton Accepter.",
     titre: "Vous décidez",
     texte:
       "Le rendez-vous arrive chez vous marqué « à valider ». Vous écoutez l’appel, lisez le résumé, acceptez d’un pouce. Le client reçoit un SMS.",
@@ -132,7 +141,7 @@ const DEMONSTRATION = [
   {
     qui: "sophie",
     texte:
-      "Martin Plomberie, bonjour. Je suis Sophie, votre assistante virtuelle. Comment puis-je vous aider ?",
+      "Martin Plomberie, bonjour. Je suis Zeli, votre assistante virtuelle. Comment puis-je vous aider ?",
   },
   {
     qui: "client",
@@ -247,7 +256,7 @@ const INTEGRATIONS = [
     nom: "Téléphonie",
     etat: "Disponible",
     texte:
-      "Un numéro dédié qui sonne chez Sophie, ou le renvoi de votre propre ligne.",
+      "Un numéro dédié qui sonne chez Zeli, ou le renvoi de votre propre ligne.",
   },
   {
     nom: "Google Agenda",
@@ -281,10 +290,10 @@ const INTEGRATIONS = [
 const QUESTIONS = [
   {
     q: "Faut-il changer de numéro de téléphone ?",
-    r: "Non. Vous gardez le vôtre, celui qui est sur votre camionnette et sur vos devis. Vous renvoyez vers Sophie les appels que vous ne décrochez pas, avec un code à composer sur votre téléphone.",
+    r: "Non. Vous gardez le vôtre, celui qui est sur votre camionnette et sur vos devis. Vous renvoyez vers Zeli les appels que vous ne décrochez pas, avec un code à composer sur votre téléphone.",
   },
   {
-    q: "Comment Sophie répond-elle ?",
+    q: "Comment Zeli répond-elle ?",
     r: "Par la voix, en français, en se présentant au nom de votre entreprise. Elle écoute la demande, pose les questions de votre métier, consulte votre agenda et propose une heure qui existe vraiment.",
   },
   {
@@ -308,7 +317,7 @@ const QUESTIONS = [
     r: "Google Agenda pour l’instant. La connexion prend deux minutes et se retire aussi vite. Les autres agendas sont prévus dans l’architecture mais ne sont pas développés.",
   },
   {
-    q: "Comment désactiver Sophie ?",
+    q: "Comment désactiver Zeli ?",
     r: "Un interrupteur dans l’application. Elle cesse de décrocher immédiatement, et vos appels reviennent chez vous. Rien n’est supprimé : les fiches, les appels et les rendez-vous restent.",
   },
 ];
@@ -458,11 +467,11 @@ function HeroSection() {
           <h1 className="mt-5 font-display text-[2.6rem] font-semibold leading-[1.05] tracking-tight text-balance sm:text-6xl">
             Vous ne pouvez pas décrocher.
             <br />
-            <span className="text-signal">Sophie, si.</span>
+            <span className="text-signal">Zeli, si.</span>
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-soft text-pretty sm:text-xl">
-            Pendant que vous travaillez, Sophie répond à vos clients, comprend
+            Pendant que vous travaillez, Zeli répond à vos clients, comprend
             leurs demandes et prépare vos rendez-vous. Vous gardez le contrôle,
             sans interrompre votre journée.
           </p>
@@ -472,7 +481,7 @@ function HeroSection() {
               href="/signup"
               className="pressable flex min-h-13 items-center justify-center rounded-control bg-signal px-6 text-base font-medium text-white shadow-raised transition-colors hover:bg-signal-deep"
             >
-              Essayer Sophie
+              Essayer Zeli
             </Link>
             <Link
               href="#fonctionnement"
@@ -515,19 +524,32 @@ function ProblemeSection() {
         </TitreSectionPublic>
       </Reveal>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {PROBLEMES.map((probleme, index) => (
-          <Reveal key={probleme.titre} delai={index * 70}>
-            <div className="h-full rounded-sheet border border-line bg-paper p-5 transition-transform hover:-translate-y-0.5">
-              <p className="font-display text-lg font-semibold">
-                {probleme.titre}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                {probleme.texte}
-              </p>
-            </div>
-          </Reveal>
-        ))}
+      {/* Illustration à droite, texte à gauche. La section suivante inverse :
+          une page qui répète la même disposition se lit comme un formulaire. */}
+      <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1fr_1.05fr]">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {PROBLEMES.map((probleme, index) => (
+            <Reveal key={probleme.titre} delai={index * 70}>
+              <div className="h-full rounded-sheet border border-line bg-paper p-5 transition-transform hover:-translate-y-0.5">
+                <p className="font-display text-lg font-semibold">
+                  {probleme.titre}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  {probleme.texte}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delai={120} className="mx-auto w-full max-w-[460px]">
+          <Illustration
+            nom="probleme-appel-manque"
+            alt="Un artisan répare un tuyau sous un évier, les deux mains prises, pendant que son téléphone sonne à côté de lui et affiche déjà un appel manqué."
+            largeur={440}
+            hauteur={330}
+          />
+        </Reveal>
       </div>
     </Section>
   );
@@ -550,19 +572,29 @@ function FonctionnementSection() {
       <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {ETAPES.map((etape, index) => (
           <Reveal key={etape.numero} delai={index * 80}>
-            <li className="relative h-full list-none overflow-hidden rounded-sheet border border-line bg-surface p-6 shadow-sheet transition-transform hover:-translate-y-1">
-              <span
-                aria-hidden="true"
-                className="absolute -right-2 -top-4 font-display text-[5rem] font-semibold leading-none text-signal-tint"
-              >
-                {etape.numero}
-              </span>
-              <p className="relative font-display text-xl font-semibold">
-                {etape.titre}
-              </p>
-              <p className="relative mt-2 text-sm leading-relaxed text-ink-soft">
-                {etape.texte}
-              </p>
+            <li className="relative h-full list-none overflow-hidden rounded-sheet border border-line bg-surface shadow-sheet transition-transform hover:-translate-y-1">
+              <div className="bg-paper-deep px-4 pb-1 pt-3">
+                <Illustration
+                  nom={etape.image}
+                  alt={etape.alt}
+                  largeur={200}
+                  hauteur={160}
+                />
+              </div>
+              <div className="relative p-6">
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-3 right-2 font-display text-[4.5rem] font-semibold leading-none text-signal-tint"
+                >
+                  {etape.numero}
+                </span>
+                <p className="relative font-display text-xl font-semibold">
+                  {etape.titre}
+                </p>
+                <p className="relative mt-2 text-sm leading-relaxed text-ink-soft">
+                  {etape.texte}
+                </p>
+              </div>
             </li>
           </Reveal>
         ))}
@@ -592,7 +624,19 @@ function DemonstrationSection() {
         </p>
       </Reveal>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+      <Reveal delai={100}>
+        <div className="mt-8 overflow-hidden rounded-sheet border border-line bg-paper p-4 sm:p-6">
+          <Illustration
+            nom="demonstration-appel"
+            alt="Le déroulé d’un appel : le téléphone du client à gauche, les répliques au centre, et à droite le rendez-vous préparé du mardi 14 h, à valider."
+            largeur={440}
+            hauteur={300}
+            className="mx-auto max-w-[680px]"
+          />
+        </div>
+      </Reveal>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-start">
         <div className="rounded-sheet border border-line bg-paper p-5 sm:p-7">
           <ol className="flex flex-col gap-3">
             {DEMONSTRATION.map((ligne, index) => (
@@ -609,7 +653,7 @@ function DemonstrationSection() {
                   ) : (
                     <div className="max-w-[88%]">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                        {ligne.qui === "sophie" ? "Sophie" : "Le client"}
+                        {ligne.qui === "sophie" ? "Zeli" : "Le client"}
                       </p>
                       <p
                         className={`rounded-sheet px-4 py-3 text-[0.95rem] leading-relaxed ${
@@ -694,13 +738,25 @@ function MetiersSection() {
       <Reveal>
         <TitreSectionPublic
           surtitre="Les métiers"
-          sous="Sophie n’est pas écrite pour un métier. Vous choisissez le vôtre à l’inscription, et elle adapte ses questions, ses urgences et ses durées d’intervention."
+          sous="Zeli n’est pas écrite pour un métier. Vous choisissez le vôtre à l’inscription, et elle adapte ses questions, ses urgences et ses durées d’intervention."
         >
           Pour ceux qui travaillent avec les mains
         </TitreSectionPublic>
       </Reveal>
 
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <Reveal delai={80}>
+        <div className="mt-8">
+          <Illustration
+            nom="metiers-outils"
+            alt="Les outils de six métiers posés côte à côte : une clé à molette pour la plomberie, une prise et un éclair pour l’électricité, une clé pour la serrurerie, un radiateur pour le chauffage, un sécateur pour le jardinage et un rouleau pour la peinture."
+            largeur={420}
+            hauteur={240}
+            className="mx-auto max-w-[620px]"
+          />
+        </div>
+      </Reveal>
+
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {METIERS.map((metier, index) => (
           <Reveal key={metier.nom} delai={(index % 4) * 50}>
             <div className="flex h-full items-center gap-3 rounded-sheet border border-line bg-paper px-4 py-4 transition-colors hover:border-signal">
@@ -728,41 +784,54 @@ function GarantiesSection() {
           surtitre="Les garde-fous"
           sous="C’est la partie que les autres ne mettent pas sur leur site. Une assistante qui improvise vous coûte un client ; mieux vaut qu’elle dise qu’elle transmet."
         >
-          Ce que Sophie ne fera jamais
+          Ce que Zeli ne fera jamais
         </TitreSectionPublic>
       </Reveal>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {GARANTIES.map((garantie, index) => (
-          <Reveal key={garantie.titre} delai={(index % 3) * 70}>
-            <div className="h-full rounded-sheet border border-line bg-surface p-6">
-              <span
-                aria-hidden="true"
-                className="mb-3 flex size-9 items-center justify-center rounded-control bg-signal-soft text-signal"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+      {/* Illustration à gauche cette fois : la section précédente la mettait
+          à droite, et l'alternance donne son rythme à la page. */}
+      <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1fr_1.4fr]">
+        <Reveal className="order-last mx-auto w-full max-w-[420px] lg:order-first">
+          <Illustration
+            nom="garanties-controle"
+            alt="Un bouclier protège les données de l’appel ; à côté, une main garde l’interrupteur de validation manuelle, qui est activé."
+            largeur={420}
+            hauteur={300}
+          />
+        </Reveal>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {GARANTIES.map((garantie, index) => (
+            <Reveal key={garantie.titre} delai={(index % 3) * 70}>
+              <div className="h-full rounded-sheet border border-line bg-surface p-6">
+                <span
+                  aria-hidden="true"
+                  className="mb-3 flex size-9 items-center justify-center rounded-control bg-signal-soft text-signal"
                 >
-                  <path d="M12 3l7 3v6c0 4.4-3 7.7-7 9-4-1.3-7-4.6-7-9V6l7-3Z" />
-                  <path d="M9 12l2 2 4-4" />
-                </svg>
-              </span>
-              <p className="font-display text-lg font-semibold">
-                {garantie.titre}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                {garantie.texte}
-              </p>
-            </div>
-          </Reveal>
-        ))}
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 3l7 3v6c0 4.4-3 7.7-7 9-4-1.3-7-4.6-7-9V6l7-3Z" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                </span>
+                <p className="font-display text-lg font-semibold">
+                  {garantie.titre}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  {garantie.texte}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </Section>
   );
@@ -784,11 +853,23 @@ function IntegrationsSection() {
           surtitre="Intégrations"
           sous="Ce qui est marqué « disponible » fonctionne. Ce qui est marqué « à venir » est prévu dans l’architecture, et rien de plus."
         >
-          Ce à quoi Sophie se connecte
+          Ce à quoi Zeli se connecte
         </TitreSectionPublic>
       </Reveal>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Reveal delai={80}>
+        <div className="mt-8">
+          <Illustration
+            nom="integrations-connexions"
+            alt="Zelicall au centre, relié à quatre services : la téléphonie, l’agenda, les SMS et le résumé d’appel."
+            largeur={440}
+            hauteur={300}
+            className="mx-auto max-w-[620px]"
+          />
+        </div>
+      </Reveal>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {INTEGRATIONS.map((integration, index) => (
           <Reveal key={integration.nom} delai={(index % 3) * 70}>
             <div className="flex h-full flex-col rounded-sheet border border-line bg-paper p-6">
@@ -823,7 +904,7 @@ function AccesSection({ offres }: { offres: OffrePublique[] }) {
       <Reveal>
         <TitreSectionPublic
           surtitre="Accès"
-          sous="Sophie ouvre progressivement. Créez votre compte, configurez votre entreprise, et testez-la avant de la mettre sur votre vraie ligne."
+          sous="Zeli ouvre progressivement. Créez votre compte, configurez votre entreprise, et testez-la avant de la mettre sur votre vraie ligne."
         >
           Commencer
         </TitreSectionPublic>
@@ -881,7 +962,7 @@ function AccesSection({ offres }: { offres: OffrePublique[] }) {
             </p>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               La création de compte est ouverte. Vous configurez votre
-              entreprise, votre métier et votre accueil, et vous testez Sophie
+              entreprise, votre métier et votre accueil, et vous testez Zeli
               sans la mettre sur votre vraie ligne. Nous reviendrons vers vous
               avant toute mise en service payante.
             </p>
@@ -964,24 +1045,35 @@ function AppelFinalSection() {
             "radial-gradient(700px 360px at 50% 0%, rgba(75,199,149,0.22), transparent 70%)",
         }}
       />
-      <div className="relative mx-auto max-w-3xl text-center">
-        <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-          Vos clients appellent. Continuez à travailler.
-        </h2>
-        <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-console-ink-soft text-pretty">
-          Créez votre compte, dites à Sophie ce que vous faites, connectez votre
-          agenda. Le reste se passe pendant que vous travaillez.
-        </p>
-        <Link
-          href="/signup"
-          className="pressable mt-8 inline-flex min-h-13 items-center justify-center rounded-control bg-console-accent px-7 text-base font-semibold text-console shadow-raised"
-        >
-          Créer mon compte
-        </Link>
-        <p className="mt-4 text-sm text-console-ink-soft">
-          Configuration guidée. Vous pouvez tester Sophie avant de la mettre sur
-          votre ligne.
-        </p>
+      <div className="relative mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:text-left">
+        <div className="text-center lg:text-left">
+          <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
+            Vos clients appellent. Continuez à travailler.
+          </h2>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-console-ink-soft text-pretty">
+            Créez votre compte, dites à Zeli ce que vous faites, connectez votre
+            agenda. Le reste se passe pendant que vous travaillez.
+          </p>
+          <Link
+            href="/signup"
+            className="pressable mt-8 inline-flex min-h-13 items-center justify-center rounded-control bg-console-accent px-7 text-base font-semibold text-console shadow-raised"
+          >
+            Créer mon compte
+          </Link>
+          <p className="mt-4 text-sm text-console-ink-soft">
+            Configuration guidée. Vous pouvez tester Zeli avant de la mettre sur
+            votre ligne.
+          </p>
+        </div>
+
+        <Reveal className="mx-auto w-full max-w-[420px]">
+          <Illustration
+            nom="cta-sereinite"
+            alt="Un artisan travaille tranquillement, outil à la main, pendant que son téléphone affiche trois demandes déjà traitées par Zeli."
+            largeur={420}
+            hauteur={240}
+          />
+        </Reveal>
       </div>
     </section>
   );

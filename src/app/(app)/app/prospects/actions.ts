@@ -31,7 +31,7 @@ const schema = z.object({
  *
  * La déduplication passe par find_contact_by_phone() : le même numéro saisi
  * « 0470 12 34 56 » ou « +32470123456 » retrouve le même contact. C'est la
- * même fonction que Sophie utilisera en Phase 4 pour reconnaître un appelant,
+ * même fonction que Zeli utilisera en Phase 4 pour reconnaître un appelant,
  * d'où l'intérêt de l'éprouver dès maintenant.
  */
 export async function createLead(

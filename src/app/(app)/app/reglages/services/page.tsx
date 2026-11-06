@@ -9,7 +9,7 @@ import { ServicesEditor } from "@/app/onboarding/services/services-editor";
 import type { ServiceRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Services — Sophie IA" };
+export const metadata = { title: "Services — Zelicall" };
 
 export default async function ServicesReglagesPage() {
   const { activeOrganization } = await requireOrganization();
@@ -35,7 +35,7 @@ export default async function ServicesReglagesPage() {
       </Link>
       <SectionTitle>Services</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Sophie ne propose que les services actifs, et n’annonce que les durées
+        Zeli ne propose que les services actifs, et n’annonce que les durées
         indiquées ici. Elle n’invente jamais un service absent de cette liste.
       </p>
 

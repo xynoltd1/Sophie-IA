@@ -59,7 +59,7 @@ export async function saveHours(
   if (isEveryDayClosed(hours)) {
     return {
       error:
-        "Gardez au moins un jour d'ouverture : sans cela, Sophie ne pourrait proposer aucun rendez-vous.",
+        "Gardez au moins un jour d'ouverture : sans cela, Zeli ne pourrait proposer aucun rendez-vous.",
     };
   }
 

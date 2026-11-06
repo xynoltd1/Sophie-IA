@@ -99,6 +99,10 @@ export async function enregistrerAccueil(
     {
       organization_id: activeOrganization.organization_id,
       assistant_name: valeurs.assistant_name,
+      // À partir d'ici, ce nom appartient à l'entreprise. Aucune migration de
+      // renommage ne doit plus l'écraser, même si elle retape le nom par
+      // défaut : l'avoir vu et conservé est un choix.
+      assistant_name_source: "CUSTOM",
       spoken_name: valeurs.spoken_name || null,
       greeting: valeurs.greeting || null,
       greeting_morning: valeurs.greeting_morning || null,

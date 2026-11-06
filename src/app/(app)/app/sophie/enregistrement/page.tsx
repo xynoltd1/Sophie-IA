@@ -5,7 +5,7 @@ import { isRecordingActive, recordingBlockers } from "@/lib/org/recording";
 import { RecordingForm } from "./recording-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Enregistrement des appels — Sophie IA" };
+export const metadata = { title: "Enregistrement des appels — Zelicall" };
 
 /**
  * Réglage de l'enregistrement des appels (sections 13, 40 et 42).
@@ -41,7 +41,7 @@ export default async function EnregistrementPage() {
           href="/app/sophie"
           className="text-sm text-ink-soft underline underline-offset-4"
         >
-          ← Sophie
+          ← Zeli
         </Link>
       </div>
 
@@ -67,7 +67,7 @@ export default async function EnregistrementPage() {
             <span className="font-medium text-ink">
               Vos clients doivent être prévenus.
             </span>{" "}
-            Sophie l’annonce au début de chaque appel. Cette annonce n’est pas
+            Zeli l’annonce au début de chaque appel. Cette annonce n’est pas
             désactivable.
           </p>
           <p>

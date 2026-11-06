@@ -15,7 +15,7 @@ export interface MetierState {
  * Un service suggéré, tel que l'onboarding le lira.
  *
  * Le schéma est strict parce que ces valeurs finissent dans la bouche de
- * Sophie : une durée absurde ou un nom vide deviendrait une proposition faite à
+ * Zeli : une durée absurde ou un nom vide deviendrait une proposition faite à
  * un vrai client.
  */
 const serviceSchema = z.object({

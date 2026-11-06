@@ -30,7 +30,7 @@ export function OrganizationForm() {
       <Field
         label="Nom de l’entreprise"
         htmlFor="name"
-        hint="C’est le nom que Sophie annoncera au téléphone."
+        hint="C’est le nom que Zeli annoncera au téléphone."
         error={state.fieldErrors?.name}
       >
         <Input

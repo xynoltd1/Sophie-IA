@@ -28,7 +28,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * 2. **Répondre 200 même en cas d'erreur métier.** Un code d'erreur HTTP est
  *    compris par le fournisseur comme une panne de notre serveur : il coupe la
  *    conversation. Une erreur métier se signale dans le champ `error`, ce qui
- *    permet à Sophie de dire au client qu'elle ne peut pas répondre, sans
+ *    permet à Zeli de dire au client qu'elle ne peut pas répondre, sans
  *    raccrocher.
  *
  * 3. **Ne jamais faire confiance à l'organisation annoncée par le modèle.** Elle
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (cause) {
     // Une exception non prévue ne doit pas couper l'appel en cours : on la
-    // consigne et on laisse Sophie continuer avec une réponse honnête.
+    // consigne et on laisse Zeli continuer avec une réponse honnête.
     console.error("[voice/tools] échec de l'outil", appel.name, cause);
 
     return NextResponse.json(
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
  * Retrouve l'organisation concernée.
  *
  * Trois sources, dans cet ordre de confiance décroissante. Aucune ne vient du
- * modèle : Sophie ne décide jamais chez qui elle travaille.
+ * modèle : Zeli ne décide jamais chez qui elle travaille.
  *
  * **1. Le numéro appelé.** C'est la source de référence. La table
  * `phone_numbers` fait le lien, et elle est écrite par nous. Un appel arrivé

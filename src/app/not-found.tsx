@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Page introuvable — Sophie IA",
+  title: "Page introuvable — Zelicall",
   robots: { index: false, follow: true },
 };
 

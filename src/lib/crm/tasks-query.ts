@@ -9,7 +9,7 @@ export type { TacheListee, VueTaches } from "./tasks";
 /**
  * La lecture des tâches.
  *
- * Les tâches existaient déjà : Sophie en crée pendant un appel (« demandez-lui
+ * Les tâches existaient déjà : Zeli en crée pendant un appel (« demandez-lui
  * de me rappeler demain »), la fiche contact en affiche quelques-unes. Mais
  * aucun écran ne les montrait toutes. L'accueil annonçait « 3 tâches en
  * retard » et renvoyait vers un filtre de prospects qui ne connaissait pas ce

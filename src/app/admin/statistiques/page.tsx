@@ -138,7 +138,7 @@ export default async function StatistiquesPage({
       </section>
 
       <section>
-        <TitreSection detail="Ce que Sophie a réellement fait, hors essais.">
+        <TitreSection detail="Ce que Zeli a réellement fait, hors essais.">
           Opérationnel
         </TitreSection>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

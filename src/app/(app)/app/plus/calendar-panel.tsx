@@ -76,8 +76,8 @@ export function CalendarPanel({
 
         <p className="text-sm text-ink-soft">
           {state.connected
-            ? "Sophie tient compte de vos rendez-vous personnels et ne proposera pas un créneau déjà pris."
-            : "Sophie ne voit que les rendez-vous enregistrés ici. Elle pourrait proposer un créneau déjà occupé dans votre agenda personnel."}
+            ? "Zeli tient compte de vos rendez-vous personnels et ne proposera pas un créneau déjà pris."
+            : "Zeli ne voit que les rendez-vous enregistrés ici. Elle pourrait proposer un créneau déjà occupé dans votre agenda personnel."}
         </p>
 
         {state.lastSyncedAt ? (

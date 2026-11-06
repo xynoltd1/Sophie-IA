@@ -13,10 +13,10 @@ import {
 import { RetentionForm } from "./retention-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Conservation — Sophie IA" };
+export const metadata = { title: "Conservation — Zelicall" };
 
 /**
- * Combien de temps Sophie garde ce qu'elle a entendu.
+ * Combien de temps Zeli garde ce qu'elle a entendu.
  *
  * L'audio a son propre écran parce qu'il a sa propre contrainte : 30 jours au
  * maximum, et une acceptation préalable. Les trois autres durées se règlent

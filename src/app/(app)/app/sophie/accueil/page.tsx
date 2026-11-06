@@ -5,12 +5,13 @@ import { Sheet, SectionTitle } from "@/components/ui/sheet";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { buildAnnouncement } from "@/lib/sophie/announcement";
 import { EditeurAccueil } from "./editor";
+import { ASSISTANTE_PAR_DEFAUT } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Accueil téléphonique — Sophie IA" };
+export const metadata = { title: "Accueil téléphonique — Zelicall" };
 
 /**
- * Ce que Sophie dit en décrochant.
+ * Ce que Zeli dit en décrochant.
  *
  * L'écran montre la phrase complète avant de proposer de la changer. Un
  * formulaire de réglages qui ne montre pas le résultat oblige à appeler son
@@ -41,7 +42,7 @@ export default async function AccueilPage() {
         .maybeSingle(),
     ]);
 
-  const assistantName = config?.assistant_name ?? "Sophie";
+  const assistantName = config?.assistant_name ?? ASSISTANTE_PAR_DEFAUT;
   const spokenName = config?.spoken_name ?? "";
 
   // L'annonce réellement due, pas une annonce d'exemple : c'est elle qui

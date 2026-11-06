@@ -3,6 +3,99 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.22.0] — 2026-11-06 — Zeli, et dix illustrations
+
+### Les deux noms sont séparés
+
+**Zelicall** est la plateforme. **Zeli** est l'assistante. Ils étaient confondus
+sous « Sophie IA », ce qui empêchait de parler de l'une sans parler de l'autre.
+
+317 lignes réécrites dans 101 fichiers. Les identifiants techniques ne bougent
+pas : la table `sophie_configurations`, la fonction
+`sophie_runtime_for_number`, les dossiers `lib/sophie` et `/app/sophie`, les
+routes. Les renommer casserait la base, les types générés et l'historique des
+migrations, pour un nom que personne ne voit. Un test vérifie qu'aucune
+mention **visible** ne subsiste, et laisse passer les identifiants.
+
+### Les noms déjà choisis ne sont pas écrasés
+
+C'est le point délicat. Une entreprise qui a appelé son assistante « Camille »
+la garde. Mais celles qui portent « Sophie » parce que c'était le défaut
+doivent être renommées — et la base ne distinguait pas les deux cas.
+
+La migration `0038` ajoute une colonne `assistant_name_source`. Elle marque
+comme **choisi** tout nom qui n'a jamais été un défaut du produit, et tout
+compte passé par l'écran d'accueil — `greeting_updated_at` le prouve. Seul le
+reste est renommé.
+
+**Une limite, que je préfère écrire :** une entreprise qui aurait tapé
+« Sophie » pendant l'onboarding, avant l'existence de l'écran d'accueil, est
+indiscernable d'un défaut hérité. Elle sera renommée. Aucune donnée en base ne
+permet de le savoir. La colonne ajoutée empêche que le cas se reproduise : à
+partir de maintenant, tout nom enregistré depuis un formulaire est marqué
+comme choisi, définitivement.
+
+### Dix illustrations
+
+`public/illustrations/`, 60 ko au total pour les dix.
+
+- `probleme-appel-manque` — un artisan sous un évier, les mains prises, le
+  téléphone qui sonne et les appels déjà manqués qui s'empilent ;
+- `etape-1-repond`, `etape-2-comprend`, `etape-3-agenda`, `etape-4-valide` —
+  quatre vignettes de même facture, une par étape ;
+- `demonstration-appel` — l'appel de bout en bout, du combiné au rendez-vous ;
+- `metiers-outils` — les outils de six métiers ;
+- `integrations-connexions` — Zelicall relié à ses quatre services ;
+- `garanties-controle` — le bouclier et l'interrupteur de validation ;
+- `cta-sereinite` — l'artisan tranquille, le téléphone qui a tout traité.
+
+Elles forment une famille : même palette, même lumière venant d'en haut à
+gauche, mêmes ombres au sol, mêmes animations.
+
+**Une tentative abandonnée en route.** J'ai d'abord écrit un générateur de
+géométrie isométrique. Le résultat, vu à l'écran, était illisible : des
+volumes trop petits qui ne racontaient rien. Je l'ai jeté et tout redessiné à
+la main. Je le dis parce que le fichier n'est pas dans la livraison et que
+c'est une demi-journée de travail qui n'apparaît nulle part.
+
+### Comment elles sont chargées
+
+En fichiers, pas dans la page. Le hero reste écrit dans le HTML — c'est le
+plus grand élément du premier écran, donc celui que Google chronomètre. Les
+autres sont sous la ligne de flottaison : en fichiers, elles se chargent à
+l'approche et restent en cache d'une visite à l'autre.
+
+Chaque fichier porte ses propres animations **et** sa propre règle
+`prefers-reduced-motion` : une image chargée par une balise `img` n'hérite
+d'aucune feuille de style de la page, donc la préférence serait ignorée
+précisément là où ça bouge. Un test le vérifie fichier par fichier.
+
+### La page alterne
+
+Problème : cartes à gauche, illustration à droite. Garanties : l'inverse.
+Démonstration, métiers et intégrations : composition pleine largeur. Appel
+final : deux colonnes. Une page qui répète la même disposition se lit comme un
+formulaire.
+
+### Vérifié
+
+498 tests (476 passants, 22 ignorés), typecheck, lint, build. Dix-sept
+nouveaux : aucune mention visible de l'ancien nom nulle part, la migration
+incapable d'écraser un nom choisi, les tables non renommées, aucune URL
+publique changée, chaque illustration sans script ni ressource externe, titrée,
+sous 24 ko, et respectant la réduction d'animations.
+
+Vérifié aussi dans un navigateur, sur 1440 px et sur iPhone 13 : aucun
+débordement horizontal, aucun bloc resté invisible.
+
+### À faire de votre côté
+
+Appliquer la migration `0038`, et **changer le nom de l'assistant chez Vapi**.
+Le texte de l'accueil vient de notre base depuis la 0.20.0, mais si l'assistant
+enregistré chez eux s'appelle encore « Sophie », ce nom apparaît dans leur
+tableau de bord et dans leurs journaux. Détail dans `OWNER_ACTION_PLAN.md`,
+étape B4c.
+
 ## [0.21.0] — 2026-11-06 — La page d'accueil, refaite
 
 ### Le hero

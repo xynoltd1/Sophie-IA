@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ForgotForm } from "./forgot-form";
 
-export const metadata = { title: "Mot de passe oublié — Sophie IA" };
+export const metadata = { title: "Mot de passe oublié — Zelicall" };
 
 export default function MotDePasseOubliePage() {
   return (

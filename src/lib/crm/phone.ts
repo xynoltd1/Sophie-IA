@@ -32,7 +32,7 @@ export interface PhoneCheck {
   /** Le numéro en forme internationale, ou `null` s'il est inutilisable. */
   e164: string | null;
   plausible: boolean;
-  /** Ce qui ne va pas, formulé pour être dit à voix haute par Sophie. */
+  /** Ce qui ne va pas, formulé pour être dit à voix haute par Zeli. */
   reason?: string;
 }
 

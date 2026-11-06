@@ -18,12 +18,12 @@ export const metadata: Metadata = {
   verification: process.env.GOOGLE_SITE_VERIFICATION
     ? { google: process.env.GOOGLE_SITE_VERIFICATION }
     : undefined,
-  title: "Sophie IA",
+  title: "Zelicall",
   description:
-    "Sophie répond à vos clients pendant que vous travaillez : appels qualifiés, rendez-vous proposés, messages centralisés.",
-  applicationName: "Sophie IA",
+    "Zeli répond à vos clients pendant que vous travaillez : appels qualifiés, rendez-vous proposés, messages centralisés.",
+  applicationName: "Zelicall",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "Sophie", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Zeli", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 

@@ -10,7 +10,7 @@ import { STEP_ROUTES } from "./steps";
  */
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Votre entreprise — Sophie IA" };
+export const metadata = { title: "Votre entreprise — Zelicall" };
 
 export default async function OnboardingPage() {
   const { activeOrganization } = await requireSession();
@@ -34,7 +34,7 @@ export default async function OnboardingPage() {
         <p className="text-sm font-medium text-signal">Étape 1 sur 7</p>
         <h1 className="mt-1 text-hero font-semibold">Votre entreprise</h1>
         <p className="mt-2 text-ink-soft">
-          Sophie a besoin de savoir pour qui elle répond. Vous pourrez tout
+          Zeli a besoin de savoir pour qui elle répond. Vous pourrez tout
           modifier ensuite.
         </p>
       </div>

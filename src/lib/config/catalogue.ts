@@ -95,7 +95,7 @@ export const CATALOGUE: readonly FournisseurConfig[] = [
       {
         cle: "api_key",
         libelle: "Clé API",
-        aide: "Elle permet à Sophie de rédiger les résumés. Elle n’est jamais réaffichée après enregistrement.",
+        aide: "Elle permet à Zeli de rédiger les résumés. Elle n’est jamais réaffichée après enregistrement.",
         secret: true,
         variableEnv: "AI_API_KEY",
         placeholder: "sk-…",
@@ -120,7 +120,7 @@ export const CATALOGUE: readonly FournisseurConfig[] = [
   },
   {
     cle: "voice",
-    nom: "Sophie Voice",
+    nom: "Zeli Voice",
     categorie: "Voix IA",
     role: "Répond au téléphone, parle avec le client et appelle les outils de l’application.",
     implemente: true,
@@ -133,7 +133,7 @@ export const CATALOGUE: readonly FournisseurConfig[] = [
       {
         cle: "api_key",
         libelle: "Clé API privée",
-        aide: "Elle autorise l’application à déclarer les outils de Sophie chez le fournisseur.",
+        aide: "Elle autorise l’application à déclarer les outils de Zeli chez le fournisseur.",
         secret: true,
         variableEnv: "VOICE_API_KEY",
       },

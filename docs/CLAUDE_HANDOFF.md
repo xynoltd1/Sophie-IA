@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.21.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.22.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-sept
+## Migrations — trente-huit
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -296,7 +296,13 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  des brouillons : indexees, elles seraient lues
                                  comme les documents en vigueur (ADR-050).
 
-**0033, 0034, 0035, 0036 et 0037 ne sont pas appliquées en production.** Les écrans qui en dépendent
+0038_assistante_zeli             assistant_name_source (DEFAULT|CUSTOM), renomme
+                                 les seuls noms herites en « Zeli », change le
+                                 defaut de la colonne, met a jour le repli de
+                                 sophie_runtime_for_number. Ne renomme AUCUNE
+                                 table ni fonction (ADR-052).
+
+**0033 à 0038 ne sont pas appliquées en production.** Les écrans qui en dépendent
 — statistiques, consommation, SEO, intégrations, référencement page par page, envoi
 d'image, accueil téléphonique — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
 étape D2.
@@ -460,8 +466,23 @@ responsabilité, droit applicable. Puis les rendre indexables depuis
 `/admin/seo` et retirer le bandeau de brouillon dans
 `src/components/public/legal.tsx`.
 
+**12. Renommer l'assistant chez Vapi** (`OWNER_ACTION_PLAN.md`, B4c) et vérifier que
+son instruction système ne dit plus « Sophie ». La phrase d'accueil vient de notre base
+depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là.
+
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Les deux noms — à ne pas reconfondre
+
+**Zelicall** est la plateforme, **Zeli** est l'assistante. `src/lib/brand.ts` les
+porte, et rien d'autre ne doit les recopier.
+
+Les identifiants techniques gardent « sophie » : table `sophie_configurations`,
+fonction `sophie_runtime_for_number`, dossiers `lib/sophie/` et `/app/sophie`, clés
+d'énumération. C'est délibéré (ADR-052) et un test l'autorise explicitement. Ce même
+test échoue sur toute mention **visible** de l'ancien nom : avant d'ajouter un texte,
+vérifier qu'il dit Zeli.
 
 ## Leçon de la 0.21.0 — regarder la page, pas seulement la compiler
 

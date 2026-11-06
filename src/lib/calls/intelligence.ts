@@ -9,6 +9,7 @@ import {
 } from "@/lib/sophie/analysis";
 import { signalerErreurFournisseur } from "@/lib/platform/errors";
 import { noterEchangeReussi } from "@/lib/platform/errors";
+import { ASSISTANTE_PAR_DEFAUT } from "@/lib/brand";
 
 /**
  * Production du résumé et des champs structurés à partir de la transcription.
@@ -47,7 +48,7 @@ interface Tour {
 /**
  * La conversation telle qu'un modèle doit la lire.
  *
- * Les noms sont neutres — « Sophie » et « Client » — parce que le nom réel de
+ * Les noms sont neutres — « Zeli » et « Client » — parce que le nom réel de
  * l'appelant fait partie de ce que l'extraction doit TROUVER. Le lui donner
  * d'avance reviendrait à lui souffler la réponse, et à le laisser confirmer un
  * nom que la transcription a peut-être mal entendu.
@@ -57,7 +58,7 @@ export function transcriptionEnTexte(tours: Tour[]): string {
     .map((tour) => {
       const qui =
         tour.speaker === "SOPHIE"
-          ? "Sophie"
+          ? ASSISTANTE_PAR_DEFAUT
           : tour.speaker === "CLIENT"
             ? "Client"
             : "Système";

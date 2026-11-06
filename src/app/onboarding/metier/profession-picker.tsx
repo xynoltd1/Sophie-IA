@@ -78,7 +78,7 @@ export function ProfessionPicker({
         <Field
           label="Précisez votre métier"
           htmlFor="customLabel"
-          hint="C'est le terme que Sophie emploiera avec vos clients."
+          hint="C'est le terme que Zeli emploiera avec vos clients."
         >
           <Input
             id="customLabel"

@@ -61,7 +61,7 @@ export const RETENTION_FIELDS: readonly RetentionDescription[] = [
     champ: "summary_retention_days",
     titre: "Résumés et données extraites",
     detail:
-      "Le résumé de Sophie et les informations qu'elle a relevées (nom, adresse, " +
+      "Le résumé de Zeli et les informations qu'elle a relevées (nom, adresse, " +
       "problème). La fiche d'appel reste, avec sa date et sa durée.",
   },
   {

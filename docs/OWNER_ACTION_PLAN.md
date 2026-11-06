@@ -835,6 +835,41 @@ mot pour mot.
 Vapi écrase ce que le script a poussé. Relancez `npm run vapi:tools -- --apply` après
 chaque modification faite à la main.
 
+## B4c — Renommer l'assistant chez Vapi
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **moyenne** · dépend de **B4** · **coût : 0 €**
+
+**Quoi** Chez Vapi, renommer l'assistant « Sophie » en « Zeli », et vérifier son
+instruction système.
+
+**Pourquoi** Depuis la 0.20.0, la phrase prononcée vient de notre base : vos clients
+entendent déjà le bon nom. Mais l'assistant enregistré chez Vapi porte encore son
+ancien nom dans leur tableau de bord et dans leurs journaux. Et si son instruction
+système contient « Tu es Sophie », il peut se corriger lui-même au milieu d'une phrase.
+
+**Les menus**
+
+1. **Assistants** → votre assistant → changez le nom en :
+
+```
+Zeli
+```
+
+2. Dans le même écran, onglet **Model**, lisez l'instruction système. Si le mot
+   « Sophie » y apparaît, remplacez-le par « Zeli ».
+
+3. Relancez la synchronisation des outils dans votre terminal :
+
+```
+npm run vapi:tools -- --apply
+```
+
+**Comment vérifier** Appelez le numéro. La première phrase doit dire « Je suis Zeli ».
+
+**Si Zeli se présente encore comme Sophie** C'est l'instruction système du point 2.
+La phrase d'accueil vient de nous, mais ce qu'elle dit d'elle-même ensuite vient de là.
+
 ## B5 — Obtenir un numéro de téléphone
 
 - [ ] Fait
@@ -1541,7 +1576,7 @@ ligne `Sitemap:`. La troisième liste deux adresses.
 Vercel. Corrigez la variable, puis **relancez un déploiement** : elle est lue à la
 compilation.
 
-## D2 — Appliquer les migrations 0033 à 0037
+## D2 — Appliquer les migrations 0033 à 0038
 
 - [ ] Fait
 `ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
@@ -1553,6 +1588,7 @@ compilation.
 3. `supabase/migrations/20261105140000_0035_seo_pages.sql`
 4. `supabase/migrations/20261105170000_0036_accueil_personnalise.sql`
 5. `supabase/migrations/20261106090000_0037_pages_legales.sql`
+6. `supabase/migrations/20261106140000_0038_assistante_zeli.sql`
 
 Puis les mêmes sur la préproduction.
 

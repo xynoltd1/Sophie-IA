@@ -92,7 +92,7 @@ export function ConnaissancesEditor({
       ) : (
         <Sheet>
           <p className="text-sm text-ink-soft">
-            Sophie ne connaît pour l’instant que votre entreprise, vos services
+            Zeli ne connaît pour l’instant que votre entreprise, vos services
             et vos horaires. Ajoutez ici ce qu’elle doit pouvoir répondre
             d’autre.
           </p>
@@ -134,7 +134,7 @@ export function ConnaissancesEditor({
 
           <div className="flex flex-col gap-1">
             <label className="text-sm" htmlFor="answer">
-              Ce que Sophie doit dire
+              Ce que Zeli doit dire
             </label>
             <textarea
               id="answer"

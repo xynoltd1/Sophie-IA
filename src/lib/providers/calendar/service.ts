@@ -437,7 +437,7 @@ export async function syncCalendar(
           external_event_id: block.externalEventId,
           // L'intitulé d'un rendez-vous personnel peut être sensible. On le
           // garde pour que le professionnel se reconnaisse, mais il n'est
-          // jamais transmis au client ni à Sophie.
+          // jamais transmis au client ni à Zeli.
           summary: block.summary,
           starts_at: block.startsAt.toISOString(),
           ends_at: block.endsAt.toISOString(),
@@ -543,7 +543,7 @@ export async function pushAppointment(params: {
       contact?.full_name ? `Client : ${contact.full_name}` : null,
       contact?.phone ? `Téléphone : ${contact.phone}` : null,
       rdv.notes as string | null,
-      "— créé par Sophie IA",
+      "— créé par Zelicall",
     ]
       .filter(Boolean)
       .join("\n"),
@@ -623,7 +623,7 @@ export async function removeAppointment(params: {
  * tourner plus d'une fois par jour sur un compte Vercel Hobby, alors que
  * `calendar_sync_state` considère un agenda comme fiable seulement s'il a été
  * relu il y a moins de 30 minutes. Dépendre de la tâche planifiée rendrait donc
- * l'agenda « périmé » presque en permanence, et Sophie refuserait de proposer
+ * l'agenda « périmé » presque en permanence, et Zeli refuserait de proposer
  * le moindre créneau (sections 19 et 43). Voir ADR-024.
  *
  * On synchronise donc au moment où la réponse en dépend : ouverture de l'agenda,

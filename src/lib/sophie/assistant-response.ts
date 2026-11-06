@@ -10,9 +10,9 @@
  * ## La forme de la réponse
  *
  * `{ assistantId, assistantOverrides }` : l'assistant enregistré chez le
- * fournisseur porte les outils de Sophie, et nous ne remplaçons que les mots.
+ * fournisseur porte les outils de Zeli, et nous ne remplaçons que les mots.
  * Un assistant construit de toutes pièces à chaque appel devrait porter aussi
- * les quatorze outils, et une erreur dans cette liste couperait Sophie de la
+ * les quatorze outils, et une erreur dans cette liste couperait Zeli de la
  * base pendant la conversation.
  *
  * `variableValues` est la voie documentée par le fournisseur. L'assistant
@@ -41,7 +41,7 @@ export type MotifRefus =
   | "PANNE";
 
 /**
- * Ce qui est dit quand Sophie ne décroche pas.
+ * Ce qui est dit quand Zeli ne décroche pas.
  *
  * Aucune de ces phrases ne nomme une entreprise. À ce stade, on ne sait pas
  * laquelle — c'est la raison même du refus — et en nommer une au hasard

@@ -1,7 +1,7 @@
 import type { VoiceToolDefinition } from "@/lib/providers/voice/types";
 
 /**
- * Contrat commun à tous les outils de Sophie.
+ * Contrat commun à tous les outils de Zeli.
  *
  * Séparé de `tools.ts` pour que les outils puissent vivre dans plusieurs
  * fichiers sans s'importer en cercle. Le contenu n'a pas changé.
@@ -36,7 +36,7 @@ export type ToolHandler = (
   context: ToolContext,
 ) => Promise<ToolOutcome>;
 
-export interface SophieTool {
+export interface ZeliTool {
   definition: VoiceToolDefinition;
   handler: ToolHandler;
 }

@@ -3,7 +3,7 @@ import { FormulaireInvitation } from "./formulaire";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
-  title: "Invitation — Sophie IA",
+  title: "Invitation — Zelicall",
   robots: { index: false },
 };
 
@@ -28,7 +28,7 @@ export default async function PageInvitation({
           Rejoindre une entreprise
         </h1>
         <p className="mt-2 text-sm text-ink-soft">
-          Vous avez été invité à rejoindre une entreprise sur Sophie IA.
+          Vous avez été invité à rejoindre une entreprise sur Zelicall.
           Connectez-vous avec l’adresse qui a reçu l’invitation, puis confirmez.
         </p>
         <FormulaireInvitation token={token} />

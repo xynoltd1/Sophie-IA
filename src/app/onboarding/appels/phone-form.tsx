@@ -5,33 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Sheet } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
-import type { SophieAnswerMode } from "@/types/database";
+import type { ZeliAnswerMode } from "@/types/database";
 import { savePhoneRules, type PhoneState } from "./actions";
 
-const MODES: { value: SophieAnswerMode; label: string; detail: string }[] = [
+const MODES: { value: ZeliAnswerMode; label: string; detail: string }[] = [
   {
     value: "WHEN_UNAVAILABLE",
     label: "Quand je ne réponds pas",
     detail:
-      "Le téléphone sonne chez vous d'abord. Sophie prend le relais après quelques sonneries.",
+      "Le téléphone sonne chez vous d'abord. Zeli prend le relais après quelques sonneries.",
   },
   {
     value: "ALWAYS",
     label: "Toujours",
     detail:
-      "Sophie décroche tous les appels. Utile quand vous êtes sur un chantier toute la journée.",
+      "Zeli décroche tous les appels. Utile quand vous êtes sur un chantier toute la journée.",
   },
   {
     value: "SCHEDULE",
     label: "Selon des horaires",
     detail:
-      "Sophie répond en dehors de vos heures de travail. Les plages se règlent ensuite.",
+      "Zeli répond en dehors de vos heures de travail. Les plages se règlent ensuite.",
   },
   {
     value: "OFF",
     label: "Jamais pour l'instant",
     detail:
-      "Vous configurez tout maintenant et vous activerez Sophie quand vous serez prêt.",
+      "Vous configurez tout maintenant et vous activerez Zeli quand vous serez prêt.",
   },
 ];
 
@@ -39,7 +39,7 @@ export function PhoneForm({
   answerMode,
   transferNumber,
 }: {
-  answerMode: SophieAnswerMode;
+  answerMode: ZeliAnswerMode;
   transferNumber: string | null;
 }) {
   const [state, action, pending] = useActionState<PhoneState, FormData>(
@@ -62,7 +62,7 @@ export function PhoneForm({
       <input type="hidden" name="answerMode" value={mode} />
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="sr-only">Quand Sophie doit-elle répondre ?</legend>
+        <legend className="sr-only">Quand Zeli doit-elle répondre ?</legend>
         {MODES.map((option) => {
           const active = mode === option.value;
           return (
@@ -91,7 +91,7 @@ export function PhoneForm({
         <Field
           label="Votre numéro"
           htmlFor="transferNumber"
-          hint="Celui qui sonne avant que Sophie prenne le relais."
+          hint="Celui qui sonne avant que Zeli prenne le relais."
           error={state.fieldErrors?.transferNumber}
         >
           <Input
@@ -108,7 +108,7 @@ export function PhoneForm({
       ) : null}
 
       <Sheet className="flex flex-col gap-2 border-attention bg-attention-soft">
-        <p className="font-semibold">Sophie ne décroche pas encore</p>
+        <p className="font-semibold">Zeli ne décroche pas encore</p>
         <p className="text-sm text-ink-soft">
           La prise d&apos;appel réelle demande un numéro de téléphone et une
           intégration téléphonique, en cours de construction. Vos réglages sont

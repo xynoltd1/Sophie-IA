@@ -3,8 +3,8 @@ import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   diagnostiquerLigne,
-  type ConfigurationSophie,
-  type EtatLigneSophie,
+  type ConfigurationZeli,
+  type EtatLigneZeli,
   type NumeroRelie,
 } from "@/lib/sophie/ligne";
 import type {
@@ -188,15 +188,15 @@ export async function suitesDesAppels(
 }
 
 /**
- * L'état réel de la ligne de Sophie, lu en base.
+ * L'état réel de la ligne de Zeli, lu en base.
  *
- * Deux lectures, parce qu'il y a deux façons pour Sophie de rester muette : ne
+ * Deux lectures, parce qu'il y a deux façons pour Zeli de rester muette : ne
  * pas avoir de numéro, ou ne pas être activée. Le professionnel doit voir
  * laquelle le concerne, pas un voyant gris sans explication.
  */
-export async function etatLigneSophie(
+export async function etatLigneZeli(
   organizationId: string,
-): Promise<EtatLigneSophie> {
+): Promise<EtatLigneZeli> {
   const supabase = await createServerSupabase();
 
   const [configuration, numeros] = await Promise.all([
@@ -212,7 +212,7 @@ export async function etatLigneSophie(
   ]);
 
   return diagnostiquerLigne(
-    (configuration.data ?? null) as ConfigurationSophie | null,
+    (configuration.data ?? null) as ConfigurationZeli | null,
     (numeros.data ?? []) as NumeroRelie[],
   );
 }
@@ -234,14 +234,14 @@ export async function alertesNonLues(organizationId: string): Promise<number> {
   return count ?? 0;
 }
 
-export interface ActiviteSophie {
+export interface ActiviteZeli {
   appels: number;
   prospects: number;
   rendezVous: number;
 }
 
 /**
- * Ce que Sophie a fait cette semaine (section 30).
+ * Ce que Zeli a fait cette semaine (section 30).
  *
  * Trois chiffres, sur sept jours glissants. Pas un graphique : l'artisan ne
  * vient pas sur l'accueil pour analyser une tendance, il vient savoir si sa
@@ -251,9 +251,9 @@ export interface ActiviteSophie {
  * Les comptes passent par RLS avec `head: true` : aucune ligne n'est
  * rapatriée, seulement le total.
  */
-export async function activiteSophie(
+export async function activiteZeli(
   organizationId: string,
-): Promise<ActiviteSophie> {
+): Promise<ActiviteZeli> {
   const supabase = await createServerSupabase();
   const depuis = new Date(Date.now() - 7 * 86_400_000).toISOString();
 

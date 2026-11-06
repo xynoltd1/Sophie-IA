@@ -119,7 +119,7 @@ export function MenuMobile({ liens }: { liens: LienNav[] }) {
                 onClick={() => setOuvert(false)}
                 className="pressable flex min-h-12 items-center justify-center rounded-control bg-signal px-4 font-medium text-white"
               >
-                Essayer Sophie
+                Essayer Zeli
               </Link>
               <Link
                 href="/login"

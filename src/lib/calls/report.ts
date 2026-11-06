@@ -81,11 +81,11 @@ function nombreOuNull(valeur: unknown): number | null {
 // ---------------------------------------------------------------------------
 
 /**
- * `bot` est Sophie, `user` est l'appelant. Le reste — instruction de départ,
+ * `bot` est Zeli, `user` est l'appelant. Le reste — instruction de départ,
  * appels d'outils, résultats d'outils — n'est pas de la conversation et n'a
  * rien à faire dans une transcription lue par un artisan. Ces lignes sont
  * écartées plutôt que rangées sous `SYSTEME` : l'instruction de départ est le
- * prompt complet de Sophie, inutile ici et volumineux à chaque appel.
+ * prompt complet de Zeli, inutile ici et volumineux à chaque appel.
  */
 function speakerDepuisRole(role: unknown): Speaker | null {
   switch (typeof role === "string" ? role.toLowerCase() : "") {

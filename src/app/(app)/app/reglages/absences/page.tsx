@@ -8,7 +8,7 @@ import { can } from "@/lib/auth/permissions";
 import { AbsencesEditor, type LigneAbsence } from "./absences-editor";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Absences — Sophie IA" };
+export const metadata = { title: "Absences — Zelicall" };
 
 export default async function AbsencesPage() {
   const { activeOrganization } = await requireOrganization();
@@ -42,7 +42,7 @@ export default async function AbsencesPage() {
       </Link>
       <SectionTitle>Absences et vacances</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Pendant ces périodes, Sophie ne proposera aucun créneau. Les rendez-vous
+        Pendant ces périodes, Zeli ne proposera aucun créneau. Les rendez-vous
         déjà confirmés ne sont pas touchés : à vous de prévenir ces clients.
       </p>
 

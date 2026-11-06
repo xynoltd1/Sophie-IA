@@ -71,7 +71,7 @@ export async function ownerOfNumber(
  *
  * Ne lève pas quand le numéro est inconnu : renvoie `null`. L'appelant décide
  * quoi faire — en général, laisser le fournisseur jouer un message et
- * raccrocher, plutôt que de faire parler Sophie au nom de personne.
+ * raccrocher, plutôt que de faire parler Zeli au nom de personne.
  */
 export async function openCall(
   incoming: IncomingCall,

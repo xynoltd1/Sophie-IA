@@ -104,7 +104,7 @@ export function InstallButton({ className }: { className?: string }) {
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id="install-ios-titre" className="font-display text-xl font-semibold">
-              Ajouter Sophie à votre écran d’accueil
+              Ajouter Zeli à votre écran d’accueil
             </h2>
             <p className="mt-2 text-ink-soft">
               Vous recevrez les rendez-vous à valider directement sur votre téléphone.

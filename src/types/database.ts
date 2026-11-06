@@ -111,8 +111,8 @@ export interface MyOrganizationRow {
 }
 
 export type ServiceSource = "TEMPLATE" | "CUSTOM";
-export type SophieStyle = "CHALEUREUX" | "NEUTRE" | "DIRECT";
-export type SophieAnswerMode = "OFF" | "ALWAYS" | "WHEN_UNAVAILABLE" | "SCHEDULE";
+export type ZeliStyle = "CHALEUREUX" | "NEUTRE" | "DIRECT";
+export type ZeliAnswerMode = "OFF" | "ALWAYS" | "WHEN_UNAVAILABLE" | "SCHEDULE";
 export type KnowledgeKind = "FAQ" | "INSTRUCTION" | "FACT";
 export type AbsenceKind = "VACATION" | "ABSENCE" | "HOLIDAY";
 
@@ -172,7 +172,7 @@ export interface ServiceRow {
   duration_minutes: number;
   is_urgent: boolean;
   is_active: boolean;
-  /** Texte libre : Sophie l'énonce tel quel et ne calcule jamais un prix. */
+  /** Texte libre : Zeli l'énonce tel quel et ne calcule jamais un prix. */
   price_indication: string | null;
   collect_fields: string[];
   source: ServiceSource;
@@ -192,16 +192,16 @@ export interface BusinessHourRow {
   closes_at: string | null;
 }
 
-export interface SophieConfigurationRow {
+export interface ZeliConfigurationRow {
   organization_id: string;
   assistant_name: string;
   language: string;
   voice_id: string | null;
-  style: SophieStyle;
+  style: ZeliStyle;
   greeting: string | null;
   behavior_notes: string | null;
   disclose_ai: boolean;
-  answer_mode: SophieAnswerMode;
+  answer_mode: ZeliAnswerMode;
   transfer_number: string | null;
   transfer_number_e164: string | null;
   is_active: boolean;

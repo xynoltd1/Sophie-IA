@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ui/states";
 import type { ProfessionTemplateRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Votre métier — Sophie IA" };
+export const metadata = { title: "Votre métier — Zelicall" };
 
 export default async function ProfessionStep() {
   const { organization, supabase } = await requireStep("PROFESSION");
@@ -40,7 +40,7 @@ export default async function ProfessionStep() {
     <StepShell
       step="PROFESSION"
       title="Votre métier"
-      intro="Sophie adapte son vocabulaire, ses questions et ses suggestions de services. Vous pourrez tout modifier ensuite."
+      intro="Zeli adapte son vocabulaire, ses questions et ses suggestions de services. Vous pourrez tout modifier ensuite."
       backHref="/onboarding"
     >
       <ProfessionPicker

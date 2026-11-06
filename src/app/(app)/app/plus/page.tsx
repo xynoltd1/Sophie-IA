@@ -10,7 +10,7 @@ import { getCalendarState } from "@/lib/crm/calendar-state";
 import { CalendarPanel } from "./calendar-panel";
 import type { MemberRole, MemberStatus } from "@/types/database";
 
-export const metadata = { title: "Plus — Sophie IA" };
+export const metadata = { title: "Plus — Zelicall" };
 
 const ROLE_LABELS: Record<MemberRole, string> = {
   OWNER: "Propriétaire",
@@ -120,11 +120,11 @@ export default async function PlusPage({
             {
               href: "/app/notifications",
               titre: "Alertes",
-              detail: "Ce que Sophie a signalé.",
+              detail: "Ce que Zeli a signalé.",
             },
             {
               href: "/app/sophie",
-              titre: "Sophie",
+              titre: "Zeli",
               detail: "Son état, ses connaissances, l’enregistrement.",
             },
           ].map((entree) => (

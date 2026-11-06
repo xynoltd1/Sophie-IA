@@ -5,13 +5,13 @@ import { InstallButton } from "@/components/pwa/install-button";
 /**
  * En-tête de l'application.
  *
- * L'élément le plus important n'est pas le logo : c'est de savoir si Sophie
+ * L'élément le plus important n'est pas le logo : c'est de savoir si Zeli
  * répond ou non en ce moment. Tout le reste de la barre lui cède la place.
  *
  * ## Deux corrections de hiérarchie
  *
  * Les alertes s'affichaient comme un nombre dans un cadre ambre, à côté du
- * badge de Sophie. Deux cadres de même taille côte à côte se lisent comme deux
+ * badge de Zeli. Deux cadres de même taille côte à côte se lisent comme deux
  * états, et l'œil doit relire pour savoir lequel est lequel. Les alertes sont
  * donc redevenues ce qu'elles sont — une cloche avec une pastille — et il ne
  * reste qu'un seul objet d'état dans la barre.
@@ -85,7 +85,7 @@ export function AppHeader({
               sophieActive ? "bg-signal ring-2 ring-signal/25" : "bg-ink-faint",
             )}
           />
-          {sophieActive ? "Sophie répond" : "Sophie en pause"}
+          {sophieActive ? "Zeli répond" : "Zeli en pause"}
         </Link>
       </div>
     </header>

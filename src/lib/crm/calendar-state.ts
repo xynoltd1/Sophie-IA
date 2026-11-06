@@ -12,7 +12,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
  *  - connecté mais périmé : on ne peut PAS affirmer qu'un créneau est libre.
  *
  * Le troisième cas est le plus dangereux, parce qu'il ressemble au deuxième.
- * Section 19 : Sophie ne doit jamais inventer une disponibilité.
+ * Section 19 : Zeli ne doit jamais inventer une disponibilité.
  */
 export type CalendarConfidence =
   | "NOT_CONNECTED"
@@ -78,18 +78,18 @@ export async function getCalendarState(
 }
 
 /**
- * Phrase à afficher au professionnel. Elle dit ce que Sophie voit, et surtout
+ * Phrase à afficher au professionnel. Elle dit ce que Zeli voit, et surtout
  * ce qu'elle ne voit pas.
  */
 export function calendarMessage(state: CalendarState): string {
   switch (state.confidence) {
     case "FRESH":
-      return `Agenda Google connecté${state.account ? ` (${state.account})` : ""}. Sophie tient compte de vos rendez-vous personnels.`;
+      return `Agenda Google connecté${state.account ? ` (${state.account})` : ""}. Zeli tient compte de vos rendez-vous personnels.`;
     case "EXPIRED":
-      return "L'autorisation Google a expiré. Sophie ne voit plus votre agenda : reconnectez-le pour qu'elle recommence à proposer des créneaux.";
+      return "L'autorisation Google a expiré. Zeli ne voit plus votre agenda : reconnectez-le pour qu'elle recommence à proposer des créneaux.";
     case "STALE":
       return "Agenda Google connecté, mais la dernière synchronisation est ancienne. Vérifiez vos créneaux avant de confirmer.";
     case "NOT_CONNECTED":
-      return "Agenda Google non connecté. Sophie ne voit que les rendez-vous enregistrés ici, pas ceux de votre agenda personnel.";
+      return "Agenda Google non connecté. Zeli ne voit que les rendez-vous enregistrés ici, pas ceux de votre agenda personnel.";
   }
 }

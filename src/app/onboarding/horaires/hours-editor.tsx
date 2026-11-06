@@ -142,7 +142,7 @@ export function HoursEditor({
         <Field
           label="Marge entre deux interventions"
           htmlFor="buffer"
-          hint="Le temps de trajet et de rangement. Sophie en tiendra compte."
+          hint="Le temps de trajet et de rangement. Zeli en tiendra compte."
         >
           <Input
             id="buffer"

@@ -1,14 +1,14 @@
 /**
- * L'état réel de la ligne de Sophie.
+ * L'état réel de la ligne de Zeli.
  *
- * L'en-tête de l'application affichait « Sophie en pause » en permanence : la
+ * L'en-tête de l'application affichait « Zeli en pause » en permanence : la
  * valeur était écrite en dur dans la mise en page, en attendant la téléphonie.
  * La téléphonie est arrivée, pas la valeur. Un voyant qui ne regarde rien est
  * pire qu'une absence de voyant — il répond à la question sans la poser.
  *
  * Quatre conditions, et il suffit qu'une seule manque pour qu'aucun client ne
- * puisse joindre Sophie. Elles sont rendues dans l'ordre où il faut les
- * traiter : sans numéro, activer Sophie ne sert à rien.
+ * puisse joindre Zeli. Elles sont rendues dans l'ordre où il faut les
+ * traiter : sans numéro, activer Zeli ne sert à rien.
  */
 
 export type RaisonSilence =
@@ -16,20 +16,20 @@ export type RaisonSilence =
   | "AUCUN_NUMERO"
   /** Seule une ligne d'essai existe : les appels arrivent, marqués essai. */
   | "LIGNE_ESSAI"
-  /** Sophie n'a pas été activée. */
+  /** Zeli n'a pas été activée. */
   | "CONFIG_INACTIVE"
-  /** Sophie est réglée pour ne jamais décrocher. */
+  /** Zeli est réglée pour ne jamais décrocher. */
   | "MODE_OFF";
 
-export interface EtatLigneSophie {
-  /** Vrai seulement si un vrai client peut réellement joindre Sophie. */
+export interface EtatLigneZeli {
+  /** Vrai seulement si un vrai client peut réellement joindre Zeli. */
   repond: boolean;
   raison: RaisonSilence | null;
   /** Le premier numéro relié, pour l'afficher au professionnel. */
   numero: string | null;
 }
 
-export interface ConfigurationSophie {
+export interface ConfigurationZeli {
   is_active: boolean;
   answer_mode: string;
 }
@@ -41,9 +41,9 @@ export interface NumeroRelie {
 }
 
 export function diagnostiquerLigne(
-  configuration: ConfigurationSophie | null,
+  configuration: ConfigurationZeli | null,
   numeros: NumeroRelie[],
-): EtatLigneSophie {
+): EtatLigneZeli {
   const actifs = numeros.filter((n) => n.is_active);
   const reels = actifs.filter((n) => !n.is_test);
   const numero = (reels[0] ?? actifs[0])?.e164 ?? null;
@@ -66,7 +66,7 @@ export const MESSAGE_SILENCE: Record<
   { titre: string; detail: string }
 > = {
   AUCUN_NUMERO: {
-    titre: "Sophie n’a pas encore de numéro",
+    titre: "Zeli n’a pas encore de numéro",
     detail:
       "Aucun numéro de téléphone n’est relié à votre entreprise. Vos appels sont donc " +
       "marqués « essai » : ils n’apparaissent pas dans ce qui presse et ne comptent dans " +
@@ -79,12 +79,12 @@ export const MESSAGE_SILENCE: Record<
       "aucune alerte, pour ne pas créer de faux travail.",
   },
   CONFIG_INACTIVE: {
-    titre: "Sophie n’est pas activée",
+    titre: "Zeli n’est pas activée",
     detail:
-      "Votre numéro est relié, mais Sophie ne décroche pas tant qu’elle n’est pas activée.",
+      "Votre numéro est relié, mais Zeli ne décroche pas tant qu’elle n’est pas activée.",
   },
   MODE_OFF: {
-    titre: "Sophie est réglée pour ne jamais décrocher",
+    titre: "Zeli est réglée pour ne jamais décrocher",
     detail: "Choisissez quand elle doit répondre dans les réglages d’appel.",
   },
 };

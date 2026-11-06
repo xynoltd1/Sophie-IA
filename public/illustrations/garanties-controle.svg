@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300" role="img" aria-labelledby="t">
+  <title id="t">Un bouclier protège les données de l’entreprise ; à côté, une main garde l’interrupteur de validation.</title>
+  <defs>
+    <linearGradient id="gb" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#17b07e"/><stop offset="100%" stop-color="#0a6b4f"/></linearGradient>
+    <linearGradient id="gp" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#eef5f1"/></linearGradient>
+    <linearGradient id="gpeau" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f6cfab"/><stop offset="100%" stop-color="#e5b289"/></linearGradient>
+    <radialGradient id="gh" cx="40%" cy="44%" r="58%"><stop offset="0%" stop-color="#8ddcbb" stop-opacity="0.45"/><stop offset="100%" stop-color="#8ddcbb" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>
+    .f{animation:f 6.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .g{animation:f 5.6s ease-in-out infinite .8s;transform-box:fill-box;transform-origin:center}
+    .lueur{animation:l 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes l{0%,100%{opacity:.3}50%{opacity:.75}}
+    @media (prefers-reduced-motion:reduce){.f,.g,.lueur{animation:none}}
+  </style>
+  <ellipse cx="200" cy="146" rx="210" ry="145" fill="url(#gh)"/>
+
+  <!-- Le bouclier -->
+  <g class="f">
+    <ellipse cx="146" cy="262" rx="58" ry="9" fill="#0e1c18" opacity="0.13"/>
+    <path class="lueur" d="M146 24l86 32v74c0 56-38 94-86 110-48-16-86-54-86-110V56Z" fill="#8ddcbb"/>
+    <path d="M146 34l76 28v68c0 50-34 84-76 98-42-14-76-48-76-98V62Z" fill="url(#gb)"/>
+    <path d="M146 34l76 28v68c0 50-34 84-76 98Z" fill="#000" opacity="0.08"/>
+    <path d="M114 128l22 22 42-44" stroke="#ffffff" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- La fiche, protégée -->
+  <g class="g">
+    <rect x="238" y="60" width="150" height="86" rx="14" fill="url(#gp)" stroke="#dde7e2"/>
+    <circle cx="260" cy="82" r="9" fill="#dcece5"/>
+    <path d="M257 79.5h6v-2a3 3 0 0 0-6 0Zm-2 2.5h10v7h-10Z" fill="#0a6b4f"/>
+    <text x="276" y="80" font-size="8" fill="#7f8d87" font-family="system-ui,sans-serif">Données de l’appel</text>
+    <text x="276" y="92" font-size="9.6" font-weight="700" fill="#0e1c18" font-family="system-ui,sans-serif">Chez vous, pas ailleurs</text>
+    <rect x="254" y="106" width="118" height="3.8" rx="1.9" fill="#dbe4e0"/>
+    <rect x="254" y="116" width="94" height="3.8" rx="1.9" fill="#dbe4e0"/>
+    <rect x="254" y="126" width="68" height="3.8" rx="1.9" fill="#dbe4e0"/>
+  </g>
+
+  <!-- L'interrupteur : la décision reste à l'artisan -->
+  <g class="g" style="animation-delay:1.5s">
+    <rect x="238" y="166" width="150" height="72" rx="14" fill="url(#gp)" stroke="#dde7e2"/>
+    <text x="256" y="190" font-size="8" fill="#7f8d87" font-family="system-ui,sans-serif">Validation manuelle</text>
+    <rect x="256" y="200" width="54" height="28" rx="14" fill="url(#gb)"/>
+    <circle cx="296" cy="214" r="11" fill="#ffffff"/>
+    <text x="322" y="219" font-size="10" font-weight="700" fill="#0a6b4f" font-family="system-ui,sans-serif">Activée</text>
+    <path d="M196 232c0-8 7-13 14-13h5l-2-12c-.7-3.6 1.6-6.6 5-6.6 2.4 0 4.5 1.5 5.3 3.8l5.8 16.6" fill="url(#gpeau)"/>
+    <path d="M196 232a14 14 0 0 0 14 14h18a7 7 0 0 0 7-7v-14a7 7 0 0 0-7-7h-14Z" fill="url(#gpeau)"/>
+  </g>
+</svg>

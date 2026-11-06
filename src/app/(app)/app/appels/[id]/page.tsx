@@ -29,7 +29,7 @@ import type {
 } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Appel — Sophie IA" };
+export const metadata = { title: "Appel — Zelicall" };
 
 /**
  * Fiche d'un appel (section 31).
@@ -243,14 +243,14 @@ export default async function FicheAppelPage({
         <Sheet tone="attention">
           <p className="font-medium">Rien n’est sorti de cet appel</p>
           <p className="mt-1 text-sm text-ink-soft">
-            Sophie n’a noté ni demande, ni rendez-vous, ni rappel. Le client a
+            Zeli n’a noté ni demande, ni rendez-vous, ni rappel. Le client a
             peut-être raccroché avant d’expliquer ce qu’il voulait.
           </p>
         </Sheet>
       ) : null}
 
       <section>
-        <SectionTitle>Résumé de Sophie</SectionTitle>
+        <SectionTitle>Résumé de Zeli</SectionTitle>
         <Sheet
           tone={
             !appel.summary && appel.summary_status === "FAILED"
@@ -291,7 +291,7 @@ export default async function FicheAppelPage({
 
       {extraits.length > 0 ? (
         <section>
-          <SectionTitle>Ce que Sophie a retenu</SectionTitle>
+          <SectionTitle>Ce que Zeli a retenu</SectionTitle>
           <Sheet>
             <dl className="flex flex-col gap-2">
               {extraits.map((champ) => (
@@ -319,7 +319,7 @@ export default async function FicheAppelPage({
               const instant = formatInstant(tour.started_ms);
               const qui =
                 tour.speaker === "SOPHIE"
-                  ? "Sophie"
+                  ? "Zeli"
                   : tour.speaker === "CLIENT"
                     ? (appel.contacts?.full_name ?? "Client")
                     : "Système";

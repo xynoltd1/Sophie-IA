@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-labelledby="t">
+  <title id="t">Un agenda de la semaine : deux créneaux sont déjà pris, un troisième est libre et se détache en vert.</title>
+  <defs>
+    <linearGradient id="p3" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#eef5f1"/></linearGradient>
+    <linearGradient id="v3" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#12a271"/><stop offset="100%" stop-color="#0a6b4f"/></linearGradient>
+    <radialGradient id="h3" cx="50%" cy="46%" r="54%"><stop offset="0%" stop-color="#8ddcbb" stop-opacity="0.5"/><stop offset="100%" stop-color="#8ddcbb" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>
+    .f{animation:f 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .b{animation:b 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    @keyframes b{0%,100%{opacity:.5;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
+    @media (prefers-reduced-motion:reduce){.f,.b{animation:none}}
+  </style>
+  <ellipse cx="100" cy="76" rx="92" ry="70" fill="url(#h3)"/>
+  <ellipse cx="100" cy="142" rx="62" ry="7" fill="#0e1c18" opacity="0.1"/>
+  <g class="f">
+    <rect x="30" y="22" width="140" height="112" rx="13" fill="url(#p3)" stroke="#dde7e2"/>
+    <rect x="30" y="22" width="140" height="24" rx="13" fill="#132f27"/>
+    <rect x="30" y="36" width="140" height="10" fill="#132f27"/>
+    <circle cx="46" cy="18" r="4" fill="#132f27"/><circle cx="154" cy="18" r="4" fill="#132f27"/>
+    <text x="100" y="39" text-anchor="middle" font-size="9" font-weight="600" fill="#e8f0ed" font-family="system-ui,sans-serif">Cette semaine</text>
+    <g font-family="system-ui,sans-serif" font-size="6.5" fill="#7f8d87">
+      <text x="44" y="60">LUN</text><text x="74" y="60">MAR</text><text x="104" y="60">MER</text><text x="134" y="60">JEU</text>
+    </g>
+    <!-- Deux interventions déjà posées -->
+    <rect x="40" y="66" width="24" height="22" rx="5" fill="#e3e9e6"/>
+    <rect x="44" y="72" width="16" height="3" rx="1.5" fill="#9fada8"/>
+    <rect x="44" y="78" width="11" height="3" rx="1.5" fill="#bcc7c3"/>
+    <rect x="130" y="66" width="24" height="30" rx="5" fill="#e3e9e6"/>
+    <rect x="134" y="72" width="16" height="3" rx="1.5" fill="#9fada8"/>
+    <rect x="134" y="78" width="13" height="3" rx="1.5" fill="#bcc7c3"/>
+    <!-- Le créneau libre, celui que Zeli propose -->
+    <rect class="b" x="70" y="66" width="54" height="46" rx="7" fill="url(#v3)"/>
+    <text x="97" y="84" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">14 h 00</text>
+    <text x="97" y="96" text-anchor="middle" font-size="6.6" fill="#bfe9d8" font-family="system-ui,sans-serif">créneau libre</text>
+    <rect x="40" y="118" width="114" height="4" rx="2" fill="#e3e9e6"/>
+  </g>
+</svg>

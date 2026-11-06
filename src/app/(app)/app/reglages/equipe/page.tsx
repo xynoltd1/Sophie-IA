@@ -12,7 +12,7 @@ import {
 import type { MemberRole } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Équipe — Sophie IA" };
+export const metadata = { title: "Équipe — Zelicall" };
 
 export default async function EquipePage() {
   const { activeOrganization } = await requireOrganization();

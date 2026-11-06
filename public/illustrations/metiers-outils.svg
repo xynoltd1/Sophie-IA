@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 240" role="img" aria-labelledby="t">
+  <title id="t">Les outils de six métiers de terrain posés côte à côte : plomberie, électricité, serrurerie, chauffage, jardinage et peinture.</title>
+  <defs>
+    <linearGradient id="mv" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#12a271"/><stop offset="100%" stop-color="#0a6b4f"/></linearGradient>
+    <linearGradient id="mp" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#eef5f1"/></linearGradient>
+    <linearGradient id="met" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dbe4e1"/><stop offset="50%" stop-color="#aab7b3"/><stop offset="100%" stop-color="#7d8a86"/></linearGradient>
+    <radialGradient id="mh" cx="50%" cy="48%" r="56%"><stop offset="0%" stop-color="#8ddcbb" stop-opacity="0.42"/><stop offset="100%" stop-color="#8ddcbb" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>
+    .c1{animation:f 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .c2{animation:f 6.6s ease-in-out infinite .4s;transform-box:fill-box;transform-origin:center}
+    .c3{animation:f 5.4s ease-in-out infinite .8s;transform-box:fill-box;transform-origin:center}
+    .c4{animation:f 7s ease-in-out infinite 1.2s;transform-box:fill-box;transform-origin:center}
+    .c5{animation:f 5.8s ease-in-out infinite 1.6s;transform-box:fill-box;transform-origin:center}
+    .c6{animation:f 6.3s ease-in-out infinite 2s;transform-box:fill-box;transform-origin:center}
+    @keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @media (prefers-reduced-motion:reduce){.c1,.c2,.c3,.c4,.c5,.c6{animation:none}}
+  </style>
+  <ellipse cx="210" cy="118" rx="205" ry="112" fill="url(#mh)"/>
+
+  <!-- Plomberie : clé à molette -->
+  <g class="c1">
+    <rect x="16" y="36" width="116" height="78" rx="16" fill="url(#mp)" stroke="#dde7e2"/>
+    <g transform="translate(74 76) rotate(-34)">
+      <rect x="-5" y="-26" width="10" height="46" rx="4" fill="url(#met)"/>
+      <path d="M-13-32h9v8h4v-8h9v13a7 7 0 0 1-7 7h-8a7 7 0 0 1-7-7Z" fill="#879591"/>
+      <rect x="-6" y="8" width="12" height="16" rx="5" fill="#0a6b4f"/>
+    </g>
+    <text x="74" y="106" text-anchor="middle" font-size="9" font-weight="600" fill="#0e1c18" font-family="system-ui,sans-serif">Plomberie</text>
+  </g>
+
+  <!-- Électricité : prise et éclair -->
+  <g class="c2">
+    <rect x="152" y="36" width="116" height="78" rx="16" fill="url(#mp)" stroke="#dde7e2"/>
+    <rect x="192" y="48" width="36" height="36" rx="10" fill="#dcece5"/>
+    <circle cx="203" cy="62" r="3.4" fill="#0a6b4f"/><circle cx="217" cy="62" r="3.4" fill="#0a6b4f"/>
+    <path d="M203 72h14" stroke="#0a6b4f" stroke-width="3" stroke-linecap="round"/>
+    <path d="M238 44l-14 20h9l-5 16 16-22h-10Z" fill="url(#mv)"/>
+    <text x="210" y="106" text-anchor="middle" font-size="9" font-weight="600" fill="#0e1c18" font-family="system-ui,sans-serif">Électricité</text>
+  </g>
+
+  <!-- Serrurerie : clé -->
+  <g class="c3">
+    <rect x="288" y="36" width="116" height="78" rx="16" fill="url(#mp)" stroke="#dde7e2"/>
+    <g transform="translate(332 56) rotate(28)">
+      <circle cx="0" cy="0" r="13" fill="none" stroke="url(#met)" stroke-width="7"/>
+      <rect x="-3.5" y="10" width="7" height="26" rx="3" fill="url(#met)"/>
+      <rect x="2" y="24" width="10" height="5" rx="2" fill="#879591"/>
+      <rect x="2" y="31" width="8" height="5" rx="2" fill="#879591"/>
+    </g>
+    <text x="346" y="106" text-anchor="middle" font-size="9" font-weight="600" fill="#0e1c18" font-family="system-ui,sans-serif">Serrurerie</text>
+  </g>
+
+  <!-- Chauffage : radiateur et flamme -->
+  <g class="c4">
+    <rect x="16" y="130" width="116" height="78" rx="16" fill="url(#mp)" stroke="#dde7e2"/>
+    <g>
+      <rect x="40" y="146" width="44" height="34" rx="6" fill="#dcece5"/>
+      <rect x="46" y="150" width="6" height="26" rx="3" fill="#0a6b4f" opacity="0.75"/>
+      <rect x="56" y="150" width="6" height="26" rx="3" fill="#0a6b4f" opacity="0.75"/>
+      <rect x="66" y="150" width="6" height="26" rx="3" fill="#0a6b4f" opacity="0.75"/>
+      <path d="M100 148c3 7-3 9-3 14a6 6 0 0 0 12 0c0-6-5-9-9-14Z" fill="url(#mv)"/>
+    </g>
+    <text x="74" y="200" text-anchor="middle" font-size="9" font-weight="600" fill="#0e1c18" font-family="system-ui,sans-serif">Chauffage</text>
+  </g>
+
+  <!-- Jardinage : sécateur et feuille -->
+  <g class="c5">
+    <rect x="152" y="130" width="116" height="78" rx="16" fill="url(#mp)" stroke="#dde7e2"/>
+    <g transform="translate(206 162)">
+      <path d="M-18-14 2 4" stroke="url(#met)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M2-14-18 4" stroke="url(#met)" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="-8" cy="-5" r="3.4" fill="#5f6d69"/>
+      <path d="M2 4q10-2 14-10t-2-14q-10 4-14 12t2 12Z" fill="url(#mv)"/>
+    </g>
+    <text x="210" y="200" text-anchor="middle" font-size="9" font-weight="600" fill="#0e1c18" font-family="system-ui,sans-serif">Jardinage</text>
+  </g>
+
+  <!-- Peinture : rouleau -->
+  <g class="c6">
+    <rect x="288" y="130" width="116" height="78" rx="16" fill="url(#mp)" stroke="#dde7e2"/>
+    <g transform="translate(332 142)">
+      <rect x="0" y="0" width="38" height="14" rx="6" fill="url(#mv)"/>
+      <rect x="10" y="14" width="5" height="10" rx="2" fill="#879591"/>
+      <path d="M12.5 24h-14v12" stroke="url(#met)" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <rect x="-9" y="34" width="13" height="14" rx="5" fill="#0a6b4f"/>
+      <path d="M0 14q6 14 2 26" stroke="#8ddcbb" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
+    </g>
+    <text x="346" y="200" text-anchor="middle" font-size="9" font-weight="600" fill="#0e1c18" font-family="system-ui,sans-serif">Peinture</text>
+  </g>
+</svg>

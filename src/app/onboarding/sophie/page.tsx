@@ -1,12 +1,13 @@
 import { requireStep } from "../guard";
 import { StepShell } from "../step-shell";
-import { SophieForm } from "./sophie-form";
-import type { SophieConfigurationRow } from "@/types/database";
+import { ZeliForm } from "./sophie-form";
+import type { ZeliConfigurationRow } from "@/types/database";
+import { ASSISTANTE_PAR_DEFAUT } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Sophie — Sophie IA" };
+export const metadata = { title: "Zeli — Zelicall" };
 
-export default async function SophieStep() {
+export default async function ZeliStep() {
   const { organization, supabase } = await requireStep("SOPHIE");
 
   const { data } = await supabase
@@ -16,20 +17,20 @@ export default async function SophieStep() {
     .maybeSingle();
 
   const config = data as Pick<
-    SophieConfigurationRow,
+    ZeliConfigurationRow,
     "assistant_name" | "style" | "greeting" | "behavior_notes" | "disclose_ai"
   > | null;
 
   return (
     <StepShell
       step="SOPHIE"
-      title="Sophie"
+      title="Zeli"
       intro="Son nom, son ton, sa façon de vous présenter. Vous pourrez tout ajuster après l'avoir entendue."
       backHref="/onboarding/agenda"
     >
-      <SophieForm
+      <ZeliForm
         organizationName={organization.name}
-        assistantName={config?.assistant_name ?? "Sophie"}
+        assistantName={config?.assistant_name ?? ASSISTANTE_PAR_DEFAUT}
         style={config?.style ?? "CHALEUREUX"}
         greeting={config?.greeting ?? null}
         behaviorNotes={config?.behavior_notes ?? null}

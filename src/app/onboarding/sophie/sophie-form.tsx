@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Sheet } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
-import type { SophieStyle } from "@/types/database";
-import { saveSophie, type SophieState } from "./actions";
+import type { ZeliStyle } from "@/types/database";
+import { saveZeli, type ZeliState } from "./actions";
+import { ASSISTANTE_PAR_DEFAUT } from "@/lib/brand";
 
-const STYLES: { value: SophieStyle; label: string; example: string }[] = [
+const STYLES: { value: ZeliStyle; label: string; example: string }[] = [
   {
     value: "CHALEUREUX",
     label: "Chaleureux",
@@ -26,7 +27,7 @@ const STYLES: { value: SophieStyle; label: string; example: string }[] = [
   },
 ];
 
-export function SophieForm({
+export function ZeliForm({
   organizationName,
   assistantName,
   style,
@@ -36,13 +37,13 @@ export function SophieForm({
 }: {
   organizationName: string;
   assistantName: string;
-  style: SophieStyle;
+  style: ZeliStyle;
   greeting: string | null;
   behaviorNotes: string | null;
   discloseAi: boolean;
 }) {
-  const [state, action, pending] = useActionState<SophieState, FormData>(
-    saveSophie,
+  const [state, action, pending] = useActionState<ZeliState, FormData>(
+    saveZeli,
     {},
   );
   const [name, setName] = useState(assistantName);
@@ -105,7 +106,7 @@ export function SophieForm({
       <Field
         label="Sa phrase d'accueil"
         htmlFor="greeting"
-        hint={`Laissez vide pour : « ${organizationName}, bonjour, ${name || "Sophie"} à l'appareil. »`}
+        hint={`Laissez vide pour : « ${organizationName}, bonjour, ${name || ASSISTANTE_PAR_DEFAUT} à l'appareil. »`}
       >
         <textarea
           id="greeting"
@@ -119,7 +120,7 @@ export function SophieForm({
       <Field
         label="Consignes particulières"
         htmlFor="behaviorNotes"
-        hint="Ce que Sophie doit toujours faire ou ne jamais faire. Exemple : ne jamais donner de prix au téléphone."
+        hint="Ce que Zeli doit toujours faire ou ne jamais faire. Exemple : ne jamais donner de prix au téléphone."
       >
         <textarea
           id="behaviorNotes"
@@ -139,7 +140,7 @@ export function SophieForm({
             className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-signal)]"
           />
           <span>
-            Sophie précise qu&apos;elle est une assistante virtuelle
+            Zeli précise qu&apos;elle est une assistante virtuelle
             <span className="mt-1 block text-sm text-ink-soft">
               Recommandé, et attendu en France comme en Belgique. Décocher cette
               case est un choix à valider avec votre juriste.

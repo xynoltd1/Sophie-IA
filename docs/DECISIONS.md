@@ -1819,3 +1819,119 @@ Les cartes flottantes mordaient sur le châssis du téléphone, et deux anneaux
 de sonnerie traversaient la scène en se lisant comme des traits perdus. Les
 cartes ont été écartées, les anneaux retirés. L'ombre au sol est sortie du
 groupe flottant : une ombre qui monte avec l'objet annule l'effet de hauteur.
+
+## ADR-052 — Zelicall est la plateforme, Zeli est l assistante
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### La décision
+
+Deux noms, deux rôles. **Zelicall** : le service, le site, la facture, le nom
+qu'on écrit dans un contrat. **Zeli** : la voix qui décroche, le prénom que le
+client entend. Un client ne dit pas « j'ai parlé à Zelicall » ; une entreprise
+ne s'abonne pas à Zeli.
+
+`src/lib/brand.ts` les porte, et rien d'autre. Avant cette version, le prénom
+était recopié à quatorze endroits.
+
+### Ce qui est renommé, et ce qui ne l'est pas
+
+Renommé : tout ce qu'un utilisateur lit — page publique, application, console,
+onboarding, messages, métadonnées, alternatives textuelles.
+
+**Pas renommé** : `sophie_configurations`, `sophie_runtime_for_number`,
+`lib/sophie/`, `/app/sophie`, les clés d'énumération. Ces noms ne sortent
+jamais de la base ni du dépôt. Les changer demanderait une migration de
+renommage de table, la régénération des types, la réécriture de l'historique
+des migrations et un redéploiement coordonné — pour un gain que personne ne
+voit.
+
+Un test parcourt tout `src/` et échoue sur une mention visible restante, en
+laissant passer les identifiants. C'est lui qui rend la distinction tenable :
+sans lui, la frontière se brouillerait à la première relecture.
+
+### Les URLs publiques n'ont pas bougé
+
+Changer une adresse publique sans redirection perd le référencement acquis et
+casse les liens déjà partagés. `/app/sophie` est privé et non indexé : le
+renommer n'apporterait rien et casserait les favoris.
+
+## ADR-053 — Un renommage ne doit jamais ecraser un nom choisi
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### Le problème
+
+Changer la valeur par défaut d'une colonne ne touche pas les lignes
+existantes. Mais les comptes qui portent « Sophie » parce que c'était le
+défaut doivent suivre le produit, alors que ceux qui ont **choisi** ce nom
+doivent le garder. Une colonne texte ne dit pas si sa valeur a été tapée ou
+héritée.
+
+### La décision
+
+Une colonne `assistant_name_source`, à deux valeurs : `DEFAULT` et `CUSTOM`.
+Seul `DEFAULT` est renommé. Tout enregistrement depuis un formulaire écrit
+`CUSTOM`, définitivement.
+
+Pour les lignes existantes, deux signaux marquent le choix :
+
+1. un nom qui n'a jamais été un défaut du produit ;
+2. un passage par l'écran d'accueil, prouvé par `greeting_updated_at`
+   (migration 0036) — le nom affiché à ce moment-là a été vu et conservé.
+
+### La limite, assumée
+
+Une entreprise qui aurait tapé « Sophie » pendant l'onboarding, avant
+l'existence de l'écran d'accueil, est indiscernable d'un défaut hérité. Elle
+sera renommée. Aucune donnée en base ne permet de la distinguer, et inventer
+un troisième signal serait se raconter une histoire.
+
+Le coût est faible aujourd'hui — aucune ligne téléphonique n'est en service.
+Il ne le serait plus dans six mois, et c'est la raison de faire ce changement
+maintenant plutôt que plus tard.
+
+### La règle générale
+
+Dès qu'un champ peut recevoir à la fois une valeur du produit et une valeur de
+l'utilisateur, la colonne qui dit **d'où elle vient** doit naître en même
+temps que le champ, pas le jour où on veut la changer.
+
+## ADR-054 — Les illustrations de section sont des fichiers, celle du hero non
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### Deux situations différentes
+
+L'illustration du hero est le plus grand élément du premier écran : c'est
+elle que Google chronomètre. Écrite dans le HTML, elle n'attend aucune
+requête et ne peut pas décaler la mise en page (ADR-051).
+
+Les neuf autres sont sous la ligne de flottaison et pèsent ensemble une
+soixantaine de kilo-octets. Les écrire dans la page alourdirait chaque
+chargement de tout ce que le visiteur n'a pas encore déroulé. En fichiers,
+elles se chargent à l'approche et restent en cache d'une visite à l'autre.
+
+### Trois conséquences qu'il faut accepter
+
+**Les animations vont dans le fichier.** Une image chargée par une balise
+`img` n'hérite d'aucune feuille de style de la page. Chaque fichier porte donc
+ses `@keyframes` **et** sa règle `prefers-reduced-motion` — sans quoi la
+préférence serait ignorée précisément là où ça bouge. Un test le vérifie
+fichier par fichier.
+
+**Les dimensions sont obligatoires.** Sans `width` et `height`, le navigateur
+ne réserve pas la place et le texte saute quand l'image arrive.
+
+**Pas de survol depuis la page.** Les effets au survol s'appliquent au
+conteneur, pas aux formes à l'intérieur.
+
+### Le générateur isométrique, abandonné
+
+Première tentative : un script Python produisant de la géométrie isométrique à
+30 degrés. Le résultat, regardé à l'écran, était illisible — des volumes trop
+petits qui ne racontaient rien. Jeté, et tout redessiné à la main.
+
+La leçon n'est pas que l'isométrie est mauvaise, mais qu'une illustration se
+juge en la regardant. Le script produisait une géométrie correcte et une image
+sans intérêt.

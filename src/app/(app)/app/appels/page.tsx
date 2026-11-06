@@ -15,7 +15,7 @@ import { Chip } from "@/components/ui/chip";
 import { ListeAppels } from "./liste-appels";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Appels — Sophie IA" };
+export const metadata = { title: "Appels — Zelicall" };
 
 /**
  * La liste des appels.
@@ -178,7 +178,7 @@ export default async function AppelsPage({
               ? "Essayez un autre nom ou un autre numéro."
               : corbeille
                 ? "Les appels supprimés restent ici 30 jours avant d’être effacés définitivement."
-                : "Chaque appel reçu par Sophie apparaîtra ici, avec son enregistrement, son résumé et sa transcription."
+                : "Chaque appel reçu par Zeli apparaîtra ici, avec son enregistrement, son résumé et sa transcription."
           }
           action={
             terme || filtre !== "TOUS" || periode !== "TOUT" ? (

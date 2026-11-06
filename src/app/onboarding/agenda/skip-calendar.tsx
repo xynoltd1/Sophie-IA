@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { continueToSophie } from "./actions";
+import { continueToZeli } from "./actions";
 
 export function SkipCalendar({ connected }: { connected: boolean }) {
   const [pending, startTransition] = useTransition();
@@ -12,7 +12,7 @@ export function SkipCalendar({ connected }: { connected: boolean }) {
       type="button"
       size="lg"
       loading={pending}
-      onClick={() => startTransition(() => continueToSophie())}
+      onClick={() => startTransition(() => continueToZeli())}
     >
       {connected ? "Continuer" : "Continuer sans agenda pour l\u2019instant"}
     </Button>

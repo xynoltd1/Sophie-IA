@@ -96,7 +96,7 @@ export default async function AdminAccueil({
 
       <section>
         <TitreSection detail="Hors appels d’essai : ils gonfleraient chaque chiffre sans qu’aucun client n’ait appelé.">
-          Activité de Sophie
+          Activité de Zeli
         </TitreSection>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Chiffre libelle="Appels reçus" valeur={stats.calls_total} />

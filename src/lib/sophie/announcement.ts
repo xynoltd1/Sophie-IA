@@ -11,7 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
  *
  * **1. C'est une IA.** Article 50 du règlement (UE) 2024/1689, applicable
  * depuis le 2 août 2026, sanctions jusqu'à 15 M€ ou 3 % du chiffre d'affaires
- * mondial. « Je suis Sophie, l'assistante de M. Dupont » NE SUFFIT PAS : une
+ * mondial. « Je suis Zeli, l'assistante de M. Dupont » NE SUFFIT PAS : une
  * assistante peut être humaine. Il faut que la nature automatisée soit claire.
  * Cette partie n'est jamais désactivable, et la base le verrouille
  * (migration 0019).

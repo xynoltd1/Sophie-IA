@@ -8,17 +8,17 @@ import {
   nombre,
   texte,
   vrai,
-  type SophieTool,
+  type ZeliTool,
   type ToolContext,
   type ToolOutcome,
 } from "./tool-types";
 
 /**
- * Outils de Sophie qui écrivent dans le CRM.
+ * Outils de Zeli qui écrivent dans le CRM.
  *
  * Trois principes, et ils expliquent la plupart des choix de ce fichier.
  *
- * **Sophie n'écrit jamais ce qu'elle n'a pas entendu.** Chaque champ vient d'un
+ * **Zeli n'écrit jamais ce qu'elle n'a pas entendu.** Chaque champ vient d'un
  * argument explicite. Aucun n'est déduit, complété ou embelli. Un champ inconnu
  * reste vide (section 15) : un nom inventé dans un CRM est pire qu'un nom
  * manquant, parce qu'il a l'air vrai.
@@ -27,11 +27,11 @@ import {
  * pour que l'artisan puisse reconstituer ce qui s'est dit et quand.
  *
  * **Une erreur métier n'interrompt pas l'appel.** Elle revient comme un texte
- * que Sophie peut prononcer, jamais comme une panne. Au téléphone, un silence
+ * que Zeli peut prononcer, jamais comme une panne. Au téléphone, un silence
  * vaut un raccrochage.
  */
 
-/** Trace une action de Sophie. Ne lève jamais : un journal n'arbitre rien. */
+/** Trace une action de Zeli. Ne lève jamais : un journal n'arbitre rien. */
 async function activite(
   context: ToolContext,
   type: string,
@@ -58,7 +58,7 @@ async function activite(
 /**
  * Le fuseau horaire de l'entreprise.
  *
- * Tout ce que Sophie entend au téléphone est une heure MURALE : celle de la
+ * Tout ce que Zeli entend au téléphone est une heure MURALE : celle de la
  * pendule du client. Sans cette conversion, elle est lue comme de l'heure
  * universelle et l'écriture se décale de tout l'écart horaire du pays — un
  * rendez-vous de 8 h devient 10 h (ADR-029).
@@ -172,7 +172,7 @@ async function lierAppelAuContact(
 // identify_caller
 // ---------------------------------------------------------------------------
 
-const identifyCaller: SophieTool = {
+const identifyCaller: ZeliTool = {
   definition: {
     name: "identify_caller",
     description:
@@ -183,7 +183,7 @@ const identifyCaller: SophieTool = {
 
   async handler(_args, context): Promise<ToolOutcome> {
     if (!context.callerNumber) {
-      // Numéro masqué, ou essai depuis le navigateur. Sophie doit le demander
+      // Numéro masqué, ou essai depuis le navigateur. Zeli doit le demander
       // plutôt que de faire comme si l'appelant était inconnu : sans numéro,
       // rien ne pourra être rattaché à une fiche client.
       return {
@@ -235,7 +235,7 @@ const identifyCaller: SophieTool = {
 // save_caller_details
 // ---------------------------------------------------------------------------
 
-const saveCallerDetails: SophieTool = {
+const saveCallerDetails: ZeliTool = {
   definition: {
     name: "save_caller_details",
     description:
@@ -354,7 +354,7 @@ const saveCallerDetails: SophieTool = {
     await activite(
       context,
       "CONTACT_UPDATED",
-      `Coordonnées mises à jour par Sophie`,
+      `Coordonnées mises à jour par Zeli`,
       {
         champs: Object.keys(champs),
       },
@@ -368,7 +368,7 @@ const saveCallerDetails: SophieTool = {
 // create_lead
 // ---------------------------------------------------------------------------
 
-const createLead: SophieTool = {
+const createLead: ZeliTool = {
   definition: {
     name: "create_lead",
     description:
@@ -490,7 +490,7 @@ const createLead: SophieTool = {
 // create_task
 // ---------------------------------------------------------------------------
 
-const createTask: SophieTool = {
+const createTask: ZeliTool = {
   definition: {
     name: "create_task",
     description:
@@ -584,7 +584,7 @@ const createTask: SophieTool = {
 // create_pending_appointment
 // ---------------------------------------------------------------------------
 
-const createPendingAppointment: SophieTool = {
+const createPendingAppointment: ZeliTool = {
   definition: {
     name: "create_pending_appointment",
     description:
@@ -640,7 +640,7 @@ const createPendingAppointment: SophieTool = {
 
     const { data, error } = await admin.rpc("book_appointment", {
       org_id: context.organizationId,
-      titre: texte(args, "title") ?? "Rendez-vous pris par Sophie",
+      titre: texte(args, "title") ?? "Rendez-vous pris par Zeli",
       debut: debut.toISOString(),
       fin: fin.toISOString(),
       contact: contactId,
@@ -648,7 +648,7 @@ const createPendingAppointment: SophieTool = {
       service: null,
       intervenant: null,
       // Toujours provisoire (section 22). C'est l'artisan qui confirme, pas
-      // Sophie : elle ne connaît ni les imprévus du chantier, ni le client.
+      // Zeli : elle ne connaît ni les imprévus du chantier, ni le client.
       statut: "PENDING_APPROVAL",
       duree_hold: null,
     });
@@ -690,7 +690,7 @@ const createPendingAppointment: SophieTool = {
       organizationId: context.organizationId,
       category: "ACTION",
       title: "Rendez-vous à valider",
-      body: `Sophie a retenu le ${date} à ${heure}. Acceptez, modifiez ou refusez.`,
+      body: `Zeli a retenu le ${date} à ${heure}. Acceptez, modifiez ou refusez.`,
       href: "/app/agenda",
       subjectType: "appointment",
       subjectId: data as unknown as string,
@@ -721,12 +721,12 @@ const createPendingAppointment: SophieTool = {
 // request_human_transfer
 // ---------------------------------------------------------------------------
 
-const requestHumanTransfer: SophieTool = {
+const requestHumanTransfer: ZeliTool = {
   definition: {
     name: "request_human_transfer",
     description:
       "Demande à passer l'appel à une personne. À utiliser si le client insiste pour " +
-      "parler à quelqu'un, ou si la situation dépasse ce que Sophie peut traiter.",
+      "parler à quelqu'un, ou si la situation dépasse ce que Zeli peut traiter.",
     parameters: {
       type: "object",
       properties: {
@@ -776,7 +776,7 @@ const requestHumanTransfer: SophieTool = {
   },
 };
 
-export const CRM_TOOLS: readonly SophieTool[] = [
+export const CRM_TOOLS: readonly ZeliTool[] = [
   identifyCaller,
   saveCallerDetails,
   createLead,

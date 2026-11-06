@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SignupForm } from "./signup-form";
 
-export const metadata = { title: "Créer un compte — Sophie IA" };
+export const metadata = { title: "Créer un compte — Zelicall" };
 
 export default function SignupPage() {
   return (

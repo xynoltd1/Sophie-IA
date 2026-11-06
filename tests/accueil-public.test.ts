@@ -142,14 +142,19 @@ describe("hero et illustration", () => {
   it("sur telephone, le titre passe avant l illustration", () => {
     // Une illustration placee avant l accroche occupe l ecran entier : le
     // visiteur voit un dessin et doit defiler pour savoir de quoi il s agit.
-    expect(PAGE).not.toContain("order-first");
-    const hero = PAGE.slice(PAGE.indexOf("function HeroSection"));
+    // La verification porte sur le HERO seul : ailleurs dans la page,
+    // `order-first` sert a alterner texte et illustration, ce qui est voulu.
+    const hero = PAGE.slice(
+      PAGE.indexOf("function HeroSection"),
+      PAGE.indexOf("function ProblemeSection"),
+    );
+    expect(hero).not.toContain("order-first");
     expect(hero.indexOf("<h1")).toBeLessThan(hero.indexOf("IllustrationAccueil"));
   });
 
   it("le positionnement est conserve", () => {
     expect(PAGE).toContain("Vous ne pouvez pas décrocher");
-    expect(PAGE).toContain("Sophie, si.");
+    expect(PAGE).toContain("Zeli, si.");
   });
 });
 

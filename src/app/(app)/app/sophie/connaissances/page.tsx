@@ -8,12 +8,12 @@ import { can } from "@/lib/auth/permissions";
 import { ConnaissancesEditor, type LigneConnaissance } from "./editor";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Connaissances de Sophie — Sophie IA" };
+export const metadata = { title: "Connaissances de Zeli — Zelicall" };
 
 /**
- * Sophie → Connaissances (section 9).
+ * Zeli → Connaissances (section 9).
  *
- * Le seul moyen de corriger Sophie, et le seul endroit d'où vient ce qu'elle
+ * Le seul moyen de corriger Zeli, et le seul endroit d'où vient ce qu'elle
  * sait en plus de vos services et horaires. Le cahier des charges interdit
  * l'apprentissage autonome à partir des appels : ce qu'elle dit doit avoir été
  * écrit par un humain qui en répond.
@@ -37,13 +37,13 @@ export default async function ConnaissancesPage() {
         href="/app/sophie"
         className="text-sm text-ink-soft underline underline-offset-4"
       >
-        ← Sophie
+        ← Zeli
       </Link>
-      <SectionTitle>Connaissances de Sophie</SectionTitle>
+      <SectionTitle>Connaissances de Zeli</SectionTitle>
 
       <Sheet tone="neutral">
         <p className="text-sm text-ink-soft">
-          Sophie ne dit que ce qu’elle sait d’ici, de vos services et de vos
+          Zeli ne dit que ce qu’elle sait d’ici, de vos services et de vos
           horaires. Elle n’invente jamais un tarif ni une disponibilité : quand
           elle ne sait pas, elle dit qu’elle transmet la question.
         </p>

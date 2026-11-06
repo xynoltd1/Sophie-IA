@@ -6,12 +6,12 @@ import { analysisPlan } from "@/lib/sophie/analysis";
 export const dynamic = "force-dynamic";
 
 /**
- * Catalogue des outils de Sophie, tel que le serveur le connaît réellement.
+ * Catalogue des outils de Zeli, tel que le serveur le connaît réellement.
  *
  * Pourquoi cet endpoint existe : les outils doivent être déclarés chez le
  * fournisseur de voix pour que le modèle puisse les appeler. Les recopier à la
  * main dans une interface web est long, et surtout c'est ainsi qu'ils finissent
- * par diverger du code — un paramètre renommé ici, pas là, et Sophie appelle un
+ * par diverger du code — un paramètre renommé ici, pas là, et Zeli appelle un
  * outil avec des arguments que le serveur ne comprend plus.
  *
  * Le script `scripts/sync-vapi-tools.mjs` lit ce catalogue et le pousse chez le

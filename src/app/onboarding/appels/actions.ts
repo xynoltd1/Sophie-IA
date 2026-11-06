@@ -15,7 +15,7 @@ const schema = z
       value.answerMode !== "WHEN_UNAVAILABLE" || Boolean(value.transferNumber),
     {
       message:
-        "Indiquez le numéro vers lequel appeler avant de passer la main à Sophie.",
+        "Indiquez le numéro vers lequel appeler avant de passer la main à Zeli.",
       path: ["transferNumber"],
     },
   );

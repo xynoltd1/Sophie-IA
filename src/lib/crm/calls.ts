@@ -4,7 +4,7 @@ import type { CallStatus, ProcessingStatus } from "@/types/database";
  * Vocabulaire des appels, côté interface.
  *
  * L'artisan ne lit pas des états techniques, il lit ce qui s'est passé. « Appel
- * terminé » et « Sophie n'a pas pu répondre » appellent deux réactions
+ * terminé » et « Zeli n'a pas pu répondre » appellent deux réactions
  * différentes, et c'est cette différence que les libellés doivent porter.
  */
 export const CALL_STATUS_LABELS: Record<CallStatus, string> = {
@@ -184,7 +184,7 @@ export function sansSuite(
   return new Date(appel.started_at).getTime() > limite;
 }
 
-/** Les appels que Sophie n'a pas pu prendre. Un client a entendu sonner dans le vide. */
+/** Les appels que Zeli n'a pas pu prendre. Un client a entendu sonner dans le vide. */
 export function appelEchoue(
   appel: Pick<AppelPourSuite, "status" | "is_test">,
 ): boolean {

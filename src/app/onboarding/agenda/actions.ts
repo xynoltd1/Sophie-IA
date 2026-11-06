@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
 
-export async function continueToSophie() {
+export async function continueToZeli() {
   const { activeOrganization } = await requireOrganization();
   const supabase = await createServerSupabase();
 

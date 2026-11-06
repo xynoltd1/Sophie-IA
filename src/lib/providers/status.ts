@@ -91,11 +91,11 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
   },
   {
     key: "voice",
-    label: "Sophie Voice (conversation temps réel)",
+    label: "Zeli Voice (conversation temps réel)",
     status: "TESTED",
     requiredEnv: ["VOICE_PROVIDER", "VOICE_API_KEY", "VOICE_WEBHOOK_SECRET"],
     notes:
-      "Exercé par de vrais appels les 22 et 23 octobre 2026 : Sophie répond en français, " +
+      "Exercé par de vrais appels les 22 et 23 octobre 2026 : Zeli répond en français, " +
       "appelle les huit outils métier, crée contact, demande et rendez-vous provisoire. " +
       "Région US faute d'accès libre-service à la région européenne (ADR-026). Les appels " +
       "partent du navigateur : aucun numéro de téléphone n'est encore rattaché, donc tous " +

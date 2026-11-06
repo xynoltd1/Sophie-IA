@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireOrganization } from "@/lib/auth/session";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
-import { etatLigneSophie } from "@/lib/crm/queries";
+import { etatLigneZeli } from "@/lib/crm/queries";
 import { MESSAGE_SILENCE } from "@/lib/sophie/ligne";
 import { isRecordingActive } from "@/lib/org/recording";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { ASSISTANTE_PAR_DEFAUT } from "@/lib/brand";
 import {
   composerAccueil,
   modelePourMoment,
@@ -12,20 +13,20 @@ import {
 } from "@/lib/sophie/greeting";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Sophie — Sophie IA" };
+export const metadata = { title: "Zeli — Zelicall" };
 
 /**
- * L'écran de Sophie : son état, et ce qui se règle.
+ * L'écran de Zeli : son état, et ce qui se règle.
  *
  * Il répond d'abord à « est-ce qu'elle répond, oui ou non, et sinon pourquoi ».
  * Une page de réglages qui ne dit pas l'état courant oblige à deviner.
  */
-export default async function SophiePage() {
+export default async function ZeliPage() {
   const { activeOrganization: org } = await requireOrganization();
   const supabase = await createServerSupabase();
 
   const [ligne, { data: config }] = await Promise.all([
-    etatLigneSophie(org.organization_id),
+    etatLigneZeli(org.organization_id),
     supabase
       .from("sophie_configurations")
       .select(
@@ -52,11 +53,11 @@ export default async function SophiePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <SectionTitle>Sophie</SectionTitle>
+      <SectionTitle>Zeli</SectionTitle>
 
       <Sheet tone={silence ? "attention" : "neutral"}>
         <p className="font-display text-lg font-semibold">
-          {silence ? silence.titre : "Sophie répond à vos appels"}
+          {silence ? silence.titre : "Zeli répond à vos appels"}
         </p>
         <p className="mt-1 text-sm text-ink-soft">
           {silence
@@ -171,7 +172,7 @@ function apercuAccueil(
       ouvert: true,
     }),
     entreprise: config.spoken_name?.trim() || org.name,
-    assistante: config.assistant_name ?? "Sophie",
+    assistante: config.assistant_name ?? ASSISTANTE_PAR_DEFAUT,
     moment,
   });
 }

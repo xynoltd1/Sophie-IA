@@ -1,7 +1,7 @@
 import { requireOrganization } from "@/lib/auth/session";
 import { AppHeader } from "@/components/nav/app-header";
 import { BottomNav } from "@/components/nav/bottom-nav";
-import { alertesNonLues, etatLigneSophie } from "@/lib/crm/queries";
+import { alertesNonLues, etatLigneZeli } from "@/lib/crm/queries";
 
 /**
  * Rendu dynamique obligatoire : cette page dépend de la session de
@@ -23,9 +23,9 @@ export default async function AppLayout({
   const { activeOrganization } = await requireOrganization();
 
   // Cette valeur etait ecrite en dur a false depuis la Phase 0. L en-tete
-  // annoncait donc « Sophie en pause » meme quand elle venait de repondre a un
+  // annoncait donc « Zeli en pause » meme quand elle venait de repondre a un
   // appel. Un voyant qui ne regarde rien est pire que pas de voyant.
-  const ligne = await etatLigneSophie(activeOrganization.organization_id);
+  const ligne = await etatLigneZeli(activeOrganization.organization_id);
   const sophieActive = ligne.repond;
   const alertes = await alertesNonLues(activeOrganization.organization_id);
 

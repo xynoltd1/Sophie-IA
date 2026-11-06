@@ -6,7 +6,7 @@ import { WEEKDAYS, toInputTime, type HourInput } from "@/lib/org/schedule";
 import type { BusinessHourRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Vos horaires — Sophie IA" };
+export const metadata = { title: "Vos horaires — Zelicall" };
 
 export default async function ScheduleStep() {
   const { organization, supabase } = await requireStep("SCHEDULE");
@@ -57,7 +57,7 @@ export default async function ScheduleStep() {
     <StepShell
       step="SCHEDULE"
       title="Vos horaires"
-      intro="Sophie ne proposera jamais un rendez-vous en dehors de ces plages."
+      intro="Zeli ne proposera jamais un rendez-vous en dehors de ces plages."
       backHref="/onboarding/services"
     >
       <HoursEditor

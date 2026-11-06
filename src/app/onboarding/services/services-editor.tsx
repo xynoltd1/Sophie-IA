@@ -137,7 +137,7 @@ export function ServicesEditor({
             <Field
               label="Indication de prix"
               htmlFor="priceIndication"
-              hint="Facultatif, en toutes lettres. Sophie répétera ce texte sans jamais calculer un prix."
+              hint="Facultatif, en toutes lettres. Zeli répétera ce texte sans jamais calculer un prix."
             >
               <Input
                 id="priceIndication"

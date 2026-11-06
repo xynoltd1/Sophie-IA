@@ -14,6 +14,7 @@ import {
   type Moment,
 } from "@/lib/sophie/greeting";
 import { enregistrerAccueil, type AccueilState } from "./actions";
+import { ASSISTANTE_PAR_DEFAUT } from "@/lib/brand";
 
 const MOMENTS: { cle: Moment; libelle: string }[] = [
   { cle: "MATIN", libelle: "Le matin" },
@@ -102,7 +103,7 @@ export function EditeurAccueil({ initial }: { initial: AccueilInitial }) {
         accueil: composerAccueil({
           modele: modeleActif,
           entreprise,
-          assistante: assistante.trim() || "Sophie",
+          assistante: assistante.trim() || ASSISTANTE_PAR_DEFAUT,
           metier: initial.metier,
           moment: apercu,
         }),

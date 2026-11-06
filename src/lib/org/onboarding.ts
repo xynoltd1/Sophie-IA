@@ -18,7 +18,7 @@ export const ONBOARDING_LABELS: Record<OnboardingStep, string> = {
   SERVICES: "Vos services",
   SCHEDULE: "Vos horaires",
   CALENDAR: "Votre agenda",
-  SOPHIE: "Sophie",
+  SOPHIE: "Zeli",
   PHONE: "Vos appels",
   DONE: "Termine",
 };

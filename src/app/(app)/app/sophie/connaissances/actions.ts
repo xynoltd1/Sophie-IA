@@ -22,9 +22,9 @@ const schema = z
   });
 
 /**
- * Ajoute une connaissance que Sophie a le droit d'utiliser (section 9).
+ * Ajoute une connaissance que Zeli a le droit d'utiliser (section 9).
  *
- * C'est le seul moyen pour le professionnel de corriger Sophie. Le cahier des
+ * C'est le seul moyen pour le professionnel de corriger Zeli. Le cahier des
  * charges interdit l'apprentissage autonome à partir des appels : ce qu'elle
  * sait vient d'ici, d'un humain qui en répond.
  */
@@ -56,7 +56,7 @@ export async function ajouterConnaissance(
   if (error) return { error: "La connaissance n’a pas pu être enregistrée." };
 
   revalidatePath("/app/sophie/connaissances");
-  return { success: "Sophie peut maintenant s’en servir." };
+  return { success: "Zeli peut maintenant s’en servir." };
 }
 
 export async function basculerConnaissance(

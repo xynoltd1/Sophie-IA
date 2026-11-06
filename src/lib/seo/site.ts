@@ -1,3 +1,5 @@
+import { PLATEFORME } from "@/lib/brand";
+
 /**
  * Les constantes du site public.
  *
@@ -10,10 +12,11 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_APP_URL ?? "https://zelicall.com"
 ).replace(/\/$/, "");
 
-export const SITE_NAME = "Sophie IA";
+/** Le nom du produit. Défini une seule fois, dans `lib/brand.ts`. */
+export const SITE_NAME = PLATEFORME;
 
 export const SITE_DESCRIPTION =
-  "Sophie répond au téléphone pendant que vous travaillez : elle comprend la demande, " +
+  "Zeli répond au téléphone pendant que vous travaillez : elle comprend la demande, " +
   "consulte votre agenda, propose un rendez-vous et vous transmet tout, résumé.";
 
 /**
@@ -80,7 +83,7 @@ export interface ReglagesSite {
 /** Ce que le code sait faire sans la base. Sert de repli, jamais de vérité. */
 export const DEFAUTS_SITE: ReglagesSite = {
   name: SITE_NAME,
-  title: "Sophie IA — la secrétaire qui répond pendant que vous travaillez",
+  title: "Zelicall — la secrétaire qui répond pendant que vous travaillez",
   description: SITE_DESCRIPTION,
   canonical: SITE_URL,
   locale: "fr_BE",

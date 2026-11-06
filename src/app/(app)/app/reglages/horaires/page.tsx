@@ -10,7 +10,7 @@ import { WEEKDAYS, toInputTime, type HourInput } from "@/lib/org/schedule";
 import type { BusinessHourRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Horaires — Sophie IA" };
+export const metadata = { title: "Horaires — Zelicall" };
 
 export default async function HorairesReglagesPage() {
   const { activeOrganization } = await requireOrganization();
@@ -59,7 +59,7 @@ export default async function HorairesReglagesPage() {
       </Link>
       <SectionTitle>Horaires</SectionTitle>
       <p className="text-sm text-ink-soft">
-        Sophie ne proposera jamais un rendez-vous en dehors de ces plages. La
+        Zeli ne proposera jamais un rendez-vous en dehors de ces plages. La
         marge est le temps laissé entre deux interventions.
       </p>
 

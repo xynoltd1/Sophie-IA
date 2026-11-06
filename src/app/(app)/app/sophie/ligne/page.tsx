@@ -8,10 +8,10 @@ import { missingEnvFor } from "@/lib/providers/status";
 import { LigneEditor, type LignePhone } from "./editor";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Ligne téléphonique — Sophie IA" };
+export const metadata = { title: "Ligne téléphonique — Zelicall" };
 
 /**
- * La ligne téléphonique de Sophie.
+ * La ligne téléphonique de Zeli.
  *
  * Cet écran manquait, et c'était le blocage le plus coûteux du produit : sans
  * numéro déclaré, tout appel tombe dans le repli « essai », donc rien ne peut
@@ -48,7 +48,7 @@ export default async function LignePage() {
         href="/app/sophie"
         className="text-sm text-ink-soft underline underline-offset-4"
       >
-        ← Sophie
+        ← Zeli
       </Link>
       <SectionTitle>Ligne téléphonique</SectionTitle>
 
@@ -60,7 +60,7 @@ export default async function LignePage() {
             <Sheet tone="attention">
               <p className="font-medium">Aucune ligne déclarée</p>
               <p className="mt-1 text-sm text-ink-soft">
-                Tant qu’aucun numéro n’est rattaché à votre entreprise, Sophie
+                Tant qu’aucun numéro n’est rattaché à votre entreprise, Zeli
                 ne peut pas savoir à qui appartient un appel entrant. Tous les
                 appels sont alors marqués « essai » et n’apparaissent dans
                 aucune alerte.

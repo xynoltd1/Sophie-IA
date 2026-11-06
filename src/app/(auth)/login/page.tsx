@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
-  title: "Se connecter — Sophie IA",
+  title: "Se connecter — Zelicall",
   // Une page de connexion dans les resultats de recherche n'apporte rien a
   // personne : elle n'a pas de contenu et detourne les visiteurs de la page
   // qui explique le produit.

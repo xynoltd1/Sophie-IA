@@ -11,14 +11,14 @@ import {
 } from "./greeting";
 
 /**
- * Ce que Sophie dit en décrochant, pour UNE organisation.
+ * Ce que Zeli dit en décrochant, pour UNE organisation.
  *
  * ## La règle qui gouverne ce module
  *
  * Si on ne sait pas avec certitude au nom de qui on parlerait, on ne parle
  * pas. Aucun repli sur une organisation par défaut, aucune valeur
  * d'environnement qui servirait de filet. Un filet, ici, ferait décrocher
- * Sophie au nom d'une entreprise qui n'est pas celle qu'on a appelée — c'est
+ * Zeli au nom d'une entreprise qui n'est pas celle qu'on a appelée — c'est
  * exactement la fuite entre clients que toute l'architecture cherche à
  * empêcher.
  *
@@ -93,7 +93,7 @@ interface LigneRuntime {
  * Résout le numéro appelé en accueil prononçable.
  *
  * Rend un refus motivé plutôt que `null` : l'appelant du module doit pouvoir
- * dire pourquoi Sophie ne décroche pas, et les trois raisons n'appellent pas
+ * dire pourquoi Zeli ne décroche pas, et les trois raisons n'appellent pas
  * la même réponse au téléphone.
  */
 export async function accueilPourNumero(

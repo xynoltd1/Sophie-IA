@@ -1,6 +1,6 @@
 import { ResetForm } from "./reset-form";
 
-export const metadata = { title: "Nouveau mot de passe — Sophie IA" };
+export const metadata = { title: "Nouveau mot de passe — Zelicall" };
 
 /**
  * Page d'arrivée d'un lien de récupération.

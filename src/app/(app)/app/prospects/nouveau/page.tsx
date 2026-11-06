@@ -4,7 +4,7 @@ import { SectionTitle } from "@/components/ui/sheet";
 import { LeadForm } from "./lead-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Nouveau prospect — Sophie IA" };
+export const metadata = { title: "Nouveau prospect — Zelicall" };
 
 export default async function NouveauProspectPage() {
   await requireOrganization();

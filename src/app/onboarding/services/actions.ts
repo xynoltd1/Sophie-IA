@@ -98,10 +98,10 @@ export async function continueToSchedule() {
     .eq("is_active", true);
 
   if (!count) {
-    // Sophie ne peut rien proposer si l'entreprise n'offre aucun service.
+    // Zeli ne peut rien proposer si l'entreprise n'offre aucun service.
     return {
       error:
-        "Gardez au moins un service actif pour que Sophie puisse qualifier les demandes.",
+        "Gardez au moins un service actif pour que Zeli puisse qualifier les demandes.",
     };
   }
 

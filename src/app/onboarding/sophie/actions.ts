@@ -17,15 +17,15 @@ const schema = z.object({
   discloseAi: z.boolean(),
 });
 
-export interface SophieState {
+export interface ZeliState {
   error?: string;
   fieldErrors?: Record<string, string>;
 }
 
-export async function saveSophie(
-  _prev: SophieState,
+export async function saveZeli(
+  _prev: ZeliState,
   formData: FormData,
-): Promise<SophieState> {
+): Promise<ZeliState> {
   const parsed = schema.safeParse({
     assistantName: formData.get("assistantName"),
     style: formData.get("style"),
@@ -50,6 +50,9 @@ export async function saveSophie(
     {
       organization_id: orgId,
       assistant_name: parsed.data.assistantName,
+      // Le nom saisi ici appartient à l'entreprise : une migration de
+      // renommage du produit ne doit plus l'écraser.
+      assistant_name_source: "CUSTOM",
       style: parsed.data.style,
       greeting: parsed.data.greeting || null,
       behavior_notes: parsed.data.behaviorNotes || null,

@@ -22,7 +22,7 @@ export default function Cgu() {
 
       <Partie titre="Le service">
         <p>
-          Sophie répond aux appels entrants d’un professionnel, qualifie la
+          Zeli répond aux appels entrants d’un professionnel, qualifie la
           demande, consulte les disponibilités d’un agenda connecté, prépare un
           rendez-vous provisoire et centralise les informations.
         </p>
@@ -35,7 +35,7 @@ export default function Cgu() {
       <Partie titre="Ce que le professionnel s’engage à faire">
         <p>
           Donner des informations exactes sur son entreprise, ses services et
-          ses tarifs : Sophie ne dit que ce qui lui a été écrit.
+          ses tarifs : Zeli ne dit que ce qui lui a été écrit.
         </p>
         <p>
           Vérifier, avant d’activer l’enregistrement des appels, que cette
@@ -58,12 +58,12 @@ export default function Cgu() {
           peut interrompre une partie du service.
         </p>
         <p>
-          Sophie peut mal comprendre une demande. Les enregistrements, les
+          Zeli peut mal comprendre une demande. Les enregistrements, les
           transcriptions et les résumés sont fournis pour permettre au
           professionnel de vérifier, et cette vérification lui incombe.
         </p>
         <p>
-          Sophie ne donne pas de conseil technique et ne se substitue pas au
+          Zeli ne donne pas de conseil technique et ne se substitue pas au
           jugement du professionnel, en particulier sur une situation
           dangereuse.
         </p>

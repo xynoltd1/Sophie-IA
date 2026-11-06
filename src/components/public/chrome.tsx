@@ -102,7 +102,7 @@ export function HabillagePublic({ children }: { children: React.ReactNode }) {
               href="/signup"
               className="pressable hidden min-h-11 items-center rounded-control bg-signal px-4 text-sm font-medium text-white transition-colors hover:bg-signal-deep md:flex"
             >
-              Essayer Sophie
+              Essayer Zeli
             </Link>
             <MenuMobile liens={LIENS} />
           </div>

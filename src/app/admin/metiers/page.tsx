@@ -10,7 +10,7 @@ export const metadata = { title: "Métiers — Plateforme" };
  * Les modèles de métier (section 7 et 37).
  *
  * Créer « Vitrier » ne doit pas demander un déploiement. C'est la condition
- * pour que Sophie reste universelle au lieu de devenir un logiciel de
+ * pour que Zeli reste universelle au lieu de devenir un logiciel de
  * plombier.
  */
 export default async function MetiersPage() {

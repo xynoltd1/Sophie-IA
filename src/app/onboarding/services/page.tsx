@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ui/states";
 import type { ServiceRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Vos services — Sophie IA" };
+export const metadata = { title: "Vos services — Zelicall" };
 
 export default async function ServicesStep() {
   const { organization, supabase } = await requireStep("SERVICES");

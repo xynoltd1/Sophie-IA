@@ -21,7 +21,7 @@ describe("transcription donnee au modele", () => {
       { speaker: "SOPHIE", content: "Bonjour, ici Sophie." },
       { speaker: "CLIENT", content: "Je suis Eugene Bosset." },
     ]);
-    expect(texte).toBe("Sophie : Bonjour, ici Sophie.\nClient : Je suis Eugene Bosset.");
+    expect(texte).toBe("Zeli : Bonjour, ici Sophie.\nClient : Je suis Eugene Bosset.");
   });
 });
 

@@ -30,7 +30,7 @@ export const maxDuration = 10;
  *
  * **La certitude.** Si le numéro appelé n'est rattaché à personne, on ne
  * cherche pas une organisation « probable ». On rend une erreur parlée. Faire
- * décrocher Sophie au nom d'une entreprise qu'on a devinée serait pire que de
+ * décrocher Zeli au nom d'une entreprise qu'on a devinée serait pire que de
  * ne pas décrocher.
  *
  * **La transparence.** La mention d'IA est garantie par `composerAccueil`,

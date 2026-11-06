@@ -21,7 +21,7 @@ const schema = z.object({
 });
 
 /**
- * Déclare le numéro sur lequel Sophie reçoit les appels.
+ * Déclare le numéro sur lequel Zeli reçoit les appels.
  *
  * Ce que cette action NE fait pas : commander un numéro, l'activer chez
  * l'opérateur, ou vérifier qu'il existe. Elle enregistre un lien entre un

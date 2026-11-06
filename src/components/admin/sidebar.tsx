@@ -131,7 +131,7 @@ export function Sidebar({ compte }: { compte: React.ReactNode }) {
     <div className="flex h-full flex-col">
       <div className="px-5 py-5">
         <p className="font-display text-lg font-semibold text-console-ink">
-          Sophie
+          Zeli
           <span className="ml-1.5 font-normal text-console-ink-soft">
             plateforme
           </span>
@@ -214,7 +214,7 @@ export function Sidebar({ compte }: { compte: React.ReactNode }) {
           </svg>
         </button>
         <p className="font-display font-semibold text-console-ink">
-          Sophie — plateforme
+          Zeli — plateforme
         </p>
       </div>
 

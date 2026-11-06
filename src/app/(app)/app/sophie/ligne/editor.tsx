@@ -146,7 +146,7 @@ export function LigneEditor({
 
           {ligne.connection_mode === "FORWARD" && ligne.is_active ? (
             <Sheet tone="neutral">
-              <p className="font-medium">Renvoyer vos appels vers Sophie</p>
+              <p className="font-medium">Renvoyer vos appels vers Zeli</p>
               <p className="mt-1 text-sm text-ink-soft">
                 Composez l’un de ces codes depuis votre téléphone, comme un
                 numéro. Le deuxième est celui que nous conseillons pour
@@ -201,7 +201,7 @@ export function LigneEditor({
             <Sheet className="flex flex-col gap-3">
               <p className="font-medium">Déclarer une ligne</p>
               <p className="text-sm text-ink-soft">
-                Le numéro sur lequel Sophie reçoit les appels. C’est celui que
+                Le numéro sur lequel Zeli reçoit les appels. C’est celui que
                 votre fournisseur de téléphonie vous a attribué, écrit en entier
                 avec l’indicatif.
               </p>

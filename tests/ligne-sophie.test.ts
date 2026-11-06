@@ -64,6 +64,6 @@ describe("etat de la ligne de Sophie", () => {
     // La faute d origine, et la seule qui puisse revenir en silence.
     const layout = readFileSync(resolve(process.cwd(), "src/app/(app)/layout.tsx"), "utf-8");
     expect(/const sophieActive\s*=\s*(true|false)/.test(layout)).toBe(false);
-    expect(layout).toContain("etatLigneSophie");
+    expect(layout).toContain("etatLigneZeli");
   });
 });

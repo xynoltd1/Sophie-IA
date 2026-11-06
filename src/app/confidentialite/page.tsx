@@ -129,7 +129,7 @@ export default function Confidentialite() {
           des données (Belgique) ou de la CNIL (France).
         </p>
         <p>
-          Si vous avez appelé une entreprise utilisant Sophie et souhaitez
+          Si vous avez appelé une entreprise utilisant Zeli et souhaitez
           exercer vos droits sur cet appel, adressez-vous d’abord à cette
           entreprise : c’est elle qui décide de ce qui est conservé.
         </p>
@@ -137,7 +137,7 @@ export default function Confidentialite() {
 
       <Partie titre="Intelligence artificielle">
         <p>
-          Sophie est un système automatisé. Elle l’annonce au début de chaque
+          Zeli est un système automatisé. Elle l’annonce au début de chaque
           appel, et ce réglage n’est pas désactivable.
         </p>
         <p>

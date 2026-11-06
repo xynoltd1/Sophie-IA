@@ -69,7 +69,7 @@ export function AbsencesEditor({
       ) : (
         <Sheet>
           <p className="text-sm text-ink-soft">
-            Aucune absence enregistrée. Sophie propose des rendez-vous sur tous
+            Aucune absence enregistrée. Zeli propose des rendez-vous sur tous
             vos jours ouvrés.
           </p>
         </Sheet>

@@ -66,7 +66,7 @@ function LigneTache({ tache, fuseau }: { tache: TacheListee; fuseau: string }) {
             </Link>
           ) : null}
           {tache.source === "SOPHIE" ? (
-            <Badge ton="signal">Sophie</Badge>
+            <Badge ton="signal">Zeli</Badge>
           ) : null}
           {tache.priority === "URGENT" ? (
             <Badge ton="urgent">Urgent</Badge>
