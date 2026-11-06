@@ -69,7 +69,7 @@ describe("indexation", () => {
     // Declarer un tarif qui n existe pas ou une note que personne n a donnee
     // est une donnee structuree trompeuse.
     const accueil = lire("src/app/page.tsx");
-    const bloc = accueil.slice(accueil.indexOf("donneesStructurees"));
+    const bloc = accueil.slice(accueil.indexOf("function DonneesStructurees"));
     expect(bloc).toContain("SoftwareApplication");
     expect(bloc).not.toContain("aggregateRating");
     expect(bloc).not.toContain('"offers"');

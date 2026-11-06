@@ -27,6 +27,16 @@ export const SITE_DESCRIPTION =
 export const PAGES_PUBLIQUES = [
   { chemin: "/", priorite: 1, frequence: "weekly" as const },
   { chemin: "/signup", priorite: 0.6, frequence: "monthly" as const },
+  // Les pages légales sont accessibles — le pied de page y mène — mais elles
+  // restent hors du plan du site et hors indexation tant qu'un juriste ne les
+  // a pas relues. Des conditions de vente trouvées dans Google sont lues
+  // comme les conditions en vigueur, et un client pourrait s'en prévaloir.
+  // Le réglage par page, en console, les ouvrira le jour venu.
+  { chemin: "/mentions-legales", priorite: 0.2, frequence: "yearly" as const },
+  { chemin: "/confidentialite", priorite: 0.3, frequence: "yearly" as const },
+  { chemin: "/cgu", priorite: 0.2, frequence: "yearly" as const },
+  { chemin: "/cgv", priorite: 0.2, frequence: "yearly" as const },
+  { chemin: "/cookies", priorite: 0.2, frequence: "yearly" as const },
 ] as const;
 
 /** Les espaces qui ne doivent jamais être parcourus ni indexés. */

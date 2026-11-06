@@ -1683,3 +1683,139 @@ un accueil court et naturel, pas la suppression d'une obligation. Séparées, on
 raccourcit l'une sans toucher à l'autre, et la position se règle — avant ou
 après l'accueil. Elle disparaît d'elle-même quand l'enregistrement s'arrête,
 parce qu'elle vient de `recording_allowed()` et non d'un texte saisi.
+
+## ADR-048 — Pas de bibliotheque d animation sur la page d accueil
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### Le problème
+
+La refonte demandait des apparitions progressives, du flottement, des
+micro-interactions, et citait Framer Motion. La page d'accueil est aussi celle
+où chaque centaine de millisecondes se paie en visiteurs qui partent.
+
+### La décision
+
+Tout en CSS, plus un composant `Reveal` d'une cinquantaine de lignes bâti sur
+`IntersectionObserver`.
+
+Framer Motion coûte une cinquantaine de kilo-octets de JavaScript, à
+télécharger, analyser et exécuter avant la première animation — sur la seule
+page que des visiteurs quittent avant l'affichage. Les animations demandées
+sont des apparitions, des flottements et des survols : des transitions et des
+`@keyframes` les font, sans rien charger.
+
+Un test interdit d'ajouter `framer-motion`, `motion`, `gsap`, `three` ou
+`@react-three/fiber` aux dépendances. Il échouera à l'installation, pas trois
+mois plus tard devant un rapport de performance.
+
+### Ce qui aurait justifié l'inverse
+
+Des animations orchestrées par le défilement, du glisser-déposer, des
+transitions partagées entre pages. Rien de cela n'est demandé.
+
+## ADR-049 — Une animation d apparition ne doit jamais pouvoir effacer du contenu
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### Le défaut constaté
+
+Première version de `Reveal` : masquer en CSS, révéler quand
+`IntersectionObserver` signale l'entrée dans l'écran. C'est le schéma le plus
+répandu, et il est faux.
+
+La capture d'écran l'a montré en une image. En sautant d'un coup au bas de la
+page, l'observateur n'échantillonne pas les blocs traversés : ils restent
+masqués. La moitié de la page était blanche. Le même défaut frappe une arrivée
+par ancre, une position de défilement restaurée, un onglet rouvert.
+
+### Les trois règles retenues
+
+**Le contenu est visible par défaut.** `.reveal { opacity: 1 }`. C'est le
+script qui masque, au premier rendu client. Sans JavaScript — bloqueur,
+erreur, vieux navigateur — la page reste entièrement lisible. L'inverse donne
+une page blanche à qui n'exécute pas le script.
+
+**On ne masque que ce qui est sous l'écran.** `rect.top <= window.innerHeight`
+révèle immédiatement. Ce qui est déjà vu, ou déjà dépassé, n'est jamais caché.
+
+**Un filet de cinq secondes.** Observateur silencieux, onglet en arrière-plan,
+bogue de navigateur : le bloc apparaît quand même, sans animation. Mieux vaut
+une apparition sèche qu'un trou.
+
+### La règle générale
+
+Une animation est une amélioration. Dès qu'elle devient la condition pour voir
+le texte, ce n'est plus une animation, c'est une panne qui attend son moment.
+
+## ADR-050 — Les brouillons juridiques sont accessibles, pas indexables
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### La tension
+
+Un pied de page professionnel doit mener à des mentions légales, une politique
+de confidentialité et des conditions. Les laisser absentes est une faute. Mais
+les textes écrits ici n'ont été relus par aucun juriste.
+
+### Les deux risques, et le choix
+
+**Les publier normalement** : des conditions générales de vente trouvées dans
+Google sont lues comme les conditions en vigueur. Un client pourrait
+raisonnablement s'en prévaloir, et l'éditeur se retrouverait engagé par un
+texte que personne n'a validé.
+
+**Ne pas les écrire** : le pied de page mène dans le vide, et le travail de
+rédaction reste entier.
+
+Troisième voie, retenue : les pages existent, le pied de page y mène, chacune
+porte un bandeau non refermable « Modèle non validé juridiquement », elles sont
+`noindex` et absentes du plan du site.
+
+### Les champs restent vides, volontairement
+
+Raison sociale, adresse, numéro d'entreprise, TVA, hébergeur, responsable de
+publication : inventer l'un d'eux produirait un document faux sur l'identité
+de l'éditeur. Ils apparaissent en jaune, « [À COMPLÉTER : … ] ». Un blanc se
+voit à la relecture ; une valeur plausible se recopie en production.
+
+### L'ouverture, le jour venu
+
+Le réglage par page existe depuis la 0.19.0. Deux cases à cocher dans la
+console rendent une page indexable et l'ajoutent au plan du site. Aucune
+migration, aucun déploiement.
+
+## ADR-051 — L illustration du hero est un SVG ecrit a la main
+
+**Date** : 2026-11-06 · **Statut** : accepté
+
+### La contrainte honnête
+
+La demande portait sur une illustration 3D originale. Mon environnement ne
+produit pas d'images de synthèse. Trois sorties possibles : annoncer un rendu
+que je n'ai pas fabriqué, poser une image de banque sans rapport avec le
+produit, ou dessiner.
+
+### Pourquoi le dessin est le meilleur des trois, pas le moins mauvais
+
+L'illustration est l'élément le plus large de l'écran d'accueil, donc très
+probablement celui que Google chronomètre pour le plus grand contenu affiché.
+
+Un SVG rendu par le serveur est **dans le HTML** : aucune requête réseau à
+attendre, aucune dimension inconnue, donc aucun saut de mise en page. Une
+image de 400 ko l'aurait retardé de plusieurs centaines de millisecondes ; un
+moteur 3D, de plusieurs secondes, pour une illustration décorative.
+
+### Ce qu'elle montre
+
+Un téléphone, un appel entrant, les ondes de la voix, un créneau d'agenda, une
+carte de rendez-vous à valider, un SMS de confirmation. Chaque pièce est une
+étape réelle du produit. Un robot humanoïde, l'image réflexe pour un produit
+d'IA, n'aurait rien dit de ce que Sophie fait.
+
+### Les deux corrections venues de la capture d'écran
+
+Les cartes flottantes mordaient sur le châssis du téléphone, et deux anneaux
+de sonnerie traversaient la scène en se lisant comme des traits perdus. Les
+cartes ont été écartées, les anneaux retirés. L'ombre au sol est sortie du
+groupe flottant : une ombre qui monte avec l'objet annule l'effet de hauteur.

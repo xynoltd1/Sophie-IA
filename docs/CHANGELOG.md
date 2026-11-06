@@ -3,6 +3,99 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.21.0] — 2026-11-06 — La page d'accueil, refaite
+
+### Le hero
+
+Illustration dessinée en SVG : un téléphone, un appel entrant, la voix qui
+répond, le créneau d'agenda, la carte de rendez-vous à valider, le SMS de
+confirmation. Chaque pièce est une étape réelle du produit — pas un robot
+humanoïde qui ne dit rien de ce que Sophie fait.
+
+**Je n'ai pas généré d'image de synthèse** : mon environnement ne le permet
+pas, et annoncer un rendu 3D que je n'ai pas fabriqué aurait été un mensonge.
+Le SVG se défend mieux de toute façon : il est dans le HTML, donc aucune
+requête réseau à attendre pour l'élément le plus large de l'écran — celui que
+Google chronomètre — et aucun saut de mise en page possible.
+
+### Onze sections
+
+Hero, le problème, comment ça marche, démonstration, ce que ça change, les
+métiers, les garde-fous, les intégrations, l'accès, les questions, l'appel
+final.
+
+La démonstration montre un échange complet, de la sonnerie au SMS, et porte un
+bandeau : **exemple illustratif, pas l'enregistrement d'un vrai appel**.
+
+Les intégrations distinguent ce qui marche de ce qui est prévu. WhatsApp et
+Outlook sont marqués « à venir », parce qu'ils ne sont pas développés.
+
+### Les prix viennent de la base, ou rien
+
+La section Accès lit les offres marquées publiques. Un prix ne s'affiche que
+s'il est renseigné ; sinon « Tarif à venir ». Aucune offre publique
+aujourd'hui, donc la section propose la création de compte et dit que les
+tarifs ne sont pas fixés — plutôt qu'un chiffre qu'il faudrait démentir.
+
+### Animations
+
+Apparition progressive des blocs, flottement des pièces de l'illustration,
+ondes de voix, survols. **Tout en CSS, aucune bibliothèque** : framer-motion
+aurait pesé une cinquantaine de kilo-octets sur la page où la vitesse se paie
+en visiteurs perdus. Un test interdit d'en ajouter une.
+
+L'apparition ne peut pas effacer du contenu : les blocs sont visibles par
+défaut, seuls ceux encore sous l'écran sont masqués, et un filet de cinq
+secondes les révèle si l'observateur reste muet. C'est un défaut que j'ai
+trouvé en prenant la capture d'écran : en sautant d'un coup au bas de la page,
+la moitié des sections restaient vides.
+
+### Pied de page et pages légales
+
+Quatre colonnes, et cinq documents créés : mentions légales, confidentialité,
+conditions d'utilisation, conditions de vente, cookies.
+
+Ce sont des **brouillons**, et chacun le dit en haut de page, dans un bandeau
+non refermable. Les champs que je ne peux pas connaître — raison sociale,
+adresse, numéro d'entreprise, TVA, hébergeur — apparaissent en jaune comme
+« [À COMPLÉTER] ». Un blanc se voit ; une valeur plausible se recopie.
+
+Ils sont **hors indexation et hors plan du site**. Des conditions de vente
+trouvées dans Google sont lues comme les conditions en vigueur, et un client
+pourrait s'en prévaloir. Deux cases à cocher en console les ouvriront le jour
+où un juriste les aura relues.
+
+### Correction : une promesse qui n'était pas tenue
+
+La page cookies annonce que le signal « ne pas me suivre » du navigateur est
+respecté. Il ne l'était pas. `DNT: 1` et `Sec-GPC: 1` interrompent maintenant
+la mesure avant toute lecture.
+
+### Vérification juridique
+
+L'affirmation sur l'obligation d'annoncer qu'on parle à une machine a été
+vérifiée : l'article 50 du règlement européen sur l'IA s'applique depuis le
+2 août 2026 et **n'a pas été reporté** par le paquet « omnibus numérique »,
+qui n'a décalé que les règles sur les systèmes à haut risque. La formulation
+sur l'enregistrement des appels reste prudente et renvoie à une validation par
+pays.
+
+### Vérifié
+
+481 tests (459 passants, 22 ignorés), typecheck, lint, build. Vingt-cinq tests
+nouveaux : aucun témoignage, aucune statistique, aucun prix en dur, aucune
+identité d'entreprise inventée, la démonstration annoncée comme exemple,
+l'animation incapable d'effacer un bloc, le titre avant l'illustration sur
+téléphone, chaque ancre du menu existante, le refus de suivi respecté.
+
+Vérifié aussi dans un vrai navigateur, sur 1440 px et sur iPhone 13 : 18 liens
+testés et aucun mort, aucun débordement horizontal, un seul `h1`, aucune image
+sans alternative, données structurées valides.
+
+### Migration
+
+`0037_pages_legales` — les cinq pages entrent dans le référencement, fermées.
+
 ## [0.20.0] — 2026-11-05 — Sophie décroche au nom de l'entreprise appelée
 
 ### Ce qui changeait de place

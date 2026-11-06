@@ -221,3 +221,110 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ===========================================================================
+   Page d'accueil publique
+   ---------------------------------------------------------------------------
+   Toutes les animations d'ici sont en CSS, et aucune ne porte de contenu.
+   Une bibliotheque d'animation aurait pese une cinquantaine de kilo-octets de
+   JavaScript sur la seule page ou la vitesse se paie en visiteurs perdus.
+
+   Le bloc `prefers-reduced-motion` plus haut les neutralise toutes : il cible
+   `*`, donc il couvre ce qui suit sans rien ajouter.
+   =========================================================================== */
+
+/* Apparition a l'entree dans l'ecran. L'element est VISIBLE par defaut : sans
+   JavaScript, ou si l'observateur echoue, la page reste entierement lisible.
+   C'est le script qui masque, juste avant de reveler. */
+.reveal {
+  opacity: 1;
+}
+
+.reveal[data-cache="oui"] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.reveal[data-vu="oui"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Flottement des pieces de l'illustration. Trois durees premieres entre elles,
+   pour que les elements ne reviennent jamais en phase : un mouvement
+   synchronise se lit comme une animation, un mouvement decale se lit comme de
+   la profondeur. */
+@keyframes flotter {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.flotte-lent {
+  animation: flotter 7s ease-in-out infinite;
+}
+.flotte-moyen {
+  animation: flotter 5s ease-in-out infinite;
+}
+.flotte-vif {
+  animation: flotter 4.3s ease-in-out infinite;
+}
+
+/* Les barres de voix. Chaque barre recoit son propre retard en ligne. */
+@keyframes onde {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.onde-voix {
+  transform-origin: center;
+  animation: onde 1.25s ease-in-out infinite;
+}
+
+/* Halo qui respire derriere le telephone. Opacite seulement : animer un
+   filtre ou une ombre forcerait le navigateur a repeindre a chaque image. */
+@keyframes respirer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.halo {
+  animation: respirer 6s ease-in-out infinite;
+}
+
+/* Pastille d'appel entrant. */
+@keyframes pulsation {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.pulsation {
+  animation: pulsation 2.4s ease-out infinite;
+}

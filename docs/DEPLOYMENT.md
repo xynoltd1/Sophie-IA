@@ -444,3 +444,31 @@ est exactement ce qu'un environnement de préproduction doit éviter.
 **À ne jamais partager entre les deux** : la clé de service Supabase, la clé de chiffrement
 des jetons d'agenda, le secret des webhooks. Une préproduction compromise ne doit pas
 donner accès à la production.
+
+## Pages publiques et référencement (0.21.0)
+
+Six pages publiques existent désormais, en plus de `/signup` :
+
+| Chemin | Indexée | Dans le plan du site |
+|---|---|---|
+| `/` | oui, si `NEXT_PUBLIC_APP_ENV=production` | oui |
+| `/signup` | oui, même condition | oui |
+| `/mentions-legales` | **non** | non |
+| `/confidentialite` | **non** | non |
+| `/cgu` | **non** | non |
+| `/cgv` | **non** | non |
+| `/cookies` | **non** | non |
+
+Les cinq dernières sont des brouillons juridiques. Elles restent accessibles —
+le pied de page y mène — mais hors des résultats de recherche tant qu'un
+juriste ne les a pas relues (ADR-050).
+
+**Toutes ces pages portent `revalidate = 60`.** Elles lisent des réglages en
+base ; sans cette ligne, Next les figerait au moment du build et un changement
+dans la console n'arriverait qu'au redéploiement suivant. Un test le vérifie.
+
+**Rien à ajouter dans Vercel** pour cette version : aucune variable
+d'environnement nouvelle, aucune route d'API nouvelle. La migration `0037` doit
+être appliquée, sans quoi les cinq pages ne sont pas réglables depuis la
+console — elles s'affichent quand même, en `noindex`, ce qui est le
+comportement voulu par défaut.

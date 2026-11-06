@@ -46,6 +46,21 @@ export async function POST(request: NextRequest) {
   const fin = () => new NextResponse(null, { status: 204 });
 
   try {
+    // Le refus de suivi, avant tout le reste.
+    //
+    // `DNT: 1` et `Sec-GPC: 1` sont des demandes explicites de ne pas être
+    // suivi, émises par le navigateur. Les ignorer parce que notre mesure est
+    // déjà sans cookie serait répondre à côté : la personne demande à ne pas
+    // être comptée, pas à ne pas recevoir de cookie. Le respecter coûte deux
+    // lignes et quelques visites non comptées, et c'est ce que la page
+    // publique sur les cookies promet.
+    if (
+      request.headers.get("dnt") === "1" ||
+      request.headers.get("sec-gpc") === "1"
+    ) {
+      return fin();
+    }
+
     const brut = await request.text();
     if (brut.length > 2_000) return fin();
 

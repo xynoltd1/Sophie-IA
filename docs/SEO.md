@@ -178,3 +178,54 @@ décliné sur cent villes et douze métiers, donne mille deux cents pages identi
 près. Google appelle cela du contenu de faible qualité et l'a sanctionné bien avant 2026.
 Quelques pages vraiment écrites valent mieux, et elles demandent quelqu'un qui connaît le
 métier — pas un générateur.
+
+## La page d'accueil (0.21.0)
+
+### Structure
+
+Un seul `h1`. Dix `h2`, un par section : problème, fonctionnement,
+démonstration, bénéfices, métiers, garde-fous, intégrations, accès, questions,
+appel final. Chaque section porte une ancre (`#fonctionnement`,
+`#demonstration`, `#metiers`, `#garanties`, `#integrations`, `#acces`,
+`#questions`) servant au menu et au pied de page. Un test vérifie que chaque
+ancre citée dans la navigation existe dans la page.
+
+### Données structurées
+
+Trois entités : `Organization`, `SoftwareApplication`, `FAQPage`.
+
+Pas de `aggregateRating`, pas de `offers`, pas de `review`. Aucun tarif n'est
+fixé et personne n'a noté le produit : les déclarer ferait écrire à Google une
+chose fausse sous notre nom, ce qui se sanctionne quand il s'en aperçoit. Un
+test l'interdit.
+
+Les questions de `FAQPage` sont exactement celles affichées dans la page —
+même tableau, même texte. Un balisage qui annoncerait d'autres questions que
+celles visibles est un balisage trompeur.
+
+### Vitesse
+
+L'élément le plus large de l'écran est l'illustration. Elle est en SVG dans le
+HTML : aucune requête, aucune dimension inconnue, donc aucun saut de mise en
+page (ADR-051).
+
+Aucune bibliothèque d'animation n'est chargée (ADR-048). Le seul JavaScript de
+la page est le composant d'apparition, une cinquantaine de lignes, et la
+mesure de visite.
+
+Le contenu est rendu par le serveur. Il reste entièrement lisible sans
+JavaScript : l'apparition progressive est une amélioration, jamais une
+condition (ADR-049).
+
+### Les pages légales ne sont pas indexées
+
+`/mentions-legales`, `/confidentialite`, `/cgu`, `/cgv`, `/cookies` sont
+servies en `noindex, follow` et absentes du plan du site. Ce sont des
+brouillons : indexées, elles seraient lues comme les documents en vigueur
+(ADR-050).
+
+`follow` et non `nofollow` : les liens internes qu'elles portent restent utiles
+à l'exploration, et rien dans ces pages ne mène ailleurs qu'au site.
+
+Pour les ouvrir une fois validées : `/admin/seo`, section **Référencement page
+par page**, cocher « Indexable » et « Dans le plan du site ».

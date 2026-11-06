@@ -1541,7 +1541,7 @@ ligne `Sitemap:`. La troisième liste deux adresses.
 Vercel. Corrigez la variable, puis **relancez un déploiement** : elle est lue à la
 compilation.
 
-## D2 — Appliquer les migrations 0033, 0034, 0035 et 0036
+## D2 — Appliquer les migrations 0033 à 0037
 
 - [ ] Fait
 `ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
@@ -1552,6 +1552,7 @@ compilation.
 2. `supabase/migrations/20261105100000_0034_platform_configuration.sql`
 3. `supabase/migrations/20261105140000_0035_seo_pages.sql`
 4. `supabase/migrations/20261105170000_0036_accueil_personnalise.sql`
+5. `supabase/migrations/20261106090000_0037_pages_legales.sql`
 
 Puis les mêmes sur la préproduction.
 
@@ -1861,3 +1862,62 @@ vérification via `GOOGLE_SITE_VERIFICATION`, puis dépôt du plan du site.
 Le bouton « Connecter Google Search Console » n'existe pas encore dans la console. La
 table et l'état sont prêts ; la connexion OAuth reste à écrire. Je préfère vous le dire
 plutôt que de livrer un bouton qui ne ferait rien.
+
+
+## F — Les documents légaux
+
+## F1 — Faire relire les cinq brouillons
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **haute avant toute vente** · **coût : honoraires d'un juriste**
+
+**Quoi** Faire relire par un juriste compétent pour la Belgique et la France :
+
+- `/mentions-legales`
+- `/confidentialite`
+- `/cgu`
+- `/cgv`
+- `/cookies`
+
+**Pourquoi** Ce sont des brouillons, et chacun le dit en haut de page. Ils
+contiennent des champs en jaune que je ne pouvais pas connaître sans les
+inventer : raison sociale, adresse, numéro d'entreprise, TVA, hébergeur,
+responsable de publication, durées de conservation, clause de responsabilité,
+droit applicable.
+
+**Les trois points qui méritent le plus d'attention**
+
+1. **L'enregistrement des appels.** Les règles diffèrent selon le pays et selon
+   la base légale retenue. C'est le point le plus exposé du produit.
+2. **Le contrat de sous-traitance** entre vous et chaque artisan abonné. Pour
+   les appels de ses clients, c'est lui le responsable du traitement et vous le
+   sous-traitant. L'article 28 du RGPD impose un contrat écrit.
+3. **Le droit de rétractation** dans les conditions de vente. Vous vendez à des
+   professionnels, mais des exceptions existent selon la taille de l'entreprise
+   et le pays. S'y tromper expose à une sanction administrative.
+
+**Les champs à remplir** Cherchez le jaune. Chaque mention à compléter est
+surlignée et dit ce qu'elle attend.
+
+**Une fois validés** `/admin/seo` → **Référencement page par page** → pour
+chaque page, cocher « Indexable » et « Dans le plan du site ». Puis retirer le
+bandeau de brouillon dans `src/components/public/legal.tsx`.
+
+**Tant que ce n'est pas fait** Les pages restent accessibles depuis le pied de
+page, mais Google ne les indexe pas, et le bandeau prévient le visiteur. C'est
+volontaire : des conditions de vente trouvées dans Google sont lues comme les
+conditions en vigueur.
+
+## F2 — Vérifier l'image de partage de la page d'accueil
+
+- [ ] Fait
+`JE DOIS FAIRE` · priorité **moyenne** · **coût : 0 €**
+
+**Quoi** Envoyer une image 1200 × 630 dans `/admin/seo` → **Image de partage**.
+
+**Pourquoi** La page d'accueil a été refaite ; c'est le bon moment. Sans image,
+un lien vers zelicall.com partagé sur WhatsApp ou LinkedIn apparaît sans
+aperçu.
+
+**Comment vérifier** Collez `https://zelicall.com` dans une conversation
+WhatsApp sans envoyer : l'aperçu se construit.

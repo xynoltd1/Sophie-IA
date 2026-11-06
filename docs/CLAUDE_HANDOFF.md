@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.20.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.21.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-six
+## Migrations — trente-sept
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -291,7 +291,12 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  rend toute la configuration d un numero en un
                                  seul aller-retour. Revoquee a anon/authenticated.
 
-**0033, 0034, 0035 et 0036 ne sont pas appliquées en production.** Les écrans qui en dépendent
+0037_pages_legales               seme les cinq pages legales dans seo_pages,
+                                 non indexables et hors plan du site. Ce sont
+                                 des brouillons : indexees, elles seraient lues
+                                 comme les documents en vigueur (ADR-050).
+
+**0033, 0034, 0035, 0036 et 0037 ne sont pas appliquées en production.** Les écrans qui en dépendent
 — statistiques, consommation, SEO, intégrations, référencement page par page, envoi
 d'image, accueil téléphonique — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
 étape D2.
@@ -448,8 +453,34 @@ B4b) : première phrase `{{premierMessage}}`, adresse serveur du **numéro** ver
 `/api/voice/assistant`, et numéro laissé sans assistant fixe. Sans ces trois réglages,
 le code est en place et le fournisseur continue de prononcer sa phrase figée.
 
+**11. Faire relire les cinq documents légaux** et remplir les champs
+« [À COMPLÉTER] » : raison sociale, adresse, numéro d'entreprise, TVA,
+hébergeur, responsable de publication, durées de conservation, clause de
+responsabilité, droit applicable. Puis les rendre indexables depuis
+`/admin/seo` et retirer le bandeau de brouillon dans
+`src/components/public/legal.tsx`.
+
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Leçon de la 0.21.0 — regarder la page, pas seulement la compiler
+
+Le build passait, les tests passaient, le typecheck passait. La première
+capture d'écran a montré une page à moitié blanche : l'animation d'apparition
+n'avait jamais révélé les blocs traversés d'un seul saut de défilement.
+
+Aucune vérification textuelle ne pouvait trouver ça. Trois défauts sur quatre
+de cette version viennent d'avoir ouvert un navigateur :
+
+1. les sections invisibles (ADR-049) ;
+2. les cartes de l'illustration qui mordaient sur le téléphone ;
+3. sur téléphone, l'illustration placée avant le titre, qui occupait l'écran
+   entier et repoussait l'accroche sous la ligne de flottaison.
+
+**Le réflexe à garder** : pour tout travail visuel, prendre une capture sur
+1440 px et sur un téléphone, et la regarder. Playwright et Chromium sont
+installés. Le script tient en vingt lignes, et il vaut mieux qu'un test qui
+compte des caractères.
 
 ## Leçon de la 0.20.0 — la vérité est dans ce qui est prononcé
 
