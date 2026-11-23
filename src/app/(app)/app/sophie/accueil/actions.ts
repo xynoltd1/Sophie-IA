@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { messageErreurBase } from "@/lib/db/erreurs";
 import { LONGUEUR_MAX, verifierModele } from "@/lib/sophie/greeting";
 
 export interface AccueilState {
@@ -115,7 +116,9 @@ export async function enregistrerAccueil(
     { onConflict: "organization_id" },
   );
 
-  if (error) return { error: `Enregistrement refusé : ${error.message}` };
+  if (error) {
+    return { error: messageErreurBase(error, "Enregistrement refusé.") };
+  }
 
   revalidatePath("/app/sophie/accueil");
   revalidatePath("/app/sophie");

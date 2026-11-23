@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { messageErreurBase } from "@/lib/db/erreurs";
 
 const schema = z.object({
   assistantName: z
@@ -62,8 +63,13 @@ export async function saveZeli(
   );
 
   if (error) {
+    // « Réessayez » ne répare jamais une colonne manquante : c'est la cause la
+    // plus fréquente ici, et elle demande d'appliquer une migration.
     return {
-      error: "La configuration n'a pas pu être enregistrée. Réessayez.",
+      error: messageErreurBase(
+        error,
+        "La configuration n’a pas pu être enregistrée.",
+      ),
     };
   }
 

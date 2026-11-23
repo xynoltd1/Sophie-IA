@@ -48,6 +48,9 @@ export function PhoneForm({
   );
   const [mode, setMode] = useState(answerMode);
 
+  // Piloté : React vide un formulaire après une action serveur.
+  const [numero, setNumero] = useState(transferNumber ?? "");
+
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
@@ -100,7 +103,8 @@ export function PhoneForm({
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            defaultValue={transferNumber ?? ""}
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
             placeholder="0470 12 34 56"
             invalid={Boolean(state.fieldErrors?.transferNumber)}
           />

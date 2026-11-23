@@ -3,6 +3,50 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.23.2] — 2026-11-23 — Les erreurs disent enfin ce qui ne va pas
+
+### Le vrai problème était toujours le même
+
+Trois écrans différents affichaient trois messages inutiles — « Réessayez »,
+« Application error », « Aucun devis » — pour une seule et même cause : une
+migration non appliquée.
+
+Réessayer ne répare jamais une colonne manquante. Le mot invite à refaire
+exactement ce qui vient d'échouer.
+
+### Un traducteur, pas trois rustines
+
+`src/lib/db/erreurs.ts` fait le lien entre ce qui manque en base et le fichier
+à coller dans l'éditeur SQL. Quand PostgreSQL dit que
+`assistant_name_source` n'existe pas, l'écran dit : appliquez
+`0038_assistante_zeli`.
+
+Sept migrations sont répertoriées. Un test vérifie qu'aucune ne manque à
+l'appel, pour que le prochain oubli se voie à la compilation et non chez
+l'utilisateur.
+
+Les erreurs qui **ne sont pas** des absences restent lisibles telles quelles —
+une contrainte violée, un droit refusé. Les masquer derrière « Réessayez »
+ferait perdre la seule information disponible.
+
+Appliqué dans les trois écrans qui écrivent : l'étape Zeli de l'inscription,
+l'accueil téléphonique, les devis.
+
+### Les formulaires ne mangent plus ce qu'on tape
+
+React remet un formulaire à zéro après une action serveur. Les champs
+remplis par `defaultValue` étaient donc effacés à chaque échec : on retapait
+son texte pour se heurter à la même erreur, puisque la cause n'avait pas
+bougé.
+
+Quatre champs passés en pilotage : la phrase d'accueil et les consignes de
+Zeli, le numéro de transfert, le métier personnalisé. Un test refuse désormais
+tout champ texte en `defaultValue` dans l'inscription.
+
+### Vérifié
+
+547 tests (525 passants, 22 ignorés), typecheck, lint, build. Treize nouveaux.
+
 ## [0.23.1] — 2026-11-23 — Deux corrections
 
 ### La connexion renvoyait sur la page commerciale

@@ -7,6 +7,7 @@ import { requireOrganization } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { attribuerNumero } from "@/lib/quotes/queries";
+import { messageErreurBase } from "@/lib/db/erreurs";
 
 export interface DevisState {
   error?: string;
@@ -83,30 +84,10 @@ export async function creerDevis(
     .single();
 
   if (error || !data) {
-    return { error: messageLisible(error) };
+    return { error: messageErreurBase(error, "Création refusée.") };
   }
 
   redirect(`/app/devis/${data.id}`);
-}
-
-/**
- * Traduit une erreur de base en phrase utile.
- *
- * Le cas le plus fréquent, et de loin : la migration des devis n'a pas été
- * appliquée. PostgreSQL répond alors `42P01`, « relation inexistante ». Sans
- * cette traduction, l'artisan lit un jargon anglais et croit à une panne.
- */
-function messageLisible(
-  error: { code?: string; message?: string } | null,
-): string {
-  if (error?.code === "42P01" || /quotes/.test(error?.message ?? "")) {
-    return (
-      "La table des devis n’existe pas encore dans la base. " +
-      "Appliquez la migration 0039_devis dans l’éditeur SQL de Supabase, puis réessayez."
-    );
-  }
-
-  return `Création refusée : ${error?.message ?? "raison inconnue"}`;
 }
 
 export async function ajouterLigne(
@@ -155,7 +136,7 @@ export async function ajouterLigne(
 
   if (error) {
     // Le déclencheur de la base refuse toute écriture sur un devis envoyé.
-    return { error: messageLisible(error) };
+    return { error: messageErreurBase(error, "Ligne refusée.") };
   }
 
   revalidatePath(`/app/devis/${ligne.quote_id}`);

@@ -48,6 +48,14 @@ export function ZeliForm({
   );
   const [name, setName] = useState(assistantName);
   const [selectedStyle, setSelectedStyle] = useState(style);
+  // Ces deux champs sont pilotés, et non simplement pré-remplis.
+  //
+  // React remet un formulaire à zéro après une action serveur. Avec un simple
+  // `defaultValue`, un échec d'enregistrement efface donc ce que la personne
+  // venait d'écrire — et l'invite à le retaper pour rien, puisque la cause de
+  // l'échec, elle, n'a pas bougé.
+  const [greetingText, setGreetingText] = useState(greeting ?? "");
+  const [notes, setNotes] = useState(behaviorNotes ?? "");
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -112,7 +120,8 @@ export function ZeliForm({
           id="greeting"
           name="greeting"
           rows={3}
-          defaultValue={greeting ?? ""}
+          value={greetingText}
+          onChange={(e) => setGreetingText(e.target.value)}
           className="w-full rounded-control border border-line bg-surface px-3.5 py-3 text-base text-ink"
         />
       </Field>
@@ -126,7 +135,8 @@ export function ZeliForm({
           id="behaviorNotes"
           name="behaviorNotes"
           rows={4}
-          defaultValue={behaviorNotes ?? ""}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           className="w-full rounded-control border border-line bg-surface px-3.5 py-3 text-base text-ink"
         />
       </Field>

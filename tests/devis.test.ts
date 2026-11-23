@@ -230,15 +230,17 @@ describe("une erreur de creation se lit a l ecran", () => {
     // blanche et ne sait pas quoi faire.
     const creation = action.slice(
       action.indexOf("export async function creerDevis"),
-      action.indexOf("function messageLisible"),
+      action.indexOf("export async function ajouterLigne"),
     );
     expect(creation).not.toContain("throw new Error");
-    expect(creation).toContain("return { error: messageLisible(error) }");
+    expect(creation).toContain("messageErreurBase(error");
   });
 
   it("la migration manquante est nommee, pas traduite en jargon", () => {
-    expect(action).toContain('error?.code === "42P01"');
-    expect(action).toContain("0039_devis");
+    // La traduction vit maintenant dans un module partage : les trois ecrans
+    // qui ecrivent en base donnent le meme message.
+    expect(action).toContain("messageErreurBase");
+    expect(lire("src/lib/db/erreurs.ts")).toContain("0039_devis");
   });
 
   it("la liste distingue « aucun devis » de « table absente »", () => {

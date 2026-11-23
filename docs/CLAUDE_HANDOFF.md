@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.23.1 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.23.2 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -477,6 +477,19 @@ depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là
 
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Deux reflexes d ecriture, depuis la 0.23.2
+
+**Toute ecriture en base passe par `messageErreurBase`** (`lib/db/erreurs.ts`).
+Un message generique comme « Reessayez » cache la cause la plus frequente : une
+migration non appliquee. Le traducteur nomme le fichier a coller. Quand une
+migration ajoute une table ou une colonne qu un formulaire ecrit, sa ligne va
+dans la table de correspondance — un test verifie qu aucune ne manque.
+
+**Aucun champ texte en `defaultValue` dans un formulaire d action serveur.**
+React remet le formulaire a zero apres l action : le texte saisi disparait a
+chaque echec. Les champs sont pilotes par `useState`. Un test l impose pour
+l inscription.
 
 ## Lecon de la 0.23.1 — une action serveur ne leve pas d exception
 

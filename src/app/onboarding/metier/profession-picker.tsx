@@ -31,6 +31,9 @@ export function ProfessionPicker({
   const needsCustomLabel =
     templates.find((t) => t.id === selected)?.allows_custom_label ?? false;
 
+  // Piloté : React vide un formulaire après une action serveur.
+  const [libelle, setLibelle] = useState(currentCustomLabel ?? "");
+
   return (
     <form action={action} className="flex flex-col gap-5">
       {state.error ? (
@@ -84,7 +87,8 @@ export function ProfessionPicker({
             id="customLabel"
             name="customLabel"
             required
-            defaultValue={currentCustomLabel ?? ""}
+            value={libelle}
+            onChange={(e) => setLibelle(e.target.value)}
             placeholder="Vitrier"
           />
         </Field>
