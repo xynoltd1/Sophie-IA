@@ -1,8 +1,8 @@
 {
   "name": "sophie-ia",
-  "version": "0.23.3",
+  "version": "0.24.0",
   "private": true,
-  "description": "Sophie IA \u2014 secretaire virtuelle pour artisans et professionnels de terrain",
+  "description": "Sophie IA — secretaire virtuelle pour artisans et professionnels de terrain",
   "engines": {
     "node": "22.x"
   },

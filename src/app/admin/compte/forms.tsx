@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { changerMotDePasse, changerNom, type CompteState } from "./actions";
+import { InputMemoire } from "@/components/ui/champ-memoire";
 
 function Message({ state }: { state: CompteState }) {
   if (state.error) {
@@ -35,7 +36,13 @@ export function FormulaireNom({ nom }: { nom: string }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <Field label="Nom affiché" htmlFor="nom">
-        <Input id="nom" name="nom" defaultValue={nom} required minLength={2} />
+        <InputMemoire
+          id="nom"
+          name="nom"
+          valeurInitiale={nom}
+          required
+          minLength={2}
+        />
       </Field>
       <Message state={state} />
       <div>

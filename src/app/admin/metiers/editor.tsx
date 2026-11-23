@@ -197,17 +197,24 @@ function Champ({
   requis?: boolean;
   defaut?: string;
 }) {
+  // Piloté par son propre état : React vide un formulaire après une action
+  // serveur, et un champ non contrôlé perdrait la saisie à chaque échec.
+  const [valeur, setValeur] = useState(defaut ?? "");
+
   return (
     <div className="flex flex-1 flex-col gap-1">
       <label className="text-sm font-medium" htmlFor={nom}>
         {libelle}
       </label>
+      {/* Piloté par son propre état : React vide un formulaire après une
+          action serveur, et ce champ perdrait la saisie à chaque échec. */}
       <input
         id={nom}
         name={nom}
         type={type}
         required={requis}
-        defaultValue={defaut}
+        value={valeur}
+        onChange={(e) => setValeur(e.target.value)}
         className="min-h-12 rounded-control border border-line px-3"
       />
     </div>

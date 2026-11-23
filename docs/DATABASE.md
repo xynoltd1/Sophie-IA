@@ -226,3 +226,18 @@ ligne que l'artisan voit et corrige avant de figer.
 
 Aucune table de facture. Voir ADR-055 : facturation électronique structurée
 obligatoire en Belgique depuis le 1er janvier 2026.
+
+
+## Les droits de table (0040)
+
+`quotes` et `quote_lines` ont reçu leurs `GRANT` dans une migration séparée,
+parce que la 0039 les avait oubliés.
+
+**Règle à retenir pour toute table nouvelle** : les politiques RLS ne suffisent
+pas. Il faut aussi `grant select, insert, update, delete ... to authenticated`
+dès que la table est écrite avec le client de session. Les tables écrites
+uniquement par le service role — `site_events`, `seo_pages`,
+`platform_settings`, `provider_credentials`, `search_console_connection` — n'en
+ont pas besoin : il contourne les droits.
+
+`anon` ne reçoit jamais rien.

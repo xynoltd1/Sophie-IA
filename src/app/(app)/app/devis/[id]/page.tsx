@@ -30,8 +30,26 @@ export default async function FicheDevis({
   const { id } = await params;
   const { activeOrganization: org } = await requireOrganization();
 
-  const devis = await lireDevis(id);
-  if (!devis) notFound();
+  const { devis, erreur } = await lireDevis(id);
+
+  // Un devis absent est un 404. Une lecture qui échoue ne l'est pas : le devis
+  // existe, et dire « cette page n'existe pas » enverrait l'artisan chercher
+  // une faute qui n'est pas la sienne.
+  if (!devis && !erreur) notFound();
+  if (!devis) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Link href="/app/devis" className="text-sm text-ink-soft">
+          ← Tous les devis
+        </Link>
+        <Sheet>
+          <p role="alert" className="text-sm leading-relaxed">
+            {erreur}
+          </p>
+        </Sheet>
+      </div>
+    );
+  }
 
   const services = await servicesPourDevis(org.organization_id);
   const ouvert = peutModifier(devis.status) && can(org.role, "leads:manage");

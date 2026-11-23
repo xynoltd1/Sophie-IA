@@ -3,6 +3,102 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.24.0] — 2026-11-23 — Une colonne inventée, et l'audit qui l'attrape
+
+### « Cette page n'existe pas » sur un devis qui existait
+
+Le devis se créait, l'adresse de sa fiche s'ouvrait, et la page répondait 404.
+
+La requête demandait `contacts(id, display_name)`. Cette colonne n'a jamais
+existé : la table `contacts` nomme son client `full_name` et son entreprise
+`company_name`. PostgREST répondait « colonne inexistante », `lireDevis`
+rendait `null` sans regarder l'erreur, et la page traduisait ce `null` en
+« cette page n'existe pas ».
+
+Trois défauts empilés, corrigés séparément :
+
+1. **La colonne.** Les requêtes demandent maintenant `full_name`,
+   `company_name` et `phone`, et le nom affiché est construit par
+   `contactLabel`, le helper qui servait déjà aux prospects.
+2. **L'erreur avalée.** `lireDevis` et `listerDevis` rendent la raison de
+   l'échec, pas seulement une absence. Un devis absent reste un 404 ; une
+   lecture qui échoue affiche ce qui s'est passé.
+3. **Le message.** La liste ne dit plus à l'artisan d'appliquer une migration.
+   Elle passe par `messageErreurBase`, qui parle d'installation incomplète à
+   l'artisan et nomme le fichier à l'administrateur.
+
+Le même défaut touchait la liste des tâches : `tasks-query.ts` demandait la
+même colonne inexistante. Une tâche rattachée à un contact ne s'affichait pas.
+
+### `scripts/audit.mjs` — l'audit tourne avec les tests
+
+Les tests ne parlent ni à PostgreSQL ni à un navigateur : ils ne pouvaient pas
+voir ce défaut. L'audit compare le code au SQL des migrations et relève huit
+familles de défauts :
+
+1. une table utilisée par le code mais absente des migrations ;
+2. une table écrite avec une session utilisateur mais sans GRANT ;
+3. RLS sans politique, ou politique sans RLS ;
+4. un `throw` dans un fichier d'actions serveur — l'écran blanc ;
+5. un champ texte pré-rempli dans un formulaire d'action serveur ;
+6. un lien interne qui ne mène nulle part ;
+7. un écran privé sans garde d'authentification ;
+8. **une colonne demandée par une requête et absente des migrations.**
+
+`tests/audit.test.ts` le lance avec `npm test`. Un défaut bloquant fait échouer
+la suite.
+
+### Les champs ne se vident plus après un échec
+
+React vide un formulaire après une action serveur : un champ non contrôlé perd
+ce qui a été tapé à chaque échec d'enregistrement. Le composant
+`InputMemoire` / `TextareaMemoire` garde sa valeur lui-même. Appliqué aux
+réglages du site, au compte, aux métiers, aux offres, à la durée de
+conservation des enregistrements et à la priorité d'une page.
+
+### Vérifications
+
+536 tests passent, 22 sautés. Typecheck, lint et build propres. Audit sans
+constat. **Aucune migration nouvelle : ce correctif est entièrement dans le
+code.**
+
+## [0.23.4] — 2026-11-23 — Les droits de table manquaient sur les devis
+
+### « permission denied for table quotes »
+
+La migration 0039 a créé les tables, posé leurs politiques d'isolation, et
+oublié les GRANT. La table existait, ses règles étaient justes, et personne ne
+pouvait y écrire.
+
+Ce projet tient deux verrous séparés depuis la migration 0012 : le GRANT dit
+si un rôle a le **droit** de toucher la table, la politique dit **quelles
+lignes** il voit. Sans GRANT, PostgreSQL refuse avant même de regarder les
+politiques.
+
+La migration 0031 avait bien posé des privilèges par défaut — mais pour en
+**retirer**, pas pour en accorder. Rien n'est donc accordé automatiquement, et
+c'est voulu : une table nouvelle reste fermée tant que personne ne s'est posé
+la question. Cette fois, personne ne se l'est posée.
+
+### Migration 0040
+
+`select, insert, update, delete` sur `quotes` et `quote_lines`, pour
+`authenticated` seulement. `anon` ne reçoit rien : un visiteur non connecté
+n'a aucune raison de voir un devis. Ni TRUNCATE, ni REFERENCES, ni TRIGGER.
+
+### Un test pour la prochaine fois
+
+Quatre tests nouveaux, dont un qui vérifie que **toute table écrite avec le
+client de session possède un GRANT dans une migration**. Les tables passant
+par le service role en sont exemptées — il contourne les droits.
+
+C'est exactement le contrôle qui manquait : la 0039 passait tous les tests
+d'isolation, parce qu'ils vérifiaient les politiques et pas les droits.
+
+### Vérifié
+
+556 tests (534 passants, 22 ignorés), typecheck, lint, build.
+
 ## [0.23.3] — 2026-11-23 — Le message parlait mal, et il parlait à la mauvaise personne
 
 ### « Le nom de l'assistante n'existe pas »

@@ -79,6 +79,7 @@ export function FormulairePage({ page }: { page: PageSeo }) {
 
   const [titre, setTitre] = useState(page.title ?? "");
   const [description, setDescription] = useState(page.description ?? "");
+  const [priorite, setPriorite] = useState(String(page.priority));
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -147,7 +148,8 @@ export function FormulairePage({ page }: { page: PageSeo }) {
           step="0.1"
           min="0"
           max="1"
-          defaultValue={page.priority}
+          value={priorite}
+          onChange={(e) => setPriorite(e.target.value)}
         />
       </Field>
 

@@ -1,5 +1,8 @@
 import "server-only";
 
+import { contactLabel } from "@/lib/crm/pipeline";
+import { messageErreurBase } from "@/lib/db/erreurs";
+import { estAdminPlateforme } from "@/lib/db/qui-voit";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { EtatDevis } from "./totals";
@@ -57,25 +60,30 @@ export interface DevisComplet extends DevisResume {
 }
 
 const COLONNES_RESUME =
-  "id, reference, title, status, total_incl_cents, valid_until, created_at, customer_name, contacts(id, display_name)";
+  "id, reference, title, status, total_incl_cents, valid_until, created_at, customer_name, contacts(id, full_name, company_name, phone)";
 
 /**
  * Le contact rattaché arrive tantôt seul, tantôt dans un tableau selon la
  * façon dont la jointure est typée. On normalise ici plutôt que de forcer le
  * type : un devis sans contact est un cas courant, pas une anomalie.
  */
-type ContactJoint =
-  | { id: string; display_name: string }
-  | { id: string; display_name: string }[]
-  | null
-  | undefined;
+interface ContactBrut {
+  id: string;
+  full_name: string | null;
+  company_name: string | null;
+  phone: string | null;
+}
+
+type ContactJoint = ContactBrut | ContactBrut[] | null | undefined;
 
 type LigneBrute = Record<string, unknown> & { contacts?: ContactJoint };
 
 function premierContact(joint: ContactJoint): DevisResume["contact"] {
   if (!joint) return null;
   const valeur = Array.isArray(joint) ? joint[0] : joint;
-  return valeur ? { id: valeur.id, display_name: valeur.display_name } : null;
+  return valeur
+    ? { id: valeur.id, display_name: contactLabel(valeur) }
+    : null;
 }
 
 function versResume(ligne: LigneBrute): DevisResume {
@@ -97,13 +105,13 @@ function versResume(ligne: LigneBrute): DevisResume {
  *
  * Avaler l'erreur et rendre une liste vide afficherait « aucun devis » alors
  * que la table n'existe pas : l'artisan chercherait son erreur dans son
- * travail au lieu de la voir dans la base. `tableAbsente` permet à l'écran de
- * dire laquelle des deux situations il montre.
+ * travail au lieu de la voir dans la base. `erreur` permet à l'écran de dire
+ * laquelle des deux situations il montre.
  */
 export async function listerDevis(
   organizationId: string,
   filtre?: EtatDevis,
-): Promise<{ devis: DevisResume[]; tableAbsente: boolean }> {
+): Promise<{ devis: DevisResume[]; erreur: string | null }> {
   const supabase = await createServerSupabase();
 
   let requete = supabase
@@ -119,15 +127,29 @@ export async function listerDevis(
 
   return {
     devis: (data ?? []).map((ligne) => versResume(ligne as LigneBrute)),
-    // 42P01 : « relation inexistante ». La migration n'est pas appliquée.
-    tableAbsente: error?.code === "42P01",
+    erreur: error
+      ? messageErreurBase(error, "La liste des devis n'a pas pu être lue.", {
+          pourAdmin: await estAdminPlateforme(),
+        })
+      : null,
   };
 }
 
-export async function lireDevis(id: string): Promise<DevisComplet | null> {
+/**
+ * Lecture d'un devis, et la raison quand elle échoue.
+ *
+ * Rendre `null` sur une erreur faisait afficher « cette page n'existe pas »
+ * alors que le devis existait : l'artisan cherchait une faute dans son travail
+ * pendant que la faute était dans la requête. On distingue donc les deux.
+ */
+export async function lireDevis(
+  id: string,
+): Promise<
+  { devis: DevisComplet; erreur: null } | { devis: null; erreur: string | null }
+> {
   const supabase = await createServerSupabase();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("quotes")
     .select(
       `${COLONNES_RESUME}, customer_address, notes, terms, total_excl_cents, total_vat_cents, sent_at, decided_at, decline_reason, lead_id, call_id,
@@ -136,13 +158,23 @@ export async function lireDevis(id: string): Promise<DevisComplet | null> {
     .eq("id", id)
     .maybeSingle();
 
-  if (!data) return null;
+  if (error) {
+    return {
+      devis: null,
+      erreur: messageErreurBase(
+        error,
+        "Ce devis n'a pas pu être lu.",
+        { pourAdmin: await estAdminPlateforme() },
+      ),
+    };
+  }
+  if (!data) return { devis: null, erreur: null };
 
   const brute = data as unknown as LigneBrute & {
     quote_lines?: LigneEnregistree[];
   };
 
-  return {
+  const devis: DevisComplet = {
     ...versResume(brute),
     customer_address: (brute.customer_address as string | null) ?? null,
     notes: (brute.notes as string | null) ?? null,
@@ -158,6 +190,8 @@ export async function lireDevis(id: string): Promise<DevisComplet | null> {
       (a, b) => a.sort_order - b.sort_order,
     ),
   };
+
+  return { devis, erreur: null };
 }
 
 /**

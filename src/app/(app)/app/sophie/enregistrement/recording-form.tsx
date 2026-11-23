@@ -20,6 +20,9 @@ export function RecordingForm({
     saveRecordingPolicy,
     {},
   );
+  // Piloté par son propre état : React vide un formulaire après une action
+  // serveur, et la durée saisie disparaîtrait à chaque échec.
+  const [retention, setRetention] = useState(String(retentionInitiale));
 
   // L'acceptation commande l'activation : on ne peut pas cocher « conserver »
   // sans avoir accepté, et décocher l'acceptation éteint la conservation.
@@ -78,7 +81,8 @@ export function RecordingForm({
               type="number"
               min={1}
               max={30}
-              defaultValue={retentionInitiale}
+              value={retention}
+              onChange={(e) => setRetention(e.target.value)}
               disabled={!modifiable}
               className="min-h-12 w-24 rounded-control border border-line bg-surface px-3"
             />

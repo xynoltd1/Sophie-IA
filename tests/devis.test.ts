@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   euros,
@@ -243,11 +243,67 @@ describe("une erreur de creation se lit a l ecran", () => {
     expect(lire("src/lib/db/erreurs.ts")).toContain("0039_devis");
   });
 
-  it("la liste distingue « aucun devis » de « table absente »", () => {
-    // Avaler l erreur afficherait « aucun devis » alors que la base n est
-    // pas a jour : on chercherait l erreur au mauvais endroit.
+  it("la liste distingue « aucun devis » d une lecture qui echoue", () => {
+    // Avaler l erreur afficherait « aucun devis » alors que la requete a
+    // echoue : on chercherait l erreur au mauvais endroit.
     const requetes = lire("src/lib/quotes/queries.ts");
-    expect(requetes).toContain('tableAbsente: error?.code === "42P01"');
-    expect(lire("src/app/(app)/app/devis/page.tsx")).toContain("tableAbsente");
+    expect(requetes).toContain("erreur: error");
+    expect(lire("src/app/(app)/app/devis/page.tsx")).toContain("{erreur ?");
+  });
+
+  it("une lecture qui echoue n est pas un devis introuvable", () => {
+    // Rendre null sur une erreur affichait « cette page n existe pas » alors
+    // que le devis existait. Un 404 ne se declenche que sur une absence.
+    const page = lire("src/app/(app)/app/devis/[id]/page.tsx");
+    expect(page).toContain("if (!devis && !erreur) notFound();");
+  });
+});
+
+describe("les droits de table, pas seulement les politiques", () => {
+  const DROITS = lire("supabase/migrations/20261123140000_0040_droits_devis.sql");
+
+  it("les deux tables sont accordees a authenticated", () => {
+    // Sans GRANT, PostgreSQL refuse avant meme de regarder les politiques :
+    // « permission denied for table quotes ». Une table peut avoir des
+    // politiques parfaites et rester inaccessible.
+    for (const table of ["quotes", "quote_lines"]) {
+      expect(DROITS).toMatch(
+        new RegExp(`grant select, insert, update, delete on public\\.${table}\\s+to authenticated`),
+      );
+    }
+  });
+
+  it("anon ne recoit rien", () => {
+    // Un visiteur non connecte n a aucune raison de voir un devis.
+    expect(DROITS).not.toMatch(/grant[^;]*to[^;]*anon/);
+  });
+
+  it("accorder ne reintroduit pas TRUNCATE", () => {
+    for (const table of ["quotes", "quote_lines"]) {
+      expect(DROITS).toContain(
+        `revoke truncate, references, trigger on public.${table}`,
+      );
+    }
+  });
+});
+
+describe("aucune table ecrite avec la session ne reste sans droits", () => {
+  it("chaque table du code applicatif a son GRANT quelque part", () => {
+    // C est le defaut de la 0039 : la table creee, les politiques posees, et
+    // les droits oubliees. Ce test le rattrape pour toute table a venir.
+    const migrations = readdirSync(resolve(process.cwd(), "supabase/migrations"))
+      .map((f) => lire(`supabase/migrations/${f}`))
+      .join("\n");
+
+    // Les tables ecrites par le client de SESSION. Celles passant par le
+    // service role n ont pas besoin de droits : il les contourne.
+    const avecSession = ["quotes", "quote_lines"];
+
+    for (const table of avecSession) {
+      expect(
+        migrations,
+        `la table ${table} est ecrite avec la session mais n a aucun GRANT`,
+      ).toMatch(new RegExp(`grant[^;]*on public\\.${table}\\s+to[^;]*authenticated`));
+    }
   });
 });

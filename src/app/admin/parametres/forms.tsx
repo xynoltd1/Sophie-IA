@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { InputMemoire } from "@/components/ui/champ-memoire";
 import type { ReglagesSite } from "@/lib/seo/site";
 import {
   enregistrerAnalytics,
@@ -55,10 +56,10 @@ export function FormulaireSite({ site }: { site: ReglagesSite }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <Field label="Nom du site" htmlFor="name">
-        <Input
+        <InputMemoire
           id="name"
           name="name"
-          defaultValue={site.name}
+          valeurInitiale={site.name}
           required
           maxLength={80}
         />
@@ -136,16 +137,21 @@ export function FormulaireSite({ site }: { site: ReglagesSite }) {
       </section>
 
       <Field label="Langue et région" htmlFor="locale">
-        <Input id="locale" name="locale" defaultValue={site.locale} required />
+        <InputMemoire
+          id="locale"
+          name="locale"
+          valeurInitiale={site.locale}
+          required
+        />
       </Field>
 
       <div>
         <Field label="Image de partage" htmlFor="og_image">
-          <Input
+          <InputMemoire
             id="og_image"
             name="og_image"
             type="url"
-            defaultValue={site.og_image}
+            valeurInitiale={site.og_image}
             placeholder="https://…/partage.png"
           />
         </Field>
@@ -156,20 +162,20 @@ export function FormulaireSite({ site }: { site: ReglagesSite }) {
       </div>
 
       <Field label="Adresse de contact" htmlFor="contact_email">
-        <Input
+        <InputMemoire
           id="contact_email"
           name="contact_email"
           type="email"
-          defaultValue={site.contact_email}
+          valeurInitiale={site.contact_email}
         />
       </Field>
 
       <Field label="Adresse d’assistance" htmlFor="support_email">
-        <Input
+        <InputMemoire
           id="support_email"
           name="support_email"
           type="email"
-          defaultValue={site.support_email}
+          valeurInitiale={site.support_email}
         />
       </Field>
 

@@ -3,6 +3,7 @@ import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type { EntitySource, LeadPriority, TaskStatus } from "@/types/database";
 import type { TacheListee, VueTaches } from "./tasks";
+import { contactLabel } from "@/lib/crm/pipeline";
 
 export type { TacheListee, VueTaches } from "./tasks";
 
@@ -59,7 +60,7 @@ export async function listerTaches(
   let requete = supabase
     .from("tasks")
     .select(
-      "id, title, description, due_at, priority, status, source, completed_at, contacts(id, display_name)",
+      "id, title, description, due_at, priority, status, source, completed_at, contacts(id, full_name, company_name, phone)",
     )
     .eq("organization_id", organizationId);
 
@@ -102,7 +103,10 @@ export async function listerTaches(
     source: ligne.source,
     completed_at: ligne.completed_at,
     contact: ligne.contacts
-      ? { id: ligne.contacts.id, display_name: ligne.contacts.display_name }
+      ? {
+          id: ligne.contacts.id,
+          display_name: contactLabel(ligne.contacts),
+        }
       : null,
   }));
 }
@@ -116,5 +120,10 @@ interface RawTache {
   status: TaskStatus;
   source: EntitySource;
   completed_at: string | null;
-  contacts: { id: string; display_name: string } | null;
+  contacts: {
+    id: string;
+    full_name: string | null;
+    company_name: string | null;
+    phone: string | null;
+  } | null;
 }

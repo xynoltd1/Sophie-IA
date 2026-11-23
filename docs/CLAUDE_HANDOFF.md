@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.23.3 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.24.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-23**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-neuf
+## Migrations — quarante
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -307,7 +307,12 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  des totaux par declencheur, verrou des lignes
                                  apres envoi, RLS. PAS de factures (ADR-055).
 
-**0033 à 0039 ne sont pas appliquées en production.** Les écrans qui en dépendent
+0040_droits_devis                GRANT select/insert/update/delete sur quotes
+                                 et quote_lines pour authenticated. La 0039
+                                 avait cree les tables et leurs politiques en
+                                 oubliant les droits.
+
+**0033 à 0040 : appliquer celles qui manquent.** Les écrans qui en dépendent
 — statistiques, consommation, SEO, intégrations, référencement page par page, envoi
 d'image, accueil téléphonique — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
 étape D2.
@@ -478,6 +483,47 @@ depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
 
+## L audit statique — `scripts/audit.mjs`, depuis la 0.24.0
+
+`npm test` le lance (`tests/audit.test.ts`). Un constat bloquant fait echouer
+la suite. Il compare le code au SQL des migrations et releve huit familles :
+
+1. table utilisee par le code, absente des migrations ;
+2. table ecrite avec une session utilisateur, sans GRANT ;
+3. RLS sans politique, ou politique sans RLS ;
+4. `throw` dans un fichier `"use server"` ;
+5. champ texte pre-rempli dans un formulaire d action serveur ;
+6. lien interne qui ne mene nulle part ;
+7. ecran prive sans garde ;
+8. colonne demandee par une requete, absente des migrations.
+
+**Les tests ne parlent ni a PostgreSQL ni a un navigateur.** C est pour cela
+que cet audit existe : trois bogues de production de suite — GRANT manquant,
+colonne inventee, champ qui se vide — etaient invisibles a 500 tests verts.
+Quand un nouveau bogue echappe aux tests, la bonne reponse est d ajouter une
+famille a l audit, pas seulement de corriger le cas.
+
+Deux listes d exceptions, a tenir a jour : `FERMEES_EXPRES` (tables a RLS sans
+politique, voulues : `provider_credentials`, `search_console_connection`,
+`platform_settings`, `audit_logs`) et la regex des gardes
+(`requireOrganization`, `requirePlatformAdmin`, `requireUser`,
+`requireOnboarding`, `requireStep`, `requireSession`).
+
+## Lecon de la 0.24.0 — une erreur avalee devient un 404
+
+`lireDevis` rendait `null` sur erreur comme sur absence, et la page traduisait
+ce `null` en « cette page n existe pas ». Un devis existant s affichait donc
+comme une page inexistante, et l artisan cherchait sa faute.
+
+**Regle.** Une fonction de lecture distingue toujours « rien trouve » de « la
+requete a echoue ». `notFound()` ne se declenche que sur une absence. Le
+message d echec passe par `messageErreurBase`, qui parle d installation
+incomplete a l artisan et nomme le fichier a l administrateur.
+
+Et le nom affiche d un contact se construit avec `contactLabel`
+(`src/lib/crm/pipeline.ts`), jamais avec une colonne inventee : la table
+`contacts` a `full_name`, `company_name`, `phone` — pas de `display_name`.
+
 ## Deux reflexes d ecriture, depuis la 0.23.2
 
 **Un message d erreur s adresse a quelqu un.** `messageErreurBase` prend
@@ -519,6 +565,23 @@ etat lisible ; seul `redirect` peut lever, et jamais dans un bloc try.
 **Le reflexe** : quand une route publique change de role, chercher qui y
 renvoyait. Et pour toute action serveur, se demander ce que voit l artisan
 quand elle echoue.
+
+## Creer une table : les DEUX verrous
+
+Ce projet separe le droit et la visibilite (migration 0012) :
+
+- **GRANT** : ce role a-t-il le droit de toucher la table ?
+- **RLS** : quelles lignes voit-il ?
+
+Sans GRANT, PostgreSQL refuse avant de lire les politiques — « permission
+denied ». Avec GRANT mais sans politique, la table est entierement ouverte.
+Les deux sont obligatoires, et aucun n est automatique : la migration 0031 a
+pose des privileges par defaut pour en RETIRER, jamais pour en accorder.
+
+La 0039 a oublie le GRANT et a passe tous les tests d isolation, qui ne
+regardaient que les politiques. Un test le couvre maintenant : toute table
+ecrite avec le client de SESSION doit avoir un GRANT. Celles passant par le
+service role en sont exemptees.
 
 ## Les devis — ce qu il ne faut pas defaire
 

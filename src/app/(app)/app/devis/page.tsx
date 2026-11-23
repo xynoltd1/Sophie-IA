@@ -18,7 +18,7 @@ const TONS: Record<string, string> = {
 
 export default async function DevisPage() {
   const { activeOrganization: org } = await requireOrganization();
-  const { devis, tableAbsente } = await listerDevis(org.organization_id);
+  const { devis, erreur } = await listerDevis(org.organization_id);
   const modifiable = can(org.role, "leads:manage");
 
   const aTraiter = devis.filter((d) => d.status === "BROUILLON");
@@ -34,20 +34,15 @@ export default async function DevisPage() {
         {modifiable ? <BoutonNouveauDevis /> : null}
       </div>
 
-      {tableAbsente ? (
+      {erreur ? (
         <Sheet tone="urgent">
-          <p className="font-medium">La base n’est pas à jour.</p>
-          <p className="mt-2 text-sm leading-relaxed">
-            La table des devis n’existe pas encore. Appliquez la migration{" "}
-            <code className="rounded bg-ink-tint px-1.5 py-0.5">
-              0039_devis
-            </code>{" "}
-            dans l’éditeur SQL de Supabase, puis rechargez cette page.
+          <p role="alert" className="text-sm leading-relaxed">
+            {erreur}
           </p>
         </Sheet>
       ) : null}
 
-      {!tableAbsente && devis.length === 0 ? (
+      {!erreur && devis.length === 0 ? (
         <Sheet tone="neutral">
           <p className="font-medium">Aucun devis pour l’instant.</p>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
