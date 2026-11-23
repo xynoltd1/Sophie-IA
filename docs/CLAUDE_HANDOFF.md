@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.22.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.23.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -198,7 +198,7 @@ appel **ne passe jamais par Vercel** : notre application n'expose que des outils
 appelés pendant la conversation (ADR-002) — c'est la contrainte la plus structurante du
 projet, et le premier critère de choix du fournisseur de voix.
 
-## Migrations — trente-huit
+## Migrations — trente-neuf
 
 ```
 0001_extensions_and_helpers      extensions, set_updated_at, normalize_phone, slugify
@@ -302,7 +302,12 @@ projet, et le premier critère de choix du fournisseur de voix.
                                  sophie_runtime_for_number. Ne renomme AUCUNE
                                  table ni fonction (ADR-052).
 
-**0033 à 0038 ne sont pas appliquées en production.** Les écrans qui en dépendent
+0039_devis                       quotes + quote_lines, numerotation par
+                                 entreprise et par annee sous verrou, recalcul
+                                 des totaux par declencheur, verrou des lignes
+                                 apres envoi, RLS. PAS de factures (ADR-055).
+
+**0033 à 0039 ne sont pas appliquées en production.** Les écrans qui en dépendent
 — statistiques, consommation, SEO, intégrations, référencement page par page, envoi
 d'image, accueil téléphonique — échouent tant qu'elles ne le sont pas. Procédure dans `OWNER_ACTION_PLAN.md`,
 étape D2.
@@ -472,6 +477,21 @@ depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là
 
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Les devis — ce qu il ne faut pas defaire
+
+**Les totaux ne se calculent jamais dans le code applicatif.** Un declencheur
+les refait en base a chaque ecriture de ligne. Le module `lib/quotes/totals.ts`
+est pur et sert a l apercu : les deux doivent donner le meme centime, et un
+test le verifie.
+
+**Zeli ne touche pas aux devis.** `services.quote_unit_price_cents` existe pour
+pre-remplir une ligne, et aucun outil vocal ne le lit : la section 9 interdit a
+Zeli de calculer un prix. Deux tests gardent cette frontiere.
+
+**Pas de factures.** Ce n est pas un retard de developpement, c est une
+decision (ADR-055), fondee sur la facturation electronique structuree
+obligatoire en Belgique depuis le 1er janvier 2026.
 
 ## Les deux noms — à ne pas reconfondre
 

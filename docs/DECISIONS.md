@@ -1935,3 +1935,113 @@ petits qui ne racontaient rien. Jeté, et tout redessiné à la main.
 La leçon n'est pas que l'isométrie est mauvaise, mais qu'une illustration se
 juge en la regardant. Le script produisait une géométrie correcte et une image
 sans intérêt.
+
+## ADR-055 — Les devis oui, les factures jamais
+
+**Date** : 2026-11-19 · **Statut** : accepté
+
+### La question posée
+
+Un artisan qui reçoit une demande de devis au téléphone doit ensuite ouvrir un
+autre outil, retrouver l'adresse, retaper le problème. Le travail que Zeli a
+fait s'arrête au prospect. Fallait-il aller jusqu'au devis ? Jusqu'à la
+facture ?
+
+### Les devis : oui
+
+Le socle est déjà là — contacts, prospects, services, isolation
+multi-entreprises. Il manque le document.
+
+Un devis n'engage que commercialement. Pas de déclaration de TVA, pas de
+numérotation opposable à l'administration, pas d'archivage obligatoire de dix
+ans. La charge réglementaire est faible, et la valeur immédiate : l'artisan
+raccroche, ajuste deux prix, envoie.
+
+C'est aussi la seule partie du produit qui pouvait avancer sans numéro de
+téléphone, sans clé d'IA et sans compte SMS. Tout le reste attendait.
+
+### Les factures : non, et pas « plus tard »
+
+Depuis le **1er janvier 2026**, toute entreprise assujettie à la TVA établie en
+Belgique doit émettre et recevoir des factures électroniques **structurées**
+pour ses opérations entre professionnels. Un PDF envoyé par courriel ne suffit
+plus : il faut un point d'accès au réseau Peppol et un format structuré.
+
+Construire un générateur de PDF aujourd'hui produirait donc un outil déjà hors
+des clous pour tout client professionnel. Construire un vrai outil de
+facturation demanderait le réseau Peppol, la numérotation continue opposable,
+l'archivage de dix ans, et des règles de TVA qui diffèrent entre la Belgique
+et la France.
+
+Ce n'est pas une fonctionnalité de plus dans une secrétaire téléphonique.
+C'est un logiciel de comptabilité, avec sa responsabilité propre — et une
+responsabilité qu'une panne de notre côté ferait porter à l'artisan devant
+l'administration.
+
+L'écran des devis le dit au professionnel, en clair, plutôt que de le laisser
+chercher une fonction qui n'existera pas.
+
+## ADR-056 — L argent est en centimes entiers, et les totaux se calculent en base
+
+**Date** : 2026-11-19 · **Statut** : accepté
+
+### Les nombres à virgule sont exclus
+
+`0.1 + 0.2` ne fait pas `0.3`. `1.15 * 100` fait `114.99999999999999`. Un devis
+dont le total diffère d'un centime de la somme de ses lignes est un devis que
+le client conteste, et il a raison.
+
+Tout est en centimes entiers. La quantité, qui a deux décimales (1,5 heure ;
+12,25 mètres), passe par des centièmes entiers avant toute multiplication.
+
+### L'arrondi se fait par ligne
+
+C'est l'usage comptable, et c'est le seul qui tienne : arrondir uniquement à la
+fin fait diverger le total de la somme des lignes affichées. Le client
+additionne ce qu'il voit.
+
+### Les totaux ne viennent jamais du navigateur
+
+Un total envoyé par le formulaire est un total que le client choisit. Le
+serveur refait la somme à chaque écriture de ligne, **par déclencheur** et non
+dans le code applicatif : même une requête directe en base ne peut pas laisser
+un devis incohérent derrière elle.
+
+L'écran, lui, utilise la même fonction pure pour afficher le montant pendant la
+saisie. Et la fiche compare les deux : si le total enregistré s'écarte de la
+somme des lignes, un bandeau le dit et demande de ne pas transmettre le devis.
+Un écart caché serait pire qu'un écart signalé.
+
+## ADR-057 — Un devis envoye ne se modifie plus
+
+**Date** : 2026-11-19 · **Statut** : accepté
+
+### Le problème
+
+Le client a reçu un document. Si ses lignes changent ensuite, l'entreprise
+détient une version et le client une autre, sans que rien ne le signale. Le
+jour où les deux se parlent, personne ne sait laquelle fait foi.
+
+### La décision
+
+Un déclencheur `before insert or update or delete` sur les lignes refuse toute
+écriture dès que le devis a quitté l'état brouillon. L'écran grise les boutons,
+mais ne protège pas : c'est la base qui tranche.
+
+Pour changer un devis envoyé, il faut le refuser et en faire un nouveau. C'est
+plus lourd, et c'est ce qui rend l'historique lisible.
+
+### Le numéro arrive à l'envoi, pas à la création
+
+Un brouillon abandonné laisserait un trou dans la série. Le numéro est attribué
+au moment où le devis se fige, sous un verrou portant sur le couple
+entreprise/année : deux envois simultanés dans la même entreprise attendent
+l'un après l'autre, deux entreprises différentes ne se gênent pas. Un index
+unique tient même si quelqu'un insère directement en base.
+
+### Ce que « figer » ne veut pas dire
+
+Le bouton dit « Figer et numéroter », pas « Envoyer au client ». À cette étape,
+rien ne part. Le lien public et le PDF viennent ensuite. Un bouton qui
+annoncerait un envoi sans envoyer serait exactement le bouton décoratif que le
+cahier des charges interdit.

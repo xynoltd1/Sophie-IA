@@ -183,3 +183,46 @@ qu'il ne connaît pas, et une page privée annoncée là est une page privée d�
 WhatsApp et LinkedIn, qui n'ont aucune session. Rien de sensible n'y entre. Les
 enregistrements d'appels restent dans leur bucket privé — les deux natures ne se mélangent
 jamais, et aucun chemin de fichier n'est choisi par le navigateur.
+
+## Les devis (0039)
+
+| Table | Contenu |
+|---|---|
+| `quotes` | un devis : état, numéro, client, totaux, validité |
+| `quote_lines` | ses lignes : désignation, quantité, prix unitaire, TVA |
+
+**Les montants sont des entiers, en centimes.** Jamais de `numeric` à virgule
+ni de `float` pour de l'argent (ADR-056). Seule la quantité est
+`numeric(10,2)`, pour 1,5 heure ou 12,25 mètres.
+
+**Les totaux sont stockés, pas calculés à la lecture.** Un déclencheur
+`after insert or update or delete` sur `quote_lines` appelle
+`recompute_quote_totals()`. Deux raisons : une liste de cent devis ne doit pas
+déclencher cent sommes, et un devis envoyé doit garder *ses* totaux même si un
+taux change l'an prochain.
+
+**Les lignes se figent après l'envoi.** Un déclencheur `before` refuse toute
+écriture dès que le devis quitte l'état brouillon (ADR-057).
+
+**La numérotation** se fait dans `assign_quote_reference()`, sous
+`pg_advisory_xact_lock` portant sur l'entreprise et l'année, avec un index
+unique en dernière défense. La fonction est révoquée pour `anon` et
+`authenticated`.
+
+`quote_lines` porte son propre `organization_id`, redondant avec celui du
+devis : la politique d'isolation tranche alors sans jointure, et une ligne ne
+peut pas se retrouver rattachée au devis d'une autre entreprise.
+
+### Pourquoi `services` a gagné deux colonnes
+
+`services.price_indication` est du texte libre, délibérément : Zeli ne doit
+qu'énoncer ce que l'entreprise a écrit, jamais calculer (section 9).
+
+Un devis a besoin d'un nombre. `quote_unit_price_cents` et `quote_vat_rate` le
+portent, et **aucun outil vocal ne les lit**. Elles servent à pré-remplir une
+ligne que l'artisan voit et corrige avant de figer.
+
+### Ce qui n'existe pas, et n'existera pas
+
+Aucune table de facture. Voir ADR-055 : facturation électronique structurée
+obligatoire en Belgique depuis le 1er janvier 2026.

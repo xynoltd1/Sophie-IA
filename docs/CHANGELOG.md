@@ -3,6 +3,92 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.23.0] — 2026-11-19 — Les devis (phase 9.1)
+
+### Pourquoi maintenant
+
+C'est la seule partie du produit qui pouvait avancer sans numéro de téléphone,
+sans clé d'IA et sans compte SMS. Tout le reste attend un vrai appel.
+
+Et c'est la suite logique de ce que Zeli fait déjà : elle reconnaît une demande
+de devis, note le nom, l'adresse et le problème. Jusqu'ici, l'artisan devait
+ensuite tout retaper ailleurs.
+
+### Ce qui est livré
+
+Un écran **Devis**, dans le menu Plus. Créer un devis, ajouter des lignes
+(désignation, quantité, unité, prix unitaire, TVA), voir le total se calculer
+pendant la saisie, figer, puis marquer accepté ou refusé.
+
+Les services de l'entreprise peuvent porter un prix de devis : choisir un
+service pré-remplit le libellé et le prix, tous deux modifiables.
+
+### L'argent
+
+Tout en centimes entiers, jamais en nombre à virgule. L'arrondi se fait par
+ligne, comme en comptabilité : le client additionne ce qu'il voit.
+
+La TVA est **par ligne**. En Belgique un même chantier mêle couramment 6 % et
+21 % ; un taux unique obligerait à faire deux devis.
+
+Les totaux sont recalculés **en base, par déclencheur**. Le formulaire n'envoie
+jamais de total — ce serait laisser le navigateur choisir ce qui est facturé.
+La fiche compare les deux et affiche un bandeau si elles divergent, au lieu de
+le cacher.
+
+### Un devis figé ne bouge plus
+
+Une fois numéroté, ses lignes sont refusées par la base. Sinon l'entreprise
+détient une version et le client une autre, sans que rien ne le signale.
+
+Le numéro est attribué à l'envoi, pas à la création : un brouillon abandonné
+laisserait un trou dans la série. Deux envois simultanés dans la même
+entreprise ne peuvent pas prendre le même numéro.
+
+### Le bouton dit ce qu'il fait
+
+Il affiche « Figer et numéroter », pas « Envoyer au client ». À cette étape
+rien ne part chez le client — le lien public et le PDF sont l'étape 9.3. Un
+bouton qui annoncerait un envoi sans envoyer serait décoratif.
+
+### Les factures : non, et pas « plus tard »
+
+Décision prise et écrite (ADR-055). Depuis le 1er janvier 2026, une entreprise
+assujettie à la TVA en Belgique doit émettre des factures électroniques
+structurées pour ses clients professionnels : réseau Peppol, format structuré,
+numérotation opposable, archivage de dix ans. C'est un logiciel de
+comptabilité, pas une fonction de secrétaire téléphonique.
+
+L'écran des devis le dit au professionnel, pour qu'il ne cherche pas.
+
+### Zeli ne voit rien de tout ça
+
+Le prix de devis d'un service n'est lu par aucun outil vocal, et aucun outil
+vocal ne touche aux devis. Zeli n'énonce que `price_indication`, le texte libre
+écrit par l'entreprise — la règle de la section 9 reste entière. Deux tests le
+vérifient.
+
+### Vérifié
+
+525 tests (503 passants, 22 ignorés), typecheck, lint, build. Vingt-six
+nouveaux : la virgule flottante qui ne dérape pas, le total égal à la somme des
+lignes affichées, deux taux de TVA séparés, les totaux jamais reçus du
+navigateur, le devis figé que la base refuse de modifier, la numérotation sans
+trou et sans collision, l'isolation entre entreprises, et l'absence totale de
+devis dans les outils vocaux.
+
+### Migration
+
+`0039_devis` — les deux tables, la numérotation, le recalcul des totaux, le
+verrou après envoi, l'isolation. **À appliquer**, avec les six autres en
+attente.
+
+### Ce qui reste dans la phase 9
+
+**9.2** les écrans avancés : créer un devis directement depuis un appel ou un
+prospect. **9.3** l'envoi : lien public à jeton, page de consultation,
+acceptation par le client, PDF. **9.4** les relances avant échéance.
+
 ## [0.22.0] — 2026-11-06 — Zeli, et dix illustrations
 
 ### Les deux noms sont séparés

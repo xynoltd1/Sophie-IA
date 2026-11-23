@@ -99,3 +99,68 @@ d'enregistrer un appel réel si le modèle applicable n'est pas marqué validé 
 - Envoi des invitations par e-mail (aujourd'hui, le lien est affiché et transmis à la main).
 - Réglages de notification par utilisateur.
 - Tests de bout en bout automatisés sur un environnement de préproduction.
+
+---
+
+# Phase 9 — Les devis
+
+**Décidée le 19 novembre 2026.** Développement commencé en 0.23.0, en parallèle
+de l'attente des tests d'appel réels.
+
+## Pourquoi les devis, et maintenant
+
+Zeli reconnaît déjà l'intention « demande de devis » et crée le prospect. Mais
+l'artisan doit ensuite ouvrir un autre outil, retrouver l'adresse, retaper le
+problème. Le travail que Zeli a fait au téléphone s'arrête là.
+
+Le socle existe : contacts, prospects, services, organisations, isolation
+multi-entreprises. Il manque le document.
+
+Et c'est la partie du cahier des charges qui peut avancer **sans numéro de
+téléphone, sans clé IA, sans compte SMS**. Tout le reste attend.
+
+## Périmètre
+
+| | |
+|---|---|
+| Lignes de devis | désignation, quantité, prix unitaire, TVA par ligne |
+| Montants | en centimes entiers, recalculés côté serveur à chaque écriture |
+| TVA | par ligne — un même devis mêle souvent 6 % et 21 % en Belgique |
+| Numérotation | par entreprise et par année, sans trou |
+| États | BROUILLON → ENVOYE → ACCEPTE / REFUSE / EXPIRE |
+| Origine | créé à la main, ou depuis un appel ou un prospect |
+| Validité | date d'échéance, expiration automatique |
+| Envoi | lien public à jeton, puis PDF |
+| Acceptation | le client accepte depuis le lien ; l'artisan peut aussi marquer |
+
+## Hors périmètre, définitivement
+
+**Les factures ne seront pas dans Zelicall.** Ce n'est pas un report, c'est une
+décision (ADR-055).
+
+Depuis le 1er janvier 2026, toute entreprise assujettie à la TVA établie en
+Belgique doit émettre et recevoir des factures électroniques **structurées**
+pour ses opérations entre professionnels. Un PDF envoyé par courriel ne suffit
+plus. Il faut un point d'accès au réseau Peppol, un format structuré, une
+numérotation continue opposable, un archivage de dix ans, et des règles de TVA
+qui diffèrent entre la Belgique et la France.
+
+Ce n'est pas une fonctionnalité de plus dans une secrétaire téléphonique.
+C'est un logiciel de comptabilité, avec sa responsabilité propre.
+
+Un devis, lui, n'engage que commercialement : pas de déclaration de TVA, pas
+de numérotation opposable, pas d'archivage obligatoire. La différence de
+charge entre les deux est ce qui rend l'un raisonnable et l'autre non.
+
+## Découpage
+
+**9.1 — Base et calculs** (0.23.0) · la table, les lignes, la numérotation, le
+calcul des totaux côté serveur, l'isolation entre entreprises, les tests.
+
+**9.2 — Écrans** · liste, création depuis un appel ou un prospect, édition des
+lignes, changement d'état.
+
+**9.3 — Envoi** · lien public à jeton, page de consultation, acceptation par le
+client, PDF.
+
+**9.4 — Relances** · devis qui approche de son échéance, relance par SMS.

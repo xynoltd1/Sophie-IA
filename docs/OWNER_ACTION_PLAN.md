@@ -1576,7 +1576,7 @@ ligne `Sitemap:`. La troisième liste deux adresses.
 Vercel. Corrigez la variable, puis **relancez un déploiement** : elle est lue à la
 compilation.
 
-## D2 — Appliquer les migrations 0033 à 0038
+## D2 — Appliquer les migrations 0033 à 0039
 
 - [ ] Fait
 `ACTION PARTAGÉE` · priorité **haute, bloquante** · **coût : 0 €**
@@ -1589,6 +1589,7 @@ compilation.
 4. `supabase/migrations/20261105170000_0036_accueil_personnalise.sql`
 5. `supabase/migrations/20261106090000_0037_pages_legales.sql`
 6. `supabase/migrations/20261106140000_0038_assistante_zeli.sql`
+7. `supabase/migrations/20261119140000_0039_devis.sql`
 
 Puis les mêmes sur la préproduction.
 

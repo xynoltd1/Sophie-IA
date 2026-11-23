@@ -113,6 +113,11 @@ export default async function PlusPage({
               detail: "Services, horaires, absences, intégrations.",
             },
             {
+              href: "/app/devis",
+              titre: "Devis",
+              detail: "Chiffrer une demande, figer, suivre la réponse.",
+            },
+            {
               href: "/app/taches",
               titre: "Tâches",
               detail: "Les rappels à faire, en retard ou à venir.",
