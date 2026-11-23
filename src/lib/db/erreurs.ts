@@ -23,7 +23,14 @@
  * recherche à l'autre bout.
  */
 
-/** Ce qui manque, et la migration qui l'apporte. */
+/**
+ * Ce qui manque, et la migration qui l'apporte.
+ *
+ * `quoi` nomme **l'emplacement en base**, pas la valeur saisie. La nuance
+ * compte : « le nom de l'assistante n'existe pas » se lit comme un refus du
+ * prénom qu'on vient de taper. C'est exactement le contresens que la première
+ * version de ce module produisait.
+ */
 const MIGRATIONS: { marqueur: RegExp; fichier: string; quoi: string }[] = [
   {
     marqueur: /quote_lines|quote_unit_price_cents|quote_vat_rate/,
@@ -84,6 +91,7 @@ export interface ErreurBase {
 export function messageErreurBase(
   erreur: ErreurBase | null | undefined,
   secours: string,
+  options: { pourAdmin?: boolean } = {},
 ): string {
   if (!erreur) return secours;
 
@@ -93,27 +101,42 @@ export function messageErreurBase(
 
   const manque = ABSENT.has(erreur.code ?? "");
 
+  if (!manque) {
+    // Une erreur qui n'est pas une absence mérite d'être lue telle quelle :
+    // une contrainte violée, un droit refusé, un conflit. La masquer derrière
+    // « Réessayez » ferait perdre la seule information disponible.
+    return erreur.message ? `${secours} ${erreur.message}` : secours;
+  }
+
+  // Un artisan n'a pas à lire « appliquez une migration ». Il n'a pas accès à
+  // la base, ce n'est pas son métier, et lui donner cette phrase ne fait que
+  // déplacer notre faute sur lui. Il apprend seulement que sa saisie est
+  // bonne et que le problème vient de nous.
+  if (!options.pourAdmin) {
+    return (
+      "Ce que vous avez saisi est correct, mais l’enregistrement a échoué : " +
+      "le service n’est pas complètement installé. Prévenez-nous, " +
+      "il n’y a rien à corriger de votre côté."
+    );
+  }
+
   for (const migration of MIGRATIONS) {
     if (!migration.marqueur.test(texte)) continue;
-    if (!manque) continue;
 
     return (
-      `La base de données n’est pas à jour : ${migration.quoi} n’existe pas encore. ` +
-      `Appliquez la migration ${migration.fichier} dans l’éditeur SQL de Supabase, puis réessayez. ` +
-      `Le fichier est dans supabase/migrations/.`
+      // La tournure met l'absence du côté de la base, jamais du côté de la
+      // saisie : « le nom de l'assistante n'existe pas » se lisait comme un
+      // refus du prénom qu'on venait de taper.
+      "La saisie est correcte. La base de données n’est pas à jour : " +
+      `il lui manque l’emplacement prévu pour ${migration.quoi}. ` +
+      `Appliquez la migration ${migration.fichier} dans l’éditeur SQL de ` +
+      "Supabase, puis réessayez. Le fichier est dans supabase/migrations/."
     );
   }
 
-  if (manque) {
-    return (
-      "La base de données n’est pas à jour : une table ou une colonne manque. " +
-      "Appliquez les migrations en attente dans l’éditeur SQL de Supabase. " +
-      `Détail technique : ${erreur.message ?? erreur.code ?? "inconnu"}`
-    );
-  }
-
-  // Une erreur qui n'est pas une absence mérite d'être lue telle quelle :
-  // une contrainte violée, un droit refusé, un conflit. La masquer derrière
-  // « Réessayez » ferait perdre la seule information disponible.
-  return erreur.message ? `${secours} ${erreur.message}` : secours;
+  return (
+    "La saisie est correcte. La base de données n’est pas à jour : il lui " +
+    "manque une table ou une colonne. Appliquez les migrations en attente dans " +
+    `l’éditeur SQL de Supabase. Détail technique : ${erreur.message ?? erreur.code ?? "inconnu"}`
+  );
 }

@@ -8,6 +8,7 @@ import { can } from "@/lib/auth/permissions";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { attribuerNumero } from "@/lib/quotes/queries";
 import { messageErreurBase } from "@/lib/db/erreurs";
+import { estAdminPlateforme } from "@/lib/db/qui-voit";
 
 export interface DevisState {
   error?: string;
@@ -84,7 +85,11 @@ export async function creerDevis(
     .single();
 
   if (error || !data) {
-    return { error: messageErreurBase(error, "Création refusée.") };
+    return {
+      error: messageErreurBase(error, "Création refusée.", {
+        pourAdmin: await estAdminPlateforme(),
+      }),
+    };
   }
 
   redirect(`/app/devis/${data.id}`);
@@ -136,7 +141,11 @@ export async function ajouterLigne(
 
   if (error) {
     // Le déclencheur de la base refuse toute écriture sur un devis envoyé.
-    return { error: messageErreurBase(error, "Ligne refusée.") };
+    return {
+      error: messageErreurBase(error, "Ligne refusée.", {
+        pourAdmin: await estAdminPlateforme(),
+      }),
+    };
   }
 
   revalidatePath(`/app/devis/${ligne.quote_id}`);

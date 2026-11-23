@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.23.2 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.23.3 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -479,6 +479,17 @@ depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là
 transcripteurs, monter la préproduction.
 
 ## Deux reflexes d ecriture, depuis la 0.23.2
+
+**Un message d erreur s adresse a quelqu un.** `messageErreurBase` prend
+`pourAdmin`, obtenu par `estAdminPlateforme()`. L artisan apprend que sa
+saisie est bonne et que le probleme vient de nous ; seul l administrateur de
+plateforme recoit le nom de la migration. Lui demander d appliquer une
+migration, c est lui demander de reparer notre faute dans un outil auquel il
+n a pas acces.
+
+**Et il ne doit jamais designer la saisie quand le probleme est ailleurs.**
+« Le nom de l assistante n existe pas » se lisait comme un refus du prenom
+tape. Un test interdit cette tournure.
 
 **Toute ecriture en base passe par `messageErreurBase`** (`lib/db/erreurs.ts`).
 Un message generique comme « Reessayez » cache la cause la plus frequente : une

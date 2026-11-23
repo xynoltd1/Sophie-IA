@@ -5,7 +5,9 @@ import { messageErreurBase } from "../src/lib/db/erreurs";
 
 const lire = (c: string) => readFileSync(resolve(process.cwd(), c), "utf-8");
 
-describe("une migration manquante se dit, elle ne se cache pas", () => {
+const ADMIN = { pourAdmin: true };
+
+describe("ce que lit l administrateur de la plateforme", () => {
   it("la colonne de la 0038 renvoie vers la 0038", () => {
     const message = messageErreurBase(
       {
@@ -14,6 +16,7 @@ describe("une migration manquante se dit, elle ne se cache pas", () => {
           "Could not find the 'assistant_name_source' column of 'sophie_configurations' in the schema cache",
       },
       "La configuration n’a pas pu être enregistrée.",
+      ADMIN,
     );
 
     expect(message).toContain("0038_assistante_zeli");
@@ -25,6 +28,7 @@ describe("une migration manquante se dit, elle ne se cache pas", () => {
     const message = messageErreurBase(
       { code: "42P01", message: 'relation "public.quotes" does not exist' },
       "Création refusée.",
+      ADMIN,
     );
     expect(message).toContain("0039_devis");
   });
@@ -33,6 +37,7 @@ describe("une migration manquante se dit, elle ne se cache pas", () => {
     const message = messageErreurBase(
       { code: "42703", message: 'column "spoken_name" does not exist' },
       "Enregistrement refusé.",
+      ADMIN,
     );
     expect(message).toContain("0036_accueil_personnalise");
   });
@@ -41,19 +46,58 @@ describe("une migration manquante se dit, elle ne se cache pas", () => {
     const message = messageErreurBase(
       { code: "42P01", message: 'relation "public.futur" does not exist' },
       "Échec.",
+      ADMIN,
     );
     expect(message).toContain("migrations en attente");
     expect(message).toContain("futur");
   });
 
-  it("le mot « réessayez » n apparait pas pour une colonne manquante", () => {
-    // Réessayer ne répare jamais une colonne absente : le mot invite à
-    // refaire exactement ce qui vient d échouer.
+  it("le mot « réessayez » ne remplace pas l action a faire", () => {
     const message = messageErreurBase(
       { code: "42703", message: 'column "assistant_name_source" does not exist' },
       "Échec.",
+      ADMIN,
     );
     expect(message).toContain("Appliquez la migration");
+  });
+});
+
+describe("ce que lit l artisan", () => {
+  const erreur = {
+    code: "PGRST204",
+    message:
+      "Could not find the 'assistant_name_source' column of 'sophie_configurations' in the schema cache",
+  };
+
+  it("on ne lui demande pas d appliquer une migration", () => {
+    // Il n a pas acces a la base, ce n est pas son metier, et lui donner
+    // cette phrase ne fait que deplacer notre faute sur lui.
+    const message = messageErreurBase(erreur, "Échec.");
+
+    expect(message).not.toContain("migration");
+    expect(message).not.toContain("Supabase");
+    expect(message).not.toContain("SQL");
+    expect(message).not.toContain("colonne");
+  });
+
+  it("on lui dit que sa saisie est bonne", () => {
+    // « le nom de l assistante n existe pas » se lisait comme un refus du
+    // prenom qu il venait de taper. C etait un contresens.
+    const message = messageErreurBase(erreur, "Échec.");
+
+    expect(message).toContain("Ce que vous avez saisi est correct");
+    expect(message).toContain("rien à corriger de votre côté");
+  });
+
+  it("aucun message ne dit qu un nom saisi n existe pas", () => {
+    for (const pourAdmin of [true, false]) {
+      const message = messageErreurBase(erreur, "Échec.", { pourAdmin });
+      expect(message).not.toMatch(/le nom de l’assistante n’existe pas/);
+    }
+  });
+
+  it("l admin, lui, voit bien le detail", () => {
+    expect(messageErreurBase(erreur, "Échec.", ADMIN)).toContain("0038");
   });
 });
 
@@ -78,6 +122,7 @@ describe("les autres erreurs ne sont pas masquees", () => {
     const message = messageErreurBase(
       { code: "42501", message: "permission denied for table quotes" },
       "Refusé.",
+      ADMIN,
     );
     expect(message).not.toContain("0039");
     expect(message).toContain("permission denied");
@@ -85,6 +130,17 @@ describe("les autres erreurs ne sont pas masquees", () => {
 });
 
 describe("les ecrans qui ecrivent utilisent la traduction", () => {
+  it("chaque ecran dit a qui il parle", () => {
+    // Sans ce parametre, l artisan recevrait le message technique.
+    for (const fichier of [
+      "src/app/onboarding/sophie/actions.ts",
+      "src/app/(app)/app/sophie/accueil/actions.ts",
+      "src/app/(app)/app/devis/actions.ts",
+    ]) {
+      expect(lire(fichier), fichier).toContain("pourAdmin: await estAdminPlateforme()");
+    }
+  });
+
   it("l onboarding de Zeli, l accueil et les devis", () => {
     for (const fichier of [
       "src/app/onboarding/sophie/actions.ts",

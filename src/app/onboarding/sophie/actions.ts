@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireOrganization } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { messageErreurBase } from "@/lib/db/erreurs";
+import { estAdminPlateforme } from "@/lib/db/qui-voit";
 
 const schema = z.object({
   assistantName: z
@@ -69,6 +70,9 @@ export async function saveZeli(
       error: messageErreurBase(
         error,
         "La configuration n’a pas pu être enregistrée.",
+        {
+          pourAdmin: await estAdminPlateforme(),
+        },
       ),
     };
   }

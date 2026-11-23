@@ -6,6 +6,7 @@ import { requireOrganization } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { messageErreurBase } from "@/lib/db/erreurs";
+import { estAdminPlateforme } from "@/lib/db/qui-voit";
 import { LONGUEUR_MAX, verifierModele } from "@/lib/sophie/greeting";
 
 export interface AccueilState {
@@ -117,7 +118,11 @@ export async function enregistrerAccueil(
   );
 
   if (error) {
-    return { error: messageErreurBase(error, "Enregistrement refusé.") };
+    return {
+      error: messageErreurBase(error, "Enregistrement refusé.", {
+        pourAdmin: await estAdminPlateforme(),
+      }),
+    };
   }
 
   revalidatePath("/app/sophie/accueil");

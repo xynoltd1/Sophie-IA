@@ -3,6 +3,48 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.23.3] — 2026-11-23 — Le message parlait mal, et il parlait à la mauvaise personne
+
+### « Le nom de l'assistante n'existe pas »
+
+C'est ce que l'écran disait à un artisan qui venait de taper « Sophie ». Lu
+ainsi, cela signifie que son prénom a été refusé. En réalité, ce qui manquait
+était la colonne en base où le ranger.
+
+Zehra l'a signalé, et elle avait raison : un message qui désigne la saisie
+alors que le problème est ailleurs envoie chercher l'erreur au mauvais
+endroit.
+
+La tournure met maintenant l'absence du côté de la base — « il lui manque
+l'emplacement prévu pour le nom de l'assistante » — et commence par « la
+saisie est correcte ». Un test interdit la formulation d'origine, pour les
+deux publics.
+
+### Un artisan n'a pas à appliquer une migration
+
+Le deuxième défaut, plus grave. Le message technique partait à **tout le
+monde**, y compris à un artisan qui n'a aucun accès à la base de données. On
+lui demandait de réparer, dans un outil qu'il ne connaît pas, une erreur qui
+n'est pas la sienne.
+
+Deux messages selon qui regarde :
+
+- **l'artisan** : « Ce que vous avez saisi est correct, mais l'enregistrement
+  a échoué : le service n'est pas complètement installé. Prévenez-nous, il n'y
+  a rien à corriger de votre côté. » Ni migration, ni Supabase, ni SQL, ni
+  colonne ;
+- **l'administrateur de la plateforme** : le nom exact du fichier à appliquer.
+
+La distinction passe par `is_platform_admin`, lu seulement quand une écriture
+a déjà échoué. En cas de doute, c'est le message discret qui sort : il ne
+révèle rien de notre installation.
+
+### Vérifié
+
+552 tests (530 passants, 22 ignorés), typecheck, lint, build. Cinq nouveaux,
+dont un qui vérifie que le message de l'artisan ne contient ni « migration »,
+ni « Supabase », ni « SQL », ni « colonne ».
+
 ## [0.23.2] — 2026-11-23 — Les erreurs disent enfin ce qui ne va pas
 
 ### Le vrai problème était toujours le même
