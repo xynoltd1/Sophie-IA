@@ -9,10 +9,16 @@ export const metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ suite?: string }>;
+}) {
+  const { suite } = await searchParams;
+
   return (
     <>
-      <LoginForm />
+      <LoginForm suite={suite} />
       <p className="text-sm text-ink-soft">
         <Link
           href="/mot-de-passe-oublie"

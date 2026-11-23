@@ -220,3 +220,32 @@ describe("le bouton dit ce qu il fait", () => {
     expect(action).toContain("total_incl_cents as number) <= 0");
   });
 });
+
+describe("une erreur de creation se lit a l ecran", () => {
+  const action = lire("src/app/(app)/app/devis/actions.ts");
+
+  it("la creation rend un message, elle ne leve plus d exception", () => {
+    // Une exception dans une action serveur ne remonte pas a l ecran : Next
+    // affiche « Application error » et un numero. L artisan voit une page
+    // blanche et ne sait pas quoi faire.
+    const creation = action.slice(
+      action.indexOf("export async function creerDevis"),
+      action.indexOf("function messageLisible"),
+    );
+    expect(creation).not.toContain("throw new Error");
+    expect(creation).toContain("return { error: messageLisible(error) }");
+  });
+
+  it("la migration manquante est nommee, pas traduite en jargon", () => {
+    expect(action).toContain('error?.code === "42P01"');
+    expect(action).toContain("0039_devis");
+  });
+
+  it("la liste distingue « aucun devis » de « table absente »", () => {
+    // Avaler l erreur afficherait « aucun devis » alors que la base n est
+    // pas a jour : on chercherait l erreur au mauvais endroit.
+    const requetes = lire("src/lib/quotes/queries.ts");
+    expect(requetes).toContain('tableAbsente: error?.code === "42P01"');
+    expect(lire("src/app/(app)/app/devis/page.tsx")).toContain("tableAbsente");
+  });
+});

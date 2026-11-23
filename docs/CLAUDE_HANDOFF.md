@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.23.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
+**Version** 0.23.1 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-05**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -477,6 +477,24 @@ depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là
 
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## Lecon de la 0.23.1 — une action serveur ne leve pas d exception
+
+Deux corrections, meme famille : le code etait juste au moment ou il a ete
+ecrit, et une evolution ulterieure l a rendu faux sans rien casser
+visiblement.
+
+**`redirect("/")` apres connexion.** Juste jusqu a la 0.21.0, ou « / » etait
+le tableau de bord. La page d accueil publique a pris sa place et la
+connexion n a pas suivi.
+
+**`throw` dans une action serveur.** L exception ne remonte pas a l ecran :
+Next affiche « Application error » et un numero. Une action doit RENDRE un
+etat lisible ; seul `redirect` peut lever, et jamais dans un bloc try.
+
+**Le reflexe** : quand une route publique change de role, chercher qui y
+renvoyait. Et pour toute action serveur, se demander ce que voit l artisan
+quand elle echoue.
 
 ## Les devis — ce qu il ne faut pas defaire
 

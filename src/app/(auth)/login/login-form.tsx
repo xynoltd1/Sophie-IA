@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { signIn, type AuthFormState } from "../actions";
 
-export function LoginForm() {
+export function LoginForm({ suite }: { suite?: string }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signIn,
     {},
@@ -13,6 +13,8 @@ export function LoginForm() {
 
   return (
     <form action={action} className="flex flex-col gap-5">
+      {/* Là où le middleware voulait emmener la personne avant de l'arrêter. */}
+      {suite ? <input type="hidden" name="suite" value={suite} /> : null}
       {state.error ? (
         <p
           role="alert"

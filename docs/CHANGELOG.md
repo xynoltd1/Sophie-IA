@@ -3,6 +3,51 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.23.1] — 2026-11-23 — Deux corrections
+
+### La connexion renvoyait sur la page commerciale
+
+`signIn` finissait par `redirect("/")`. C'était juste jusqu'à la 0.21.0, où
+« / » était le tableau de bord. Depuis que la page d'accueil publique existe,
+un artisan qui venait de saisir son mot de passe se retrouvait devant
+« Essayer Zeli ».
+
+La page d'accueil a remplacé l'ancien comportement et personne n'a mis la
+connexion à jour. C'est ma régression.
+
+Deux choses corrigées plutôt qu'une : la connexion mène maintenant à `/app`,
+et elle respecte `suite`, le paramètre que le middleware pose quand il
+intercepte quelqu'un qui n'est pas connecté. Avant, ce paramètre était écrit
+puis ignoré : la personne qui cliquait sur un lien vers un devis se
+reconnectait et atterrissait ailleurs.
+
+`suite` arrive dans l'adresse de la page, donc n'importe qui peut forger le
+lien. Seuls les chemins internes sont acceptés : une valeur commençant par
+`//`, contenant un schéma ou un antislash renvoie sur `/app`. Sans ce filtre,
+un lien portant notre nom de domaine pourrait déposer quelqu'un sur un faux
+site juste après la saisie de son mot de passe. Sept pièges sont couverts par
+un test.
+
+### Créer un devis donnait une page blanche
+
+`creerDevis` levait une exception en cas d'échec. Une exception dans une
+action serveur ne remonte pas à l'écran : Next affiche sa page « Application
+error » avec un numéro. L'artisan voyait un écran blanc sans savoir quoi
+faire.
+
+L'action rend maintenant un message, affiché sous le bouton. Et le message le
+plus fréquent est nommé : quand PostgreSQL répond `42P01`, « relation
+inexistante », l'écran dit que la migration `0039_devis` n'est pas appliquée,
+au lieu de montrer du jargon anglais.
+
+La liste distingue aussi les deux situations. Avant, une table absente
+donnait « Aucun devis pour l'instant » — on aurait cherché l'erreur dans son
+propre travail.
+
+### Vérifié
+
+534 tests (512 passants, 22 ignorés), typecheck, lint, build. Neuf nouveaux.
+
 ## [0.23.0] — 2026-11-19 — Les devis (phase 9.1)
 
 ### Pourquoi maintenant

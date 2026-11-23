@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { destinationApresConnexion } from "@/lib/auth/redirection";
 
 const credentials = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -38,7 +39,17 @@ export async function signIn(
     return { error: "E-mail ou mot de passe incorrect." };
   }
 
-  redirect("/");
+  // Vers l'application, et non vers « / ».
+  //
+  // « / » était le tableau de bord jusqu'à la 0.21.0. Depuis que la page
+  // d'accueil publique existe, s'y rendre après une connexion réussie renvoie
+  // l'artisan sur la page commerciale : il vient de donner son mot de passe et
+  // se retrouve devant « Essayer Zeli ».
+  //
+  // `suite` est posé par le middleware quand il intercepte quelqu'un qui n'est
+  // pas connecté : la personne qui cliquait sur un lien vers un devis revient
+  // à ce devis, pas à l'accueil.
+  redirect(destinationApresConnexion(formData.get("suite")));
 }
 
 export async function signUp(

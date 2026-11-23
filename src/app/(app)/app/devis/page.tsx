@@ -2,10 +2,9 @@ import Link from "next/link";
 import { requireOrganization } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { listerDevis } from "@/lib/quotes/queries";
 import { ETATS_DEVIS, euros } from "@/lib/quotes/totals";
-import { creerDevis } from "./actions";
+import { BoutonNouveauDevis } from "./nouveau";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Devis — Zelicall" };
@@ -19,7 +18,7 @@ const TONS: Record<string, string> = {
 
 export default async function DevisPage() {
   const { activeOrganization: org } = await requireOrganization();
-  const devis = await listerDevis(org.organization_id);
+  const { devis, tableAbsente } = await listerDevis(org.organization_id);
   const modifiable = can(org.role, "leads:manage");
 
   const aTraiter = devis.filter((d) => d.status === "BROUILLON");
@@ -32,17 +31,23 @@ export default async function DevisPage() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SectionTitle>Devis</SectionTitle>
-        {modifiable ? (
-          <form action={creerDevis}>
-            <input type="hidden" name="title" value="Nouveau devis" />
-            <Button type="submit" size="lg">
-              Nouveau devis
-            </Button>
-          </form>
-        ) : null}
+        {modifiable ? <BoutonNouveauDevis /> : null}
       </div>
 
-      {devis.length === 0 ? (
+      {tableAbsente ? (
+        <Sheet tone="urgent">
+          <p className="font-medium">La base n’est pas à jour.</p>
+          <p className="mt-2 text-sm leading-relaxed">
+            La table des devis n’existe pas encore. Appliquez la migration{" "}
+            <code className="rounded bg-ink-tint px-1.5 py-0.5">
+              0039_devis
+            </code>{" "}
+            dans l’éditeur SQL de Supabase, puis rechargez cette page.
+          </p>
+        </Sheet>
+      ) : null}
+
+      {!tableAbsente && devis.length === 0 ? (
         <Sheet tone="neutral">
           <p className="font-medium">Aucun devis pour l’instant.</p>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">

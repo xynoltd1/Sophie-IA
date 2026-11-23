@@ -33,11 +33,29 @@ const ligneSchema = z.object({
   service_id: z.string().uuid().optional().or(z.literal("")),
 });
 
-export async function creerDevis(formData: FormData): Promise<void> {
+/**
+ * Crée un brouillon, puis ouvre sa fiche.
+ *
+ * ## Pourquoi cette action rend un état au lieu de lever une erreur
+ *
+ * La première version faisait `throw`. Une erreur levée dans une action
+ * serveur ne remonte pas à l'écran : Next affiche sa page « Application
+ * error » et un numéro. L'artisan voit une page blanche et ne sait ni ce qui
+ * s'est passé, ni quoi faire.
+ *
+ * Elle rend donc un message lisible, et ne quitte l'écran qu'en cas de
+ * succès. `redirect` est appelé en dehors du bloc d'erreurs, parce qu'il
+ * fonctionne lui-même en levant une exception : l'attraper annulerait la
+ * navigation.
+ */
+export async function creerDevis(
+  _prev: DevisState,
+  formData: FormData,
+): Promise<DevisState> {
   const { activeOrganization: org, user } = await requireOrganization();
 
   if (!can(org.role, "leads:manage")) {
-    throw new Error("Votre rôle ne permet pas de créer un devis.");
+    return { error: "Votre rôle ne permet pas de créer un devis." };
   }
 
   const titre = String(formData.get("title") ?? "").trim() || "Devis";
@@ -65,11 +83,30 @@ export async function creerDevis(formData: FormData): Promise<void> {
     .single();
 
   if (error || !data) {
-    throw new Error(`Création refusée : ${error?.message ?? "inconnue"}`);
+    return { error: messageLisible(error) };
   }
 
-  revalidatePath("/app/devis");
   redirect(`/app/devis/${data.id}`);
+}
+
+/**
+ * Traduit une erreur de base en phrase utile.
+ *
+ * Le cas le plus fréquent, et de loin : la migration des devis n'a pas été
+ * appliquée. PostgreSQL répond alors `42P01`, « relation inexistante ». Sans
+ * cette traduction, l'artisan lit un jargon anglais et croit à une panne.
+ */
+function messageLisible(
+  error: { code?: string; message?: string } | null,
+): string {
+  if (error?.code === "42P01" || /quotes/.test(error?.message ?? "")) {
+    return (
+      "La table des devis n’existe pas encore dans la base. " +
+      "Appliquez la migration 0039_devis dans l’éditeur SQL de Supabase, puis réessayez."
+    );
+  }
+
+  return `Création refusée : ${error?.message ?? "raison inconnue"}`;
 }
 
 export async function ajouterLigne(
@@ -118,7 +155,7 @@ export async function ajouterLigne(
 
   if (error) {
     // Le déclencheur de la base refuse toute écriture sur un devis envoyé.
-    return { error: error.message };
+    return { error: messageLisible(error) };
   }
 
   revalidatePath(`/app/devis/${ligne.quote_id}`);

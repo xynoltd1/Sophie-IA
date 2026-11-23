@@ -92,10 +92,18 @@ function versResume(ligne: LigneBrute): DevisResume {
   };
 }
 
+/**
+ * La liste des devis, et la raison quand il n'y en a pas.
+ *
+ * Avaler l'erreur et rendre une liste vide afficherait « aucun devis » alors
+ * que la table n'existe pas : l'artisan chercherait son erreur dans son
+ * travail au lieu de la voir dans la base. `tableAbsente` permet à l'écran de
+ * dire laquelle des deux situations il montre.
+ */
 export async function listerDevis(
   organizationId: string,
   filtre?: EtatDevis,
-): Promise<DevisResume[]> {
+): Promise<{ devis: DevisResume[]; tableAbsente: boolean }> {
   const supabase = await createServerSupabase();
 
   let requete = supabase
@@ -107,8 +115,13 @@ export async function listerDevis(
 
   if (filtre) requete = requete.eq("status", filtre);
 
-  const { data } = await requete;
-  return (data ?? []).map((ligne) => versResume(ligne as LigneBrute));
+  const { data, error } = await requete;
+
+  return {
+    devis: (data ?? []).map((ligne) => versResume(ligne as LigneBrute)),
+    // 42P01 : « relation inexistante ». La migration n'est pas appliquée.
+    tableAbsente: error?.code === "42P01",
+  };
 }
 
 export async function lireDevis(id: string): Promise<DevisComplet | null> {
