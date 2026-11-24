@@ -116,16 +116,27 @@ describe("les autres erreurs ne sont pas masquees", () => {
     expect(messageErreurBase(undefined, "Échec.")).toBe("Échec.");
   });
 
-  it("le nom d une table dans un message sans code ne declenche rien", () => {
-    // Sinon n importe quelle erreur mentionnant « quotes » enverrait appliquer
-    // une migration deja appliquee.
+  it("un droit refuse se lit comme un droit manquant, pas comme du jargon", () => {
+    // « permission denied for table quotes » se repare comme une colonne
+    // manquante : en appliquant une migration. Laisser passer l anglais brut
+    // envoyait l artisan chercher une faute qui n etait pas la sienne. C est
+    // exactement ce qui s est produit sur les devis.
     const message = messageErreurBase(
       { code: "42501", message: "permission denied for table quotes" },
       "Refusé.",
       ADMIN,
     );
-    expect(message).not.toContain("0039");
-    expect(message).toContain("permission denied");
+    expect(message).toContain("autorisation");
+    expect(message).not.toContain("permission denied");
+  });
+
+  it("l artisan ne lit jamais « appliquez une migration »", () => {
+    const message = messageErreurBase(
+      { code: "42501", message: "permission denied for function assign_quote_reference" },
+      "Refusé.",
+    );
+    expect(message).not.toContain("migration");
+    expect(message).toContain("rien à corriger de votre côté");
   });
 });
 

@@ -310,6 +310,51 @@ for (const fichier of SOURCES) {
   }
 }
 
+// ---------------------------------------------------------------- 9
+// Une fonction appelee par le serveur sans droit d execution.
+//
+// Les migrations retirent le droit d execution a « public » pour qu un
+// navigateur ne puisse pas appeler ces fonctions. Mais retirer a public retire
+// a tout le monde, service role compris. Quatorze fonctions etaient dans ce
+// cas, dont celle qui fait repondre Zeli au telephone.
+
+const SQL_TOTAL = MIGRATIONS.map((f) => lire(f)).join("\n");
+
+for (const fichier of SOURCES) {
+  const source = lire(fichier);
+  const role = /createAdminClient/.test(source) ? "service_role" : "authenticated";
+
+  for (const appel of source.matchAll(/\.rpc\(\s*"(\w+)"/g)) {
+    const fonction = appel[1];
+
+    // La fonction doit exister.
+    if (!new RegExp(`function public\\.${fonction}\\s*\\(`).test(SQL_TOTAL)) {
+      signaler("bloquant", "base", `${fichier} : appelle ${fonction}(), absente des migrations`);
+      continue;
+    }
+
+    // PostgreSQL accorde le droit d execution a PUBLIC par defaut. Tant que
+    // rien ne le retire, tous les roles l ont, service role compris : il n y a
+    // donc rien a verifier. C est le « revoke … from public » qui cree le
+    // besoin d un GRANT explicite — et c est la que le droit se perdait.
+    const retire = new RegExp(
+      `revoke [^;]*on function public\\.${fonction}\\s*\\([^)]*\\)[^;]*from[^;]*\\bpublic\\b`,
+    ).test(SQL_TOTAL);
+    if (!retire) continue;
+
+    const accorde = new RegExp(
+      `grant execute on function public\\.${fonction}\\s*\\([^)]*\\)\\s*to [^;]*${role}`,
+    ).test(SQL_TOTAL);
+    if (!accorde) {
+      signaler(
+        "bloquant",
+        "base",
+        `${fichier} : appelle ${fonction}() avec ${role}, sans GRANT EXECUTE pour ce role`,
+      );
+    }
+  }
+}
+
 // ---------------------------------------------------------------------- bilan
 
 const ordre = { bloquant: 0, attention: 1 };

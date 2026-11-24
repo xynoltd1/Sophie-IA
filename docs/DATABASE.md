@@ -241,3 +241,30 @@ uniquement par le service role — `site_events`, `seo_pages`,
 ont pas besoin : il contourne les droits.
 
 `anon` ne reçoit jamais rien.
+
+## Les droits d execution des fonctions (0041)
+
+Trois verrous, pas deux. Le GRANT de table dit si un role peut toucher la
+table ; la politique RLS dit quelles lignes ; le GRANT EXECUTE dit s il peut
+appeler une fonction.
+
+PostgreSQL accorde EXECUTE a PUBLIC par defaut. Les migrations de ce depot le
+retirent — pour qu un navigateur ne puisse pas appeler une fonction serveur.
+Mais retirer a PUBLIC retire a tout le monde, **service role compris**.
+
+Quatorze fonctions etaient dans ce cas, dont `sophie_runtime_for_number`, celle
+qui repond a l arrivee d un appel. La 0041 leur rend le droit, pour le role
+serveur seulement.
+
+**Regle.** Apres un `revoke … on function … from public`, il faut un
+`grant execute … to service_role` (appel serveur) ou `to authenticated` (appel
+depuis l application). `scripts/audit.mjs` le verifie, et
+`tests/droits-fonctions.test.ts` fige la liste.
+
+## Numeroter un devis (0042)
+
+`quotes_reference_coherente` impose : `(status = 'BROUILLON') = (reference is null)`.
+
+Un numero et un etat ne peuvent donc pas s ecrire separement — chaque moitie
+viole la contrainte. `assign_quote_reference` ecrit les deux dans le meme
+UPDATE, et le serveur ne touche plus a l etat apres elle.

@@ -37,6 +37,11 @@ const MIGRATIONS: { marqueur: RegExp; fichier: string; quoi: string }[] = [
     fichier: "0039_devis",
     quoi: "les lignes de devis",
   },
+  {
+    marqueur: /assign_quote_reference/,
+    fichier: "0041_droit_numerotation",
+    quoi: "celle de numéroter un devis",
+  },
   { marqueur: /\bquotes\b/, fichier: "0039_devis", quoi: "les devis" },
   {
     marqueur: /assistant_name_source/,
@@ -66,6 +71,17 @@ const MIGRATIONS: { marqueur: RegExp; fichier: string; quoi: string }[] = [
     quoi: "les statistiques",
   },
 ];
+
+/**
+ * Les codes qui veulent dire « le droit manque ».
+ *
+ * Un droit manquant se répare exactement comme une colonne manquante : en
+ * appliquant une migration. Pour l'artisan, c'est la même phrase — le service
+ * n'est pas complètement installé. Pour nous, c'est le nom du fichier.
+ */
+const DROIT_REFUSE = new Set([
+  "42501", // privilège insuffisant
+]);
 
 /** Les codes qui veulent dire « ça n'existe pas en base ». */
 const ABSENT = new Set([
@@ -99,7 +115,10 @@ export function messageErreurBase(
     .filter(Boolean)
     .join(" ");
 
-  const manque = ABSENT.has(erreur.code ?? "");
+  const droit =
+    DROIT_REFUSE.has(erreur.code ?? "") ||
+    /permission denied for (table|function|sequence)/i.test(texte);
+  const manque = ABSENT.has(erreur.code ?? "") || droit;
 
   if (!manque) {
     // Une erreur qui n'est pas une absence mérite d'être lue telle quelle :
@@ -128,7 +147,9 @@ export function messageErreurBase(
       // saisie : « le nom de l'assistante n'existe pas » se lisait comme un
       // refus du prénom qu'on venait de taper.
       "La saisie est correcte. La base de données n’est pas à jour : " +
-      `il lui manque l’emplacement prévu pour ${migration.quoi}. ` +
+      (droit
+        ? `il manque une autorisation — ${migration.quoi}. `
+        : `il lui manque l’emplacement prévu pour ${migration.quoi}. `) +
       `Appliquez la migration ${migration.fichier} dans l’éditeur SQL de ` +
       "Supabase, puis réessayez. Le fichier est dans supabase/migrations/."
     );
@@ -136,7 +157,8 @@ export function messageErreurBase(
 
   return (
     "La saisie est correcte. La base de données n’est pas à jour : il lui " +
-    "manque une table ou une colonne. Appliquez les migrations en attente dans " +
+    (droit ? "manque une autorisation. " : "manque une table ou une colonne. ") +
+    "Appliquez les migrations en attente dans " +
     `l’éditeur SQL de Supabase. Détail technique : ${erreur.message ?? erreur.code ?? "inconnu"}`
   );
 }

@@ -9,7 +9,7 @@
 
 ## Où en est le projet
 
-**Version** 0.24.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-23**
+**Version** 0.25.0 · **Phases 0 à 7 écrites ; trois fonctions majeures jamais exercées en réel** · **Vérifié le 2026-11-23**
 
 > **La console d'administration, le référencement et la mesure de fréquentation ont
 > leurs propres documents** : `docs/ADMIN_DASHBOARD.md`, `docs/SEO.md`,
@@ -482,6 +482,32 @@ depuis la 0.20.0, mais ce que l'assistante dit d'elle-même ensuite vient de là
 
 **Dettes utiles à tout moment** : régénérer `src/types/database.ts`, comparer les
 transcripteurs, monter la préproduction.
+
+## La base locale — `scripts/base-locale.sh`, depuis la 0.25.0
+
+    bash scripts/base-locale.sh
+
+Monte un PostgreSQL 16 jetable, applique les 42 migrations, joue un parcours
+complet avec les vrais roles. **Aucune cle, aucun acces a Supabase.**
+
+**A lancer avant de declarer une phase terminee.** Les tests lisent du texte ;
+seule cette base execute. Elle a trouve en une minute deux defauts que 500
+tests verts ne voyaient pas : quatorze fonctions sans droit d execution pour le
+role serveur, et une numerotation qui violait sa propre contrainte.
+
+Etendre `scripts/base-locale/0X_*.sql` a chaque fois qu un bogue echappe aux
+tests parce qu il vivait dans la base.
+
+## Les droits : trois verrous, pas deux
+
+1. **GRANT de table** — le role a-t-il le droit de toucher la table (0012, 0040).
+2. **Politique RLS** — quelles lignes il voit.
+3. **GRANT EXECUTE de fonction** — peut-il appeler la fonction (0041).
+
+Le troisieme a ete oublie quatorze fois. Piege precis : PostgreSQL accorde
+EXECUTE a PUBLIC par defaut ; un `revoke … from public` le retire a TOUT le
+monde, service role compris. Toute fonction appelee par le code apres un tel
+revoke a besoin d un `grant execute … to service_role` (ou `authenticated`).
 
 ## L audit statique — `scripts/audit.mjs`, depuis la 0.24.0
 

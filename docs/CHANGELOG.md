@@ -3,6 +3,88 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.25.0] — 2026-11-23 — Une vraie base, et quinze droits manquants
+
+### Ce qui a changé de méthode
+
+Jusqu'ici, les tests de ce dépôt lisaient du texte. Ils ne parlaient ni à
+PostgreSQL ni à un navigateur. Trois bogues de production de suite sont passés
+par ce trou : une colonne inventée, un GRANT de table oublié, un droit
+d'exécution de fonction perdu — tous invisibles à cinq cents tests verts.
+
+`scripts/base-locale.sh` monte maintenant un PostgreSQL local, y applique les
+quarante-deux migrations dans l'ordre, et joue un parcours complet avec les
+vrais rôles et les vraies politiques d'isolation. Aucune clé, aucun accès à
+Supabase : une base jetable et des données inventées.
+
+Il a trouvé deux défauts en une minute.
+
+### « Le numéro n'a pas pu être attribué » — deux causes empilées
+
+**Premièrement, le droit d'exécution.** Les migrations retirent à PUBLIC le
+droit d'exécuter leurs fonctions, pour qu'un navigateur ne puisse pas les
+appeler. Mais retirer à PUBLIC retire à tout le monde — y compris au rôle
+serveur qui les appelle. Et rien ne le lui rendait.
+
+Quatorze fonctions étaient dans ce cas. Treize ne s'étaient pas encore vues
+parce que ces chemins n'ont jamais tourné en réel. Dont celle-ci :
+
+> `sophie_runtime_for_number` — la fonction qui, à l'arrivée d'un appel, trouve
+> l'entreprise et l'accueil à prononcer. Sans ce droit, Zeli ne peut pas
+> répondre au téléphone. Pas « mal répondre » : pas répondre.
+
+Migration **0041** : le droit est rendu au rôle serveur, pour les quatorze. Les
+fonctions restent fermées au navigateur.
+
+**Deuxièmement, la contrainte.** La table porte cette règle, et elle est juste :
+un brouillon n'a pas de numéro, un devis numéroté n'est plus un brouillon. Or
+le travail se faisait en deux temps — la fonction écrivait le numéro en
+laissant l'état à BROUILLON, puis le serveur changeait l'état. Chaque moitié
+viole la règle à elle seule. La numérotation ne pouvait donc jamais réussir.
+
+Migration **0042** : la fonction écrit le numéro et l'état dans la même
+écriture. C'est la vérité du métier — numéroter, c'est figer.
+
+### Le client d'un devis
+
+Il n'y avait nulle part où le mettre. Le devis acceptait un contact et un nom
+depuis le premier jour, mais aucun écran ne les demandait.
+
+La fiche porte maintenant un bloc « Client » : choisir une fiche existante, ou
+taper un nom et une adresse, et donner son objet au devis. Les deux voies
+coexistent — un devis qui suit un appel part d'un contact créé par Zeli, un
+devis commencé sur un chantier n'a qu'un nom sur un bout de papier.
+
+Le nom et l'adresse sont recopiés dans le devis : si la fiche change plus tard,
+le devis envoyé garde ce qui y était écrit.
+
+### L'audit apprend deux familles de plus
+
+`scripts/audit.mjs` en relève neuf, dont les deux ajoutées aujourd'hui :
+
+- une colonne demandée par une requête et absente des migrations ;
+- **une fonction appelée par le serveur dont le droit a été retiré à PUBLIC
+  sans être rendu au rôle appelant.**
+
+La seconde ne se déclenche que si un `revoke … from public` existe : sans lui,
+le droit par défaut suffit, et exiger un GRANT produirait sept fausses alertes.
+C'est la base locale qui a tranché, pas une supposition.
+
+### Un droit refusé se lit en français
+
+« permission denied for table quotes » partait tel quel à l'écran.
+`messageErreurBase` traite désormais un droit manquant comme une colonne
+manquante : l'artisan lit que le service n'est pas complètement installé et
+qu'il n'a rien à corriger ; l'administrateur lit le nom du fichier.
+
+### Vérifications
+
+555 tests passent, 22 sautés. Typecheck, lint, build propres. Audit sans
+constat. Parcours complet rejoué sur une vraie base : totaux calculés par la
+base, numérotation réussie, isolation vérifiée.
+
+**Deux migrations à appliquer : 0041 et 0042.**
+
 ## [0.24.0] — 2026-11-23 — Une colonne inventée, et l'audit qui l'attrape
 
 ### « Cette page n'existe pas » sur un devis qui existait

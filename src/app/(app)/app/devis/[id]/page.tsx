@@ -3,7 +3,11 @@ import { notFound } from "next/navigation";
 import { requireOrganization } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { Sheet, SectionTitle } from "@/components/ui/sheet";
-import { lireDevis, servicesPourDevis } from "@/lib/quotes/queries";
+import {
+  contactsPourDevis,
+  lireDevis,
+  servicesPourDevis,
+} from "@/lib/quotes/queries";
 import {
   ETATS_DEVIS,
   euros,
@@ -11,6 +15,7 @@ import {
   totaux,
 } from "@/lib/quotes/totals";
 import { EditeurLignes, ActionsDevis } from "./editor";
+import { FormulaireClient } from "./client-form";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Devis — Zelicall" };
@@ -51,7 +56,10 @@ export default async function FicheDevis({
     );
   }
 
-  const services = await servicesPourDevis(org.organization_id);
+  const [services, contacts] = await Promise.all([
+    servicesPourDevis(org.organization_id),
+    contactsPourDevis(org.organization_id),
+  ]);
   const ouvert = peutModifier(devis.status) && can(org.role, "leads:manage");
   const etat = ETATS_DEVIS[devis.status];
 
@@ -98,7 +106,9 @@ export default async function FicheDevis({
           <p className="font-medium">
             {devis.contact?.display_name ??
               devis.customer_name ??
-              "Sans client rattaché"}
+              (ouvert
+                ? "Pas encore de client — renseignez-le ci-dessous"
+                : "Sans client rattaché")}
           </p>
           {devis.customer_address ? (
             <p className="text-ink-soft">{devis.customer_address}</p>
@@ -119,6 +129,16 @@ export default async function FicheDevis({
           ) : null}
         </div>
       </Sheet>
+
+      <FormulaireClient
+        devisId={devis.id}
+        titre={devis.title}
+        contactId={devis.contact?.id ?? null}
+        nom={devis.customer_name}
+        adresse={devis.customer_address}
+        contacts={contacts}
+        ouvert={ouvert}
+      />
 
       <EditeurLignes
         devisId={devis.id}

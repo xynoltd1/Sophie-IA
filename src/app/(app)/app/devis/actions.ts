@@ -9,6 +9,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { attribuerNumero } from "@/lib/quotes/queries";
 import { messageErreurBase } from "@/lib/db/erreurs";
 import { estAdminPlateforme } from "@/lib/db/qui-voit";
+import { contactLabel } from "@/lib/crm/pipeline";
 
 export interface DevisState {
   error?: string;
@@ -205,15 +206,14 @@ export async function envoyerDevis(
     return { error: "Un devis sans ligne chiffrée ne peut pas être figé." };
   }
 
-  const numero = await attribuerNumero(devisId);
-  if (!numero) return { error: "Le numéro n’a pas pu être attribué." };
-
-  const { error } = await supabase
-    .from("quotes")
-    .update({ status: "ENVOYE", sent_at: new Date().toISOString() })
-    .eq("id", devisId);
-
-  if (error) return { error: error.message };
+  // La fonction écrit le numéro ET l'état dans la même écriture. Les séparer
+  // violait la contrainte quotes_reference_coherente : un brouillon n'a pas de
+  // numéro, un devis numéroté n'est plus un brouillon. C'est pour cela que le
+  // serveur ne met plus l'état à jour après elle.
+  const { numero, erreur } = await attribuerNumero(devisId);
+  if (!numero) {
+    return { error: erreur ?? "Le numéro n’a pas pu être attribué." };
+  }
 
   revalidatePath(`/app/devis/${devisId}`);
   revalidatePath("/app/devis");
@@ -265,4 +265,81 @@ export async function deciderDevis(
     success:
       decision === "ACCEPTE" ? "Devis marqué accepté." : "Devis marqué refusé.",
   };
+}
+
+/**
+ * Rattache un client au devis, ou le saisit à la main.
+ *
+ * Les deux voies coexistent volontairement. Un devis qui suit un appel part
+ * d'un contact déjà créé par Zeli ; un devis commencé sur un chantier n'a
+ * souvent qu'un nom sur un bout de papier. Imposer la fiche contact d'abord
+ * ferait abandonner le devis.
+ */
+export async function enregistrerClient(
+  _prev: DevisState,
+  formData: FormData,
+): Promise<DevisState> {
+  const { activeOrganization: org } = await requireOrganization();
+
+  if (!can(org.role, "leads:manage")) {
+    return { error: "Votre rôle ne permet pas de modifier un devis." };
+  }
+
+  const devisId = String(formData.get("quote_id") ?? "");
+  const titre = String(formData.get("title") ?? "").trim();
+  const contactId = String(formData.get("contact_id") ?? "").trim();
+  const nom = String(formData.get("customer_name") ?? "").trim();
+  const adresse = String(formData.get("customer_address") ?? "").trim();
+
+  if (titre.length < 2) {
+    return { error: "Donnez un objet au devis (deux caractères au minimum)." };
+  }
+
+  const supabase = await createServerSupabase();
+
+  const { data: devis } = await supabase
+    .from("quotes")
+    .select("status")
+    .eq("id", devisId)
+    .maybeSingle();
+
+  if (!devis) return { error: "Devis introuvable." };
+  if (devis.status !== "BROUILLON") {
+    return { error: "Ce devis est figé : son client ne change plus." };
+  }
+
+  // Si un contact est choisi, son nom sert de nom client quand aucun n'est
+  // tapé. Le devis garde ainsi une identité même si la fiche change ensuite.
+  let nomRetenu = nom || null;
+  if (contactId && !nomRetenu) {
+    const { data: contact } = await supabase
+      .from("contacts")
+      .select("full_name, company_name, phone")
+      .eq("id", contactId)
+      .maybeSingle();
+    if (contact) nomRetenu = contactLabel(contact);
+  }
+
+  const { error } = await supabase
+    .from("quotes")
+    .update({
+      title: titre.slice(0, 200),
+      contact_id: contactId || null,
+      customer_name: nomRetenu,
+      customer_address: adresse || null,
+    })
+    .eq("id", devisId);
+
+  if (error) {
+    return {
+      error: messageErreurBase(error, "Enregistrement refusé.", {
+        pourAdmin: await estAdminPlateforme(),
+      }),
+    };
+  }
+
+  revalidatePath(`/app/devis/${devisId}`);
+  revalidatePath("/app/devis");
+
+  return { success: "Client enregistré." };
 }

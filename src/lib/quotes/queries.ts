@@ -201,15 +201,30 @@ export async function lireDevis(
  * série, et une série trouée est exactement ce qu'on cherche à éviter en
  * numérotant.
  */
-export async function attribuerNumero(devisId: string): Promise<string | null> {
+export async function attribuerNumero(
+  devisId: string,
+): Promise<{ numero: string | null; erreur: string | null }> {
   const admin = createAdminClient();
 
   const { data, error } = await admin.rpc("assign_quote_reference", {
     devis: devisId,
   });
 
-  if (error) return null;
-  return (data as string | null) ?? null;
+  // Rendre `null` sans la raison affichait « le numéro n'a pas pu être
+  // attribué » sans dire pourquoi : ni l'artisan ni nous ne pouvions savoir
+  // s'il manquait un droit, une ligne, ou la fonction elle-même.
+  if (error) {
+    return {
+      numero: null,
+      erreur: messageErreurBase(
+        error,
+        "Le numéro n'a pas pu être attribué.",
+        { pourAdmin: await estAdminPlateforme() },
+      ),
+    };
+  }
+
+  return { numero: (data as string | null) ?? null, erreur: null };
 }
 
 /** Les services de l'entreprise, pour pré-remplir une ligne. */
@@ -235,5 +250,24 @@ export async function servicesPourDevis(organizationId: string): Promise<
     name: service.name as string,
     unit_price_cents: (service.quote_unit_price_cents as number | null) ?? null,
     vat_rate: (service.quote_vat_rate as number | null) ?? null,
+  }));
+}
+
+/** Les contacts de l'entreprise, pour rattacher un devis à un client. */
+export async function contactsPourDevis(organizationId: string): Promise<
+  { id: string; nom: string }[]
+> {
+  const supabase = await createServerSupabase();
+
+  const { data } = await supabase
+    .from("contacts")
+    .select("id, full_name, company_name, phone")
+    .eq("organization_id", organizationId)
+    .order("full_name", { nullsFirst: false })
+    .limit(500);
+
+  return (data ?? []).map((contact) => ({
+    id: contact.id as string,
+    nom: contactLabel(contact),
   }));
 }
