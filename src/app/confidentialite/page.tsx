@@ -15,13 +15,13 @@ export default function Confidentialite() {
     >
       <Partie titre="Qui traite vos données">
         <p>
-          Responsable du traitement : <ACompleter quoi="raison sociale" />,{" "}
-          <ACompleter quoi="adresse" />,{" "}
-          <ACompleter quoi="numéro d’entreprise" />.
+          Responsable du traitement : XYNO, société à responsabilité limitée
+          de droit belge, Kuilenstraat 16, 3700 Tongeren, Belgique, numéro
+          d’entreprise 0801.484.571.
         </p>
         <p>
           Contact pour les questions de protection des données :{" "}
-          <ACompleter quoi="adresse e-mail" />.
+          <a href="mailto:contact@zelicall.com">contact@zelicall.com</a>.
         </p>
       </Partie>
 
@@ -122,7 +122,7 @@ export default function Confidentialite() {
         <p>
           Accès, rectification, effacement, limitation, opposition et
           portabilité. Pour les exercer, écrire à{" "}
-          <ACompleter quoi="adresse e-mail" />.
+          <a href="mailto:contact@zelicall.com">contact@zelicall.com</a>.
         </p>
         <p>
           Une réclamation peut être déposée auprès de l’Autorité de protection

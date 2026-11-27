@@ -3,6 +3,136 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.27.0] — 2026-11-27 — Dix décisions écrites, quatre laissées au juriste
+
+Les conditions portaient quinze blancs. Onze sont remplis par des propositions
+de départ, écrites pour être relues et corrigées, pas pour être arrêtées. Le
+bandeau de brouillon reste : rien ici n'a été vu par un juriste.
+
+### Les prix ne sont pas dans le texte
+
+Ils sont lus dans le catalogue — la même source que la page d'accueil et la
+console. Un prix recopié dans un document contractuel est changé à un endroit
+et oublié à l'autre, et c'est le contrat qui reste faux. Tant qu'une offre n'a
+pas de tarif, les conditions le disent au lieu d'inventer un nombre.
+
+La vitrine précise désormais « hors taxes, par mois » sous chaque prix. Un
+« 49 € » seul laisse croire au prix payé, et les conditions disent autre chose.
+
+### Ce qui est proposé
+
+**Vente.** Dépassement à 0,35 € HT la minute et 0,12 € HT le SMS. Carte
+bancaire et domiciliation SEPA, virement pour l'offre Équipe et les paiements
+annuels. Paiement d'avance, par mois, à date anniversaire ; les dépassements
+sur la facture du mois suivant. Mention de l'autoliquidation pour un
+professionnel assujetti d'un autre État membre.
+
+**Durée.** Un mois, sans engagement plus long, reconduit automatiquement,
+résiliable à tout moment depuis le compte avec effet à la fin du mois payé.
+Après la fin : trente jours de lecture seule pour tout exporter, suppression
+dans les soixante jours, sauf obligation légale de conservation.
+
+**Usage.** Aucun engagement chiffré de disponibilité — le service dépend
+d'opérateurs téléphoniques et de fournisseurs d'IA que l'éditeur ne contrôle
+pas, et un pourcentage promis sur le dos d'un tiers ne vaut rien. En échange,
+un engagement qui tient : les interruptions prévues sont annoncées, et si
+l'assistante tombe, l'appel suit le comportement de secours réglé par le
+professionnel. Un appel n'est jamais perdu en silence.
+
+**Suspension.** Sans préavis pour un usage illicite. Quinze jours après un
+rappel resté sans effet pour un impayé. Une suspension n'est pas une
+suppression : trente jours de conservation, rétablissement dès que la cause
+disparaît.
+
+**Droit.** Droit belge, tribunal de l'entreprise d'Anvers division Tongeren,
+règles impératives du pays du client réservées. À confirmer par un juriste —
+le texte le dit lui-même.
+
+### Ce qui reste au juriste, et pourquoi
+
+Quatre clauses, marquées comme telles :
+
+- **la limitation de responsabilité** — celle qui décide jusqu'où l'éditeur
+  répond d'un rendez-vous mal noté ou d'un appel manqué. Mal écrite, elle ne
+  protège de rien ;
+- **les pénalités de retard** — les minimums diffèrent entre la Belgique et la
+  France ;
+- **le droit de rétractation** — en principe écarté entre professionnels, mais
+  la France l'étend à de très petites entreprises hors de leur activité
+  principale. Un plombier qui achète un logiciel est le cas limite exact ;
+- **le médiateur de la consommation** — obligatoire seulement en cas de vente
+  à des particuliers.
+
+### Vérifications
+
+565 tests passent, 22 sautés. Typecheck, lint, build propres. Audit sans
+constat. **Aucune migration.**
+
+## [0.26.1] — 2026-11-27 — Le numéro de TVA
+
+Confirmé par l'éditrice : **BE 0801.484.571**, soit le numéro d'entreprise
+précédé de « BE ».
+
+Il restait vide dans la 0.26.0 parce qu'aucun des deux actes ne le portait, et
+qu'une société non assujettie n'en a pas : une mention légale ne se déduit pas
+d'une habitude, même quasi générale.
+
+Le test ne vérifie plus que le champ est vide, mais que les deux numéros
+coïncident — un écart serait une faute de frappe dans une mention légale.
+
+Reste ouverte : la région exacte de la base de données de production.
+
+## [0.26.0] — 2026-11-27 — L'identité de l'éditeur
+
+### Ce qui est rempli
+
+Les mentions légales portaient sept champs vides. Six sont remplis, à partir
+de deux publications au Moniteur belge — l'acte de constitution du 6 mai 2023
+et l'acte du 5 avril 2024 qui nomme la gérante et fixe le siège :
+
+- XYNO, société à responsabilité limitée de droit belge (BV/SRL) ;
+- siège : Kuilenstraat 16, 3700 Tongeren ;
+- numéro d'entreprise : 0801.484.571 ;
+- registre : tribunal de l'entreprise d'Anvers, division Tongeren ;
+- responsable de la publication : Zehra Dizer, gérante ;
+- contact : contact@zelicall.com.
+
+Le numéro d'entreprise porte une clé de contrôle — les deux derniers chiffres
+valent 97 moins le reste des huit premiers modulo 97. Celui-ci la vérifie, ce
+qui écarte une erreur de lecture du scan. `tests/mentions-legales.test.ts`
+rejoue ce calcul à chaque `npm test`.
+
+L'hébergement est nommé : Vercel Inc. pour le site, avec exécution à
+Francfort, et Supabase, Inc. pour les données, en Union européenne.
+
+Les mêmes faits sont repris dans la politique de confidentialité
+(responsable du traitement) et dans les conditions de vente (adresse de
+réclamation). Une identité écrite à deux endroits différents est une identité
+qui finit par diverger.
+
+### Ce qui reste vide, et pourquoi
+
+**Le numéro de TVA.** Il n'apparaît dans aucun des deux actes. En Belgique il
+reprend presque toujours le numéro d'entreprise précédé de « BE » — mais
+« presque toujours » n'est pas une mention légale : une société non assujettie
+n'en a pas. Il se vérifie sur la Banque-Carrefour des Entreprises.
+
+**La région exacte de la base de données.** Le projet Supabase de production
+n'est pas joignable depuis l'environnement de développement.
+
+Les clauses juridiques des CGU et des CGV restent intactes : elles relèvent
+d'un juriste, pas d'un acte de société.
+
+### Le bandeau de brouillon reste
+
+Les documents ne sont toujours pas relus par un juriste, et des champs
+restent ouverts. Le bandeau tombe quand les deux conditions seront levées.
+
+### Vérifications
+
+560 tests passent, 22 sautés. Typecheck, lint, build propres. Audit sans
+constat. **Aucune migration.**
+
 ## [0.25.0] — 2026-11-23 — Une vraie base, et quinze droits manquants
 
 ### Ce qui a changé de méthode

@@ -931,6 +931,14 @@ function AccesSection({ offres }: { offres: OffrePublique[] }) {
                     </span>
                   )}
                 </p>
+                {/* « 49 € » sans précision laisse croire au prix payé. Les
+                    conditions de vente disent hors taxes : la vitrine doit
+                    dire la même chose, au même endroit que le nombre. */}
+                {offre.prix ? (
+                  <p className="text-sm text-ink-soft">
+                    hors taxes, par mois
+                  </p>
+                ) : null}
 
                 <ul className="mt-4 flex flex-1 flex-col gap-2 text-sm text-ink-soft">
                   <li>{offre.minutes} minutes d’appel incluses</li>
