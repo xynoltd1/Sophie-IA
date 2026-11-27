@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ACompleter, PageLegale, Partie } from "@/components/public/legal";
+import { PageLegale, Partie } from "@/components/public/legal";
 import { metadonneesLegales } from "@/lib/seo/legal";
 
 export const revalidate = 60;
@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * chiffres valent 97 moins le reste des huit premiers modulo 97. Celui-ci la
  * vérifie, ce qui écarte une erreur de lecture du scan.
  *
- * ## Ce qui manque encore, et pourquoi
+ * ## Les deux dernières valeurs, et d'où elles viennent
  *
  * Le numéro de TVA n'apparaissait dans aucun des deux actes. Il a été confirmé
  * par l'éditrice le 27 novembre 2026 : BE 0801.484.571, soit le numéro
@@ -29,7 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
  * assujettie. Il restait vide jusque-là parce qu'une société non assujettie
  * n'en a pas, et qu'une mention légale ne se déduit pas d'une habitude.
  *
- * Reste ouverte la région exacte de la base de données de production.
+ * La région de la base de données a été relevée le même jour dans les réglages
+ * du projet de production : eu-west-1, Irlande. Les fonctions serveur, elles,
+ * s'exécutent à Francfort. Les deux sont dans l'Union européenne, ce qui est
+ * ce que la mention doit dire.
  */
 export default function MentionsLegales() {
   return (
@@ -68,8 +71,8 @@ export default function MentionsLegales() {
           Les données applicatives — comptes, fiches clients, rendez-vous,
           enregistrements d’appels — sont hébergées par Supabase, Inc., 3500 S.
           DuPont Highway, Dover, Kent County, DE 19901, États-Unis, sur une
-          base de données située dans l’Union européenne. Région exacte :{" "}
-          <ACompleter quoi="région du projet Supabase de production" />.
+          base de données située en Irlande (région <code>eu-west-1</code>),
+          donc dans l’Union européenne.
         </p>
         <p>
           Les deux prestataires sont des sociétés américaines dont
@@ -100,9 +103,10 @@ export default function MentionsLegales() {
 
       <Partie titre="Ce qui reste à faire avant publication">
         <p>
-          L’identité de l’éditeur est complète. Reste à régler : la région
-          exacte de la base de données, puis une relecture du document par un
-          juriste compétent pour la Belgique et la France. Le bandeau de brouillon se
+          L’identité de l’éditeur et l’hébergement sont complets : tout ce que
+          cette page demande est un fait vérifiable, et chacun l’a été. Reste
+          une relecture du document par un juriste compétent pour la Belgique
+          et la France. Le bandeau de brouillon se
           retire ensuite dans{" "}
           <code className="rounded bg-ink-tint px-1.5 py-0.5 text-sm">
             src/components/public/legal.tsx

@@ -3,6 +3,32 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Versionnement sémantique.
 
+## [0.27.1] — 2026-11-27 — La région de la base, et plus aucun blanc
+
+Relevée dans les réglages du projet de production : `eu-west-1`, Irlande.
+Écrite dans les mentions légales et dans `DEPLOYMENT.md`.
+
+**Les mentions légales ne portent plus aucun champ à compléter.** C'est le seul
+des cinq documents dont tout le contenu est un fait vérifiable plutôt qu'une
+décision de juriste. Un test l'exige désormais : plus aucun `ACompleter` dans
+cette page.
+
+Le test qui interdisait toute identité d'entreprise dans les pages légales
+gardait un document vide tant que l'identité était inconnue. Il change de sens
+sans changer de but : un seul numéro existe, 0801.484.571, et tout autre
+numéro à dix chiffres est refusé. Une faute de frappe dans une mention légale
+est une faute, pas un détail.
+
+### Un point noté, pas réglé
+
+Les fonctions serveur tournent à Francfort, la base en Irlande. Les deux sont
+dans l'Union européenne, donc l'engagement du registre des sous-traitants est
+tenu. Mais chaque requête fait un aller-retour entre les deux, de l'ordre de
+vingt à trente millisecondes. Sans conséquence pour un écran ; à surveiller sur
+le chemin de l'appel entrant, où le budget total est de 7,5 secondes.
+Rapprocher les deux régions impose de recréer le projet Supabase et d'y migrer
+les données : à faire avant les premiers vrais clients, ou pas du tout.
+
 ## [0.27.0] — 2026-11-27 — Dix décisions écrites, quatre laissées au juriste
 
 Les conditions portaient quinze blancs. Onze sont remplis par des propositions

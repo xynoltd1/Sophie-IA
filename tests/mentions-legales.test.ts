@@ -36,6 +36,13 @@ describe("mentions legales", () => {
     expect(PAGE).toContain("Vercel Inc.");
     expect(PAGE).toContain("Supabase, Inc.");
     expect(PAGE).toContain("Francfort");
+    expect(PAGE).toContain("eu-west-1");
+  });
+
+  it("plus aucun champ n est laisse a completer", () => {
+    // Les mentions legales sont le seul des cinq documents qui ne depende pas
+    // d un juriste : tout ce qu il demande est un fait verifiable.
+    expect(PAGE).not.toContain("ACompleter");
   });
 
   it("aucun de ces champs n est reste a completer", () => {

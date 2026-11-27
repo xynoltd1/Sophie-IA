@@ -208,15 +208,26 @@ describe("documents legaux", () => {
   });
 
   it("aucune identite d entreprise inventee", () => {
-    // Un numero plausible se recopie ; un blanc se voit.
+    // Ce test gardait les pages vides tant que l identite etait inconnue.
+    // Elle vient maintenant de deux publications au Moniteur belge, et la
+    // garde change de sens sans changer de but : un seul numero existe, et
+    // c est celui-la. Un autre serait une invention ou une faute de frappe.
+    const ATTENDU = "0801.484.571";
+
     for (const chemin of PAGES_LEGALES) {
       const texte = lire(chemin);
-      expect(texte).not.toMatch(/BE ?0\d{9}/);
-      expect(texte).not.toMatch(/\b\d{9}\b/);
+
+      for (const numero of texte.match(/\b\d{4}\.\d{3}\.\d{3}\b/g) ?? []) {
+        expect(numero).toBe(ATTENDU);
+      }
+      // Un numero colle d un bloc, sans points, n est pas une mention
+      // soignee : il echappe a la relecture et aux tests ci-dessus.
+      expect(texte).not.toMatch(/\b\d{10}\b/);
       expect(texte).not.toMatch(/SIREN\s*:\s*\d/);
-      expect(texte).not.toMatch(/TVA\s*:\s*[A-Z]{2}\d/);
+      for (const tva of texte.match(/TVA\s*:\s*([A-Z]{2}[\d. ]+)/g) ?? []) {
+        expect(tva).toContain(`BE ${ATTENDU}`);
+      }
     }
-    expect(lire("src/app/mentions-legales/page.tsx")).toContain("ACompleter");
   });
 
   it("ils restent hors indexation et hors plan du site", () => {

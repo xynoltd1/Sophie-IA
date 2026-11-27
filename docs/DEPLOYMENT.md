@@ -92,6 +92,19 @@ Le fichier ne suffit pas toujours : vérifiez aussi *Project Settings → Functi
 Function Region*, et que le projet Supabase associé est bien lui aussi en région
 européenne.
 
+**Relevé le 27 novembre 2026.** Base de production : projet `xynoltd1`,
+référence `mlsrtavhrhjfqvjxkjvg`, région `eu-west-1` (Irlande). Fonctions
+serveur : `fra1` (Francfort). Les deux sont dans l'Union européenne, donc
+l'engagement du registre des sous-traitants est tenu.
+
+Les deux régions diffèrent, et c'est un choix à connaître plutôt qu'un défaut :
+chaque requête fait un aller-retour Francfort–Irlande, de l'ordre de vingt à
+trente millisecondes. Sans conséquence pour un écran, qui en fait quelques-unes.
+À surveiller en revanche sur le chemin de l'appel entrant, où le budget est de
+7,5 secondes et où chaque requête compte. Rapprocher les deux régions impose de
+recréer le projet Supabase et d'y migrer les données : à faire avant les
+premiers vrais clients, ou pas du tout.
+
 **Point ouvert, à ne pas confondre** : le middleware Next.js s'exécute sur le réseau de
 périphérie, réparti mondialement, indépendamment de cette région. Il ne manipule que les
 cookies de session et le jeton, sans donnée métier — mais ce point doit être vérifié et
